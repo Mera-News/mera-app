@@ -3472,7 +3472,7 @@
         "busy": "Сервіс зараз зайнятий. Спробуйте ще раз за хвилину.",
         "failing": "У сервісі сталася помилка. Спробуйте пізніше."
       },
-      "warning": "Цей сервіс не має конфіденційних обчислень. Ваш профіль, ваші чати та статті, які Мера Ньюз читає для вас, передаються тому, хто керує сервісом.",
+      "warning": "Той, хто запускає цей сервіс, може читати ваш профіль, чати та статті, які Мера Ньюз читає для вас.",
       "switch": "Використовувати цей сервіс",
       "confirmTitle": "Використовувати власний сервіс ШІ?",
       "confirmYes": "Використовувати",
@@ -3482,10 +3482,10 @@
         "uses": "Ранжування, пояснення та чат використовуватимуть ваш сервіс.",
         "off": "Пошук у мережі та перевірки фактів вимкнено.",
         "verify": "«Перевірити засвідчення» приховано. Ця перевірка стосується лише приватної хмари.",
-        "model": "How well Мера Ньюз ranks and explains the news depends on the model you choose."
+        "model": "Наскільки добре Мера Ньюз ранжує й пояснює новини, залежить від обраної вами моделі."
       },
-      "line": "Your AI service isn't answering. Check it in Протокол Мера.",
-      "confirmBody": "Your profile, your chats and the articles Мера Ньюз reads for you go to this service. Whoever runs it can read them and decides how they are used. Мера Лабс still can't see your profile or your chats."
+      "line": "Ваш сервіс ШІ не відповідає. Перевірте його в Протоколі Мера.",
+      "confirmBody": "Ваш профіль, ваші чати і статті, які Мера Ньюз читає для вас, передаються цьому сервісу. Той, хто його запускає, може їх читати й вирішує, як їх використовувати. Мера Лабс і досі не може бачити ваш профіль чи чати."
     },
     "news": {
       "title": "Ваш власний новинний сервер",
@@ -3502,9 +3502,9 @@
         "intro": "Ваш новинний сервер не пропонує цього. Мера Ньюз показує ці сторінки порожніми.",
         "unknown": "Ваш новинний сервер не повідомив, що він пропонує. Сторінки, які він не може показати, лишаються порожніми."
       },
-      "line": "Your news server isn't answering.",
-      "confirmTitle": "Use your own news server?",
-      "confirmBody": "Your topics go to this server. Whoever runs it can read them and decides how they are used. Мера Лабс still can't see your profile or your chats."
+      "line": "Ваш новинний сервер не відповідає.",
+      "confirmTitle": "Використовувати ваш власний новинний сервер?",
+      "confirmBody": "Ваші теми передаються цьому серверу. Той, хто його запускає, може їх читати й вирішує, як їх використовувати. Мера Лабс і досі не може бачити ваш профіль чи чати."
     },
     "feature": {
       "search": "Пошук",
@@ -3517,59 +3517,59 @@
       "storyGrouping": "Групування історій",
       "publicationNames": "Назви видань"
     },
-    "podRow": "Your own Мера Ньюз server",
-    "usingPod": "Using your own Мера Ньюз server",
+    "podRow": "Ваш власний сервер Мера Ньюз",
+    "usingPod": "Використовується ваш власний сервер Мера Ньюз",
     "pod": {
-      "title": "Your own Мера Ньюз server",
-      "intro": "Your server reads and ranks the news. This phone shows the results.",
-      "pairButton": "Pair with your server",
-      "enterCodeRow": "Enter code instead",
-      "pairTitle": "Pair with your server",
-      "pairStep1": "On your server, run the pairing command.",
-      "pairStep2": "Scan its code with the Камера, or open its link on this phone.",
-      "codeTitle": "Enter code",
-      "serverAddress": "Server address",
-      "code": "Pairing code",
-      "pair": "Pair",
-      "codeWrong": "This code didn't work.",
-      "codeExpired": "This code has expired. Run the pairing command again.",
-      "codeTooMany": "Too many tries. Try again in a minute.",
-      "confirmTitle": "Pair with {{host}}?",
-      "confirmBody": "Your server can see your profile, your chats and what you read. Pair only with a server you trust.",
-      "confirmOwnOff": "Your own AI service and news server turn off. Your server's are used instead.",
-      "alreadyPaired": "This phone is already paired with {{host}}. Unpair it first.",
-      "notSetUp": "Finish setting up Мера Ньюз, then open the link again.",
-      "linkInvalid": "This pairing link isn't valid.",
-      "server": "Server",
-      "lastSynced": "Last synced",
-      "readTheNews": "Read the news",
-      "syncNow": "Sync now",
-      "unpair": "Unpair",
+      "title": "Ваш власний сервер Мера Ньюз",
+      "intro": "Ваш сервер читає й ранжує новини. Цей телефон показує результати.",
+      "pairButton": "Під'єднати до вашого сервера",
+      "enterCodeRow": "Ввести код натомість",
+      "pairTitle": "Під'єднати до вашого сервера",
+      "pairStep1": "На вашому сервері запустіть команду під'єднання.",
+      "pairStep2": "Скануйте його код у застосунку Камера або відкрийте його посилання на цьому телефоні.",
+      "codeTitle": "Введіть код",
+      "serverAddress": "Адреса сервера",
+      "code": "Код під'єднання",
+      "pair": "Під'єднати",
+      "codeWrong": "Цей код не спрацював.",
+      "codeExpired": "Термін дії цього коду минув. Виконайте команду під'єднання ще раз.",
+      "codeTooMany": "Забагато спроб. Спробуйте ще раз за хвилину.",
+      "confirmTitle": "Під'єднати до {{host}}?",
+      "confirmBody": "Ваш сервер може бачити ваш профіль, ваші чати і те, що ви читаєте. Під'єднуйте лише сервер, якому ви довіряєте.",
+      "confirmOwnOff": "Ваш власний сервіс ШІ і новинний сервер вимкнуться. Замість них використовуватимуться ті, що на вашому сервері.",
+      "alreadyPaired": "Цей телефон уже під'єднано до {{host}}. Спершу від'єднайте його.",
+      "notSetUp": "Завершіть налаштування Мера Ньюз, а потім відкрийте посилання знову.",
+      "linkInvalid": "Це посилання для під'єднання недійсне.",
+      "server": "Сервер",
+      "lastSynced": "Востаннє синхронізовано",
+      "readTheNews": "Читати новини",
+      "syncNow": "Синхронізувати зараз",
+      "unpair": "Від'єднати",
       "status": {
-        "unreachable": "Can't reach your server. Showing what this phone has.",
-        "refused": "Your server refused this phone. Pair again.",
-        "serverOld": "Your server needs an update.",
-        "phoneOld": "Update Мера Ньюз to keep syncing."
+        "unreachable": "Немає зв'язку з вашим сервером. Показано те, що є на цьому телефоні.",
+        "refused": "Ваш сервер відхилив цей телефон. Під'єднайте його знову.",
+        "serverOld": "Вашому серверу потрібне оновлення.",
+        "phoneOld": "Оновіть Мера Ньюз, щоб синхронізація продовжувала працювати."
       },
-      "pairAgain": "Pair again",
-      "unpairTitle": "Unpair this phone?",
-      "unpairBody": "This phone keeps its copy and stops using your server. Your server keeps its copy too.",
-      "line": "Can't reach your server.",
-      "unpairFirst": "Unpair your server first.",
-      "confirmErase": "Everything Мера Ньюз keeps on this phone is erased, and this phone then shows only what your server holds.",
-      "backupsOffConfirm": "Backup stays off while this phone is paired.",
-      "erasePair": "Erase and pair",
-      "pageNote": "Whoever runs your server decides how your data is used. Мера Лабс still can't see your profile or your chats.",
-      "alreadyPairedElsewhere": "Your server is already paired with another device. Unpair that device first.",
-      "backupsOff": "Backups are off while this phone is paired with your server. Your earlier backups stay where they are.",
-      "codePhoneOld": "Update Мера Ньюз to pair with this server.",
+      "pairAgain": "Під'єднати знову",
+      "unpairTitle": "Від'єднати цей телефон?",
+      "unpairBody": "Цей телефон зберігає свою копію і припиняє використовувати ваш сервер. Ваш сервер теж зберігає свою копію.",
+      "line": "Немає зв'язку з вашим сервером.",
+      "unpairFirst": "Спершу від'єднайте ваш сервер.",
+      "confirmErase": "Усе, що Мера Ньюз зберігає на цьому телефоні, буде стерто, а тоді цей телефон показуватиме лише те, що є на вашому сервері.",
+      "backupsOffConfirm": "Резервне копіювання залишається вимкненим, поки цей телефон під'єднано.",
+      "erasePair": "Стерти і під'єднати",
+      "pageNote": "Той, хто запускає ваш сервер, вирішує, як використовуються ваші дані. Мера Лабс і досі не може бачити ваш профіль чи чати.",
+      "alreadyPairedElsewhere": "Ваш сервер уже під'єднано до іншого пристрою. Спершу від'єднайте той пристрій.",
+      "backupsOff": "Резервне копіювання вимкнено, поки цей телефон під'єднано до вашого сервера. Ваші попередні резервні копії залишаються там, де були.",
+      "codePhoneOld": "Оновіть Мера Ньюз, щоб під'єднатися до цього сервера.",
       "toast": {
-        "unreachable": "Can't reach your server. Nothing was changed.",
-        "failed": "Your server couldn't save this. Try again."
+        "unreachable": "Немає зв'язку з вашим сервером. Нічого не змінено.",
+        "failed": "Ваш сервер не зміг це зберегти. Спробуйте ще раз."
       },
-      "backupRunning": "A backup or restore is running. Try again when it ends."
+      "backupRunning": "Триває резервне копіювання або відновлення. Спробуйте ще раз, коли воно завершиться."
     },
-    "logoutPaired": "This phone is also unpaired from your server.",
-    "logoutOwn": "Your own service settings are removed from this phone."
+    "logoutPaired": "Цей телефон також від'єднується від вашого сервера.",
+    "logoutOwn": "Налаштування власних сервісів видаляються з цього телефона."
   }
 }

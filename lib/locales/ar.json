@@ -3601,7 +3601,7 @@
         "busy": "هذه الخدمة مشغولة. حاول مرة أخرى بعد دقيقة.",
         "failing": "واجهت هذه الخدمة مشكلة. حاول لاحقاً."
       },
-      "warning": "لا تحتوي هذه الخدمة على حوسبة سرية. ملفك الشخصي ودردشاتك والمقالات التي تقرأها ميرا نيوز نيابةً عنك تصل جميعها إلى من يشغّل الخدمة.",
+      "warning": "من يشغّل هذه الخدمة يستطيع قراءة ملفك الشخصي ومحادثاتك والمقالات التي تقرؤها لك ميرا نيوز.",
       "switch": "استخدم هذه الخدمة",
       "confirmTitle": "هل تريد استخدام خدمة الذكاء الاصطناعي الخاصة بك؟",
       "confirmYes": "استخدمها",
@@ -3611,10 +3611,10 @@
         "uses": "يستخدم الترتيب والأسباب والدردشة خدمتك.",
         "off": "البحث على الويب والتحقق من الحقائق متوقفان.",
         "verify": "«تحقق من الشهادة» مخفي. وهو يتحقق من السحابة الخاصة فقط.",
-        "model": "How well ميرا نيوز ranks and explains the news depends on the model you choose."
+        "model": "تعتمد جودة ترتيب ميرا نيوز للأخبار وشرحها على النموذج الذي تختاره."
       },
-      "line": "Your AI service isn't answering. Check it in بروتوكول ميرا.",
-      "confirmBody": "Your profile, your chats and the articles ميرا نيوز reads for you go to this service. Whoever runs it can read them and decides how they are used. ميرا لابز still can't see your profile or your chats."
+      "line": "خدمة الذكاء الاصطناعي الخاصة بك لا تستجيب. تحقق منها في بروتوكول ميرا.",
+      "confirmBody": "يُرسَل ملفك الشخصي ومحادثاتك والمقالات التي تقرؤها لك ميرا نيوز إلى هذه الخدمة. من يشغّلها يستطيع قراءتها، وهو من يقرر كيف تُستخدم. ولا تزال ميرا لابز غير قادرة على رؤية ملفك الشخصي أو محادثاتك."
     },
     "news": {
       "title": "خادم الأخبار الخاص بك",
@@ -3631,9 +3631,9 @@
         "intro": "لا يقدّم خادم أخبارك هذه الميزات. تعرض ميرا نيوز هذه الصفحات فارغة.",
         "unknown": "لم يذكر خادم أخبارك ما يقدّمه. ستبقى الصفحات التي لا يستطيع عرضها فارغة."
       },
-      "line": "Your news server isn't answering.",
-      "confirmTitle": "Use your own news server?",
-      "confirmBody": "Your topics go to this server. Whoever runs it can read them and decides how they are used. ميرا لابز still can't see your profile or your chats."
+      "line": "خادم الأخبار الخاص بك لا يستجيب.",
+      "confirmTitle": "هل تريد استخدام خادم الأخبار الخاص بك؟",
+      "confirmBody": "تنتقل موضوعاتك إلى هذا الخادم. يستطيع من يشغّله قراءتها، وهو من يقرر كيف تُستخدم. ولا تزال ميرا لابز غير قادرة على رؤية ملفك الشخصي أو محادثاتك."
     },
     "feature": {
       "search": "البحث",
@@ -3646,59 +3646,59 @@
       "storyGrouping": "تجميع القصص",
       "publicationNames": "أسماء الناشرين"
     },
-    "podRow": "Your own ميرا نيوز server",
-    "usingPod": "Using your own ميرا نيوز server",
+    "podRow": "خادم ميرا نيوز الخاص بك",
+    "usingPod": "يُستخدم خادم ميرا نيوز الخاص بك",
     "pod": {
-      "title": "Your own ميرا نيوز server",
-      "intro": "Your server reads and ranks the news. This phone shows the results.",
-      "pairButton": "Pair with your server",
-      "enterCodeRow": "Enter code instead",
-      "pairTitle": "Pair with your server",
-      "pairStep1": "On your server, run the pairing command.",
-      "pairStep2": "Scan its code with the تطبيق الكاميرا, or open its link on this phone.",
-      "codeTitle": "Enter code",
-      "serverAddress": "Server address",
-      "code": "Pairing code",
-      "pair": "Pair",
-      "codeWrong": "This code didn't work.",
-      "codeExpired": "This code has expired. Run the pairing command again.",
-      "codeTooMany": "Too many tries. Try again in a minute.",
-      "confirmTitle": "Pair with {{host}}?",
-      "confirmBody": "Your server can see your profile, your chats and what you read. Pair only with a server you trust.",
-      "confirmOwnOff": "Your own AI service and news server turn off. Your server's are used instead.",
-      "alreadyPaired": "This phone is already paired with {{host}}. Unpair it first.",
-      "notSetUp": "Finish setting up ميرا نيوز, then open the link again.",
-      "linkInvalid": "This pairing link isn't valid.",
-      "server": "Server",
-      "lastSynced": "Last synced",
-      "readTheNews": "Read the news",
-      "syncNow": "Sync now",
-      "unpair": "Unpair",
+      "title": "خادم ميرا نيوز الخاص بك",
+      "intro": "خادمك يقرأ الأخبار ويرتبها. ويعرض هذا الهاتف النتائج.",
+      "pairButton": "اقترن بخادمك",
+      "enterCodeRow": "أدخل الرمز بدلاً من ذلك",
+      "pairTitle": "الإقران مع خادمك",
+      "pairStep1": "على خادمك، شغّل أمر الإقران.",
+      "pairStep2": "امسح رمزه بتطبيق الكاميرا، أو افتح رابطه على هذا الهاتف.",
+      "codeTitle": "أدخل الرمز",
+      "serverAddress": "عنوان الخادم",
+      "code": "رمز الإقران",
+      "pair": "إقران",
+      "codeWrong": "هذا الرمز غير صحيح.",
+      "codeExpired": "انتهت صلاحية هذا الرمز. شغّل أمر الإقران مرة أخرى.",
+      "codeTooMany": "محاولات كثيرة جداً. حاول مرة أخرى بعد دقيقة.",
+      "confirmTitle": "هل تريد الإقران مع {{host}}؟",
+      "confirmBody": "يستطيع خادمك رؤية ملفك الشخصي ومحادثاتك وما تقرؤه. اقترن فقط بخادم تثق به.",
+      "confirmOwnOff": "تتوقف خدمة الذكاء الاصطناعي الخاصة بك وخادم الأخبار الخاص بك. وتُستخدم خدمات خادمك بدلاً منهما.",
+      "alreadyPaired": "هذا الهاتف مقترن بالفعل مع {{host}}. ألغِ الإقران أولاً.",
+      "notSetUp": "أكمِل إعداد ميرا نيوز، ثم افتح الرابط مرة أخرى.",
+      "linkInvalid": "رابط الإقران هذا غير صالح.",
+      "server": "الخادم",
+      "lastSynced": "آخر مزامنة",
+      "readTheNews": "اقرأ الأخبار",
+      "syncNow": "زامن الآن",
+      "unpair": "إلغاء الإقران",
       "status": {
-        "unreachable": "Can't reach your server. Showing what this phone has.",
-        "refused": "Your server refused this phone. Pair again.",
-        "serverOld": "Your server needs an update.",
-        "phoneOld": "Update ميرا نيوز to keep syncing."
+        "unreachable": "تعذّر الوصول إلى خادمك. يعرض هذا الهاتف ما لديه.",
+        "refused": "رفض خادمك هذا الهاتف. أعد الإقران.",
+        "serverOld": "يحتاج خادمك إلى تحديث.",
+        "phoneOld": "حدّث ميرا نيوز لمتابعة المزامنة."
       },
-      "pairAgain": "Pair again",
-      "unpairTitle": "Unpair this phone?",
-      "unpairBody": "This phone keeps its copy and stops using your server. Your server keeps its copy too.",
-      "line": "Can't reach your server.",
-      "unpairFirst": "Unpair your server first.",
-      "confirmErase": "Everything ميرا نيوز keeps on this phone is erased, and this phone then shows only what your server holds.",
-      "backupsOffConfirm": "Backup stays off while this phone is paired.",
-      "erasePair": "Erase and pair",
-      "pageNote": "Whoever runs your server decides how your data is used. ميرا لابز still can't see your profile or your chats.",
-      "alreadyPairedElsewhere": "Your server is already paired with another device. Unpair that device first.",
-      "backupsOff": "Backups are off while this phone is paired with your server. Your earlier backups stay where they are.",
-      "codePhoneOld": "Update ميرا نيوز to pair with this server.",
+      "pairAgain": "أعد الإقران",
+      "unpairTitle": "هل تريد إلغاء الإقران لهذا الهاتف؟",
+      "unpairBody": "يحتفظ هذا الهاتف بنسخته ويتوقف عن استخدام خادمك. ويحتفظ خادمك بنسخته أيضاً.",
+      "line": "تعذّر الوصول إلى خادمك.",
+      "unpairFirst": "ألغِ الإقران مع خادمك أولاً.",
+      "confirmErase": "تُحذف كل البيانات التي تحتفظ بها ميرا نيوز على هذا الهاتف، ثم لا يعرض هذا الهاتف إلا ما يحتفظ به خادمك.",
+      "backupsOffConfirm": "يبقى النسخ الاحتياطي متوقفاً ما دام هذا الهاتف مقترناً.",
+      "erasePair": "احذف واقترن",
+      "pageNote": "من يشغّل خادمك هو من يقرر كيف تُستخدم بياناتك. ولا تزال ميرا لابز غير قادرة على رؤية ملفك الشخصي أو محادثاتك.",
+      "alreadyPairedElsewhere": "خادمك مقترن بالفعل بجهاز آخر. ألغِ الإقران مع ذلك الجهاز أولاً.",
+      "backupsOff": "النسخ الاحتياطية متوقفة ما دام هذا الهاتف مقترناً بخادمك. تبقى نسخك الاحتياطية السابقة حيث هي.",
+      "codePhoneOld": "حدّث ميرا نيوز للإقران مع هذا الخادم.",
       "toast": {
-        "unreachable": "Can't reach your server. Nothing was changed.",
-        "failed": "Your server couldn't save this. Try again."
+        "unreachable": "تعذّر الوصول إلى خادمك. لم يتغيّر شيء.",
+        "failed": "تعذّر على خادمك حفظ هذا. حاول مرة أخرى."
       },
-      "backupRunning": "A backup or restore is running. Try again when it ends."
+      "backupRunning": "تجري الآن عملية نسخ احتياطي أو استعادة. حاول مرة أخرى عند انتهائها."
     },
-    "logoutPaired": "This phone is also unpaired from your server.",
-    "logoutOwn": "Your own service settings are removed from this phone."
+    "logoutPaired": "يتم أيضاً إلغاء الإقران بين هذا الهاتف وخادمك.",
+    "logoutOwn": "تُحذف إعدادات خدمتك الخاصة من هذا الهاتف."
   }
 }

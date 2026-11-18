@@ -3303,7 +3303,7 @@
         "busy": "Layanan ini sedang sibuk. Coba lagi dalam semenit.",
         "failing": "Layanan ini mengalami masalah. Coba lagi nanti."
       },
-      "warning": "Layanan ini tidak memiliki komputasi rahasia. Profil Anda, obrolan Anda, dan artikel yang dibaca Mera News untuk Anda dikirim ke siapa pun yang menjalankannya.",
+      "warning": "Siapa pun yang menjalankan layanan ini bisa membaca profil, obrolan, dan artikel yang dibaca Mera News untuk Anda.",
       "switch": "Gunakan layanan ini",
       "confirmTitle": "Gunakan layanan AI milik Anda?",
       "confirmYes": "Gunakan",
@@ -3313,10 +3313,10 @@
         "uses": "Pemeringkatan, alasan, dan obrolan memakai layanan Anda.",
         "off": "Pencarian web dan pemeriksaan fakta dimatikan.",
         "verify": "“Verifikasi atestasi” disembunyikan. Fitur ini hanya memeriksa cloud pribadi.",
-        "model": "How well Mera News ranks and explains the news depends on the model you choose."
+        "model": "Seberapa baik Mera News menyusun dan menjelaskan berita bergantung pada model yang Anda pilih."
       },
-      "line": "Your AI service isn't answering. Check it in Mera Protocol.",
-      "confirmBody": "Your profile, your chats and the articles Mera News reads for you go to this service. Whoever runs it can read them and decides how they are used. Mera Labs still can't see your profile or your chats."
+      "line": "Layanan AI Anda tidak merespons. Periksa di Mera Protocol.",
+      "confirmBody": "Profil, obrolan, dan artikel yang dibaca Mera News untuk Anda dikirim ke layanan ini. Siapa pun yang menjalankannya bisa membacanya dan memutuskan cara pemakaiannya. Mera Labs tetap tidak bisa melihat profil atau obrolan Anda."
     },
     "news": {
       "title": "Server berita milik Anda",
@@ -3333,9 +3333,9 @@
         "intro": "Server berita Anda tidak menawarkan ini. Mera News menampilkannya dalam keadaan kosong.",
         "unknown": "Server berita Anda tidak menyebutkan apa yang ditawarkannya. Halaman yang tidak dapat ditampilkan akan tetap kosong."
       },
-      "line": "Your news server isn't answering.",
-      "confirmTitle": "Use your own news server?",
-      "confirmBody": "Your topics go to this server. Whoever runs it can read them and decides how they are used. Mera Labs still can't see your profile or your chats."
+      "line": "Server berita Anda tidak merespons.",
+      "confirmTitle": "Gunakan server berita milik Anda?",
+      "confirmBody": "Topik Anda dikirim ke server ini. Siapa pun yang menjalankannya bisa membacanya dan memutuskan cara pemakaiannya. Mera Labs tetap tidak bisa melihat profil atau obrolan Anda."
     },
     "feature": {
       "search": "Pencarian",
@@ -3348,59 +3348,59 @@
       "storyGrouping": "Pengelompokan cerita",
       "publicationNames": "Nama penerbit"
     },
-    "podRow": "Your own Mera News server",
-    "usingPod": "Using your own Mera News server",
+    "podRow": "Server Mera News milik Anda",
+    "usingPod": "Menggunakan server Mera News milik Anda",
     "pod": {
-      "title": "Your own Mera News server",
-      "intro": "Your server reads and ranks the news. This phone shows the results.",
-      "pairButton": "Pair with your server",
-      "enterCodeRow": "Enter code instead",
-      "pairTitle": "Pair with your server",
-      "pairStep1": "On your server, run the pairing command.",
-      "pairStep2": "Scan its code with the Camera app, or open its link on this phone.",
-      "codeTitle": "Enter code",
-      "serverAddress": "Server address",
-      "code": "Pairing code",
-      "pair": "Pair",
-      "codeWrong": "This code didn't work.",
-      "codeExpired": "This code has expired. Run the pairing command again.",
-      "codeTooMany": "Too many tries. Try again in a minute.",
-      "confirmTitle": "Pair with {{host}}?",
-      "confirmBody": "Your server can see your profile, your chats and what you read. Pair only with a server you trust.",
-      "confirmOwnOff": "Your own AI service and news server turn off. Your server's are used instead.",
-      "alreadyPaired": "This phone is already paired with {{host}}. Unpair it first.",
-      "notSetUp": "Finish setting up Mera News, then open the link again.",
-      "linkInvalid": "This pairing link isn't valid.",
+      "title": "Server Mera News milik Anda",
+      "intro": "Server Anda membaca dan menyusun berita. Ponsel ini menampilkan hasilnya.",
+      "pairButton": "Pasangkan dengan server Anda",
+      "enterCodeRow": "Masukkan kode sebagai gantinya",
+      "pairTitle": "Pasangkan dengan server Anda",
+      "pairStep1": "Di server Anda, jalankan perintah pemasangan.",
+      "pairStep2": "Pindai kodenya dengan aplikasi Kamera, atau buka tautannya di ponsel ini.",
+      "codeTitle": "Masukkan kode",
+      "serverAddress": "Alamat server",
+      "code": "Kode pemasangan",
+      "pair": "Pasangkan",
+      "codeWrong": "Kode ini tidak berhasil.",
+      "codeExpired": "Kode ini sudah kedaluwarsa. Jalankan lagi perintah pemasangan.",
+      "codeTooMany": "Terlalu banyak percobaan. Coba lagi dalam satu menit.",
+      "confirmTitle": "Pasangkan dengan {{host}}?",
+      "confirmBody": "Server Anda bisa melihat profil, obrolan, dan apa yang Anda baca. Pasangkan hanya dengan server yang Anda percaya.",
+      "confirmOwnOff": "Layanan AI milik Anda dan server berita milik Anda dimatikan. Server Anda dipakai sebagai gantinya.",
+      "alreadyPaired": "Ponsel ini sudah dipasangkan dengan {{host}}. Lepas pasangan dulu.",
+      "notSetUp": "Selesaikan pengaturan Mera News, lalu buka tautan itu lagi.",
+      "linkInvalid": "Tautan pemasangan ini tidak valid.",
       "server": "Server",
-      "lastSynced": "Last synced",
-      "readTheNews": "Read the news",
-      "syncNow": "Sync now",
-      "unpair": "Unpair",
+      "lastSynced": "Terakhir disinkronkan",
+      "readTheNews": "Baca berita",
+      "syncNow": "Sinkronkan sekarang",
+      "unpair": "Lepas pasangan",
       "status": {
-        "unreachable": "Can't reach your server. Showing what this phone has.",
-        "refused": "Your server refused this phone. Pair again.",
-        "serverOld": "Your server needs an update.",
-        "phoneOld": "Update Mera News to keep syncing."
+        "unreachable": "Tidak bisa menjangkau server Anda. Menampilkan apa yang ada di ponsel ini.",
+        "refused": "Server Anda menolak ponsel ini. Pasangkan lagi.",
+        "serverOld": "Server Anda perlu diperbarui.",
+        "phoneOld": "Perbarui Mera News agar tetap tersinkron."
       },
-      "pairAgain": "Pair again",
-      "unpairTitle": "Unpair this phone?",
-      "unpairBody": "This phone keeps its copy and stops using your server. Your server keeps its copy too.",
-      "line": "Can't reach your server.",
-      "unpairFirst": "Unpair your server first.",
-      "confirmErase": "Everything Mera News keeps on this phone is erased, and this phone then shows only what your server holds.",
-      "backupsOffConfirm": "Backup stays off while this phone is paired.",
-      "erasePair": "Erase and pair",
-      "pageNote": "Whoever runs your server decides how your data is used. Mera Labs still can't see your profile or your chats.",
-      "alreadyPairedElsewhere": "Your server is already paired with another device. Unpair that device first.",
-      "backupsOff": "Backups are off while this phone is paired with your server. Your earlier backups stay where they are.",
-      "codePhoneOld": "Update Mera News to pair with this server.",
+      "pairAgain": "Pasangkan lagi",
+      "unpairTitle": "Lepas pasangan ponsel ini?",
+      "unpairBody": "Ponsel ini menyimpan salinannya dan berhenti memakai server Anda. Server Anda juga menyimpan salinannya.",
+      "line": "Tidak bisa menjangkau server Anda.",
+      "unpairFirst": "Lepas pasangan server Anda terlebih dahulu.",
+      "confirmErase": "Semua yang disimpan Mera News di ponsel ini dihapus, dan ponsel ini kemudian hanya menampilkan apa yang disimpan server Anda.",
+      "backupsOffConfirm": "Pencadangan tetap dimatikan selama ponsel ini dipasangkan.",
+      "erasePair": "Hapus dan pasangkan",
+      "pageNote": "Siapa pun yang menjalankan server Anda memutuskan bagaimana data Anda dipakai. Mera Labs tetap tidak bisa melihat profil atau obrolan Anda.",
+      "alreadyPairedElsewhere": "Server Anda sudah dipasangkan dengan perangkat lain. Lepas pasangan perangkat itu dulu.",
+      "backupsOff": "Pencadangan dimatikan selama ponsel ini dipasangkan dengan server Anda. Pencadangan Anda sebelumnya tetap tersimpan di tempatnya.",
+      "codePhoneOld": "Perbarui Mera News untuk memasangkan dengan server ini.",
       "toast": {
-        "unreachable": "Can't reach your server. Nothing was changed.",
-        "failed": "Your server couldn't save this. Try again."
+        "unreachable": "Tidak bisa menjangkau server Anda. Tidak ada yang diubah.",
+        "failed": "Server Anda tidak dapat menyimpan ini. Coba lagi."
       },
-      "backupRunning": "A backup or restore is running. Try again when it ends."
+      "backupRunning": "Pencadangan atau pemulihan sedang berjalan. Coba lagi setelah selesai."
     },
-    "logoutPaired": "This phone is also unpaired from your server.",
-    "logoutOwn": "Your own service settings are removed from this phone."
+    "logoutPaired": "Pemasangan ponsel ini dengan server Anda juga dilepas.",
+    "logoutOwn": "Pengaturan layanan milik Anda dihapus dari ponsel ini."
   }
 }

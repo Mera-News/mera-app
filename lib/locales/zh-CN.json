@@ -3303,7 +3303,7 @@
         "busy": "此服务繁忙。请一分钟后再试。",
         "failing": "此服务出现问题。请稍后再试。"
       },
-      "warning": "此服务没有机密计算。你的个人资料、你的聊天记录，以及梅拉新闻为你阅读的文章，都会交给该服务的运营方。",
+      "warning": "运行这项服务的人，可以读取你的资料、聊天记录，以及梅拉新闻为你阅读的文章。",
       "switch": "使用此服务",
       "confirmTitle": "要使用你自己的 AI 服务吗？",
       "confirmYes": "使用",
@@ -3313,10 +3313,10 @@
         "uses": "排序、理由和聊天会使用你的服务。",
         "off": "网页搜索和事实核查将关闭。",
         "verify": "「验证证明」已隐藏。它只检查私有云。",
-        "model": "How well 梅拉新闻 ranks and explains the news depends on the model you choose."
+        "model": "梅拉新闻为新闻排序和解读的效果，取决于你选择的模型。"
       },
-      "line": "Your AI service isn't answering. Check it in 梅拉协议.",
-      "confirmBody": "Your profile, your chats and the articles 梅拉新闻 reads for you go to this service. Whoever runs it can read them and decides how they are used. 梅拉实验室 still can't see your profile or your chats."
+      "line": "你的 AI 服务没有响应。在梅拉协议中检查它。",
+      "confirmBody": "你的资料、聊天记录，以及梅拉新闻为你阅读的文章，会发送到这项服务。运行它的人可以看到这些内容，并决定如何使用。梅拉实验室仍然看不到你的资料或聊天记录。"
     },
     "news": {
       "title": "你自己的新闻服务器",
@@ -3333,9 +3333,9 @@
         "intro": "你的新闻服务器不提供这些内容。梅拉新闻会将这些页面显示为空。",
         "unknown": "你的新闻服务器没有说明它提供哪些内容。它无法显示的页面会保持为空。"
       },
-      "line": "Your news server isn't answering.",
-      "confirmTitle": "Use your own news server?",
-      "confirmBody": "Your topics go to this server. Whoever runs it can read them and decides how they are used. 梅拉实验室 still can't see your profile or your chats."
+      "line": "你的新闻服务器没有响应。",
+      "confirmTitle": "要使用你自己的新闻服务器吗？",
+      "confirmBody": "你的话题会发送到这台服务器。运行它的人可以读取这些内容，并决定如何使用。梅拉实验室仍然看不到你的资料或聊天记录。"
     },
     "feature": {
       "search": "搜索",
@@ -3348,59 +3348,59 @@
       "storyGrouping": "报道分组",
       "publicationNames": "媒体名称"
     },
-    "podRow": "Your own 梅拉新闻 server",
-    "usingPod": "Using your own 梅拉新闻 server",
+    "podRow": "你自己的梅拉新闻服务器",
+    "usingPod": "正在使用你自己的梅拉新闻服务器",
     "pod": {
-      "title": "Your own 梅拉新闻 server",
-      "intro": "Your server reads and ranks the news. This phone shows the results.",
-      "pairButton": "Pair with your server",
-      "enterCodeRow": "Enter code instead",
-      "pairTitle": "Pair with your server",
-      "pairStep1": "On your server, run the pairing command.",
-      "pairStep2": "Scan its code with the 相机应用, or open its link on this phone.",
-      "codeTitle": "Enter code",
-      "serverAddress": "Server address",
-      "code": "Pairing code",
-      "pair": "Pair",
-      "codeWrong": "This code didn't work.",
-      "codeExpired": "This code has expired. Run the pairing command again.",
-      "codeTooMany": "Too many tries. Try again in a minute.",
-      "confirmTitle": "Pair with {{host}}?",
-      "confirmBody": "Your server can see your profile, your chats and what you read. Pair only with a server you trust.",
-      "confirmOwnOff": "Your own AI service and news server turn off. Your server's are used instead.",
-      "alreadyPaired": "This phone is already paired with {{host}}. Unpair it first.",
-      "notSetUp": "Finish setting up 梅拉新闻, then open the link again.",
-      "linkInvalid": "This pairing link isn't valid.",
-      "server": "Server",
-      "lastSynced": "Last synced",
-      "readTheNews": "Read the news",
-      "syncNow": "Sync now",
-      "unpair": "Unpair",
+      "title": "你自己的梅拉新闻服务器",
+      "intro": "你的服务器负责读取并排序新闻。这部手机负责显示结果。",
+      "pairButton": "与你的服务器配对",
+      "enterCodeRow": "改为输入配对码",
+      "pairTitle": "与你的服务器配对",
+      "pairStep1": "在你的服务器上运行配对命令。",
+      "pairStep2": "用相机应用扫描其中的代码，或在这部手机上打开其链接。",
+      "codeTitle": "输入配对码",
+      "serverAddress": "服务器地址",
+      "code": "配对码",
+      "pair": "配对",
+      "codeWrong": "此配对码无效。",
+      "codeExpired": "此配对码已过期。重新运行配对命令。",
+      "codeTooMany": "尝试次数过多。一分钟后再试。",
+      "confirmTitle": "要与{{host}}配对吗？",
+      "confirmBody": "你的服务器可以看到你的资料、聊天记录和你阅读的内容。只与你信任的服务器配对。",
+      "confirmOwnOff": "你自己的 AI 服务和你自己的新闻服务器将会关闭。改为使用你的服务器上的服务。",
+      "alreadyPaired": "这部手机已经与{{host}}配对。需要先取消配对。",
+      "notSetUp": "先完成梅拉新闻的设置，然后再打开此链接。",
+      "linkInvalid": "此配对链接无效。",
+      "server": "服务器",
+      "lastSynced": "上次同步",
+      "readTheNews": "阅读新闻",
+      "syncNow": "立即同步",
+      "unpair": "取消配对",
       "status": {
-        "unreachable": "Can't reach your server. Showing what this phone has.",
-        "refused": "Your server refused this phone. Pair again.",
-        "serverOld": "Your server needs an update.",
-        "phoneOld": "Update 梅拉新闻 to keep syncing."
+        "unreachable": "无法连接到你的服务器。正在显示这部手机上已有的内容。",
+        "refused": "你的服务器拒绝了这部手机。重新配对。",
+        "serverOld": "你的服务器需要更新。",
+        "phoneOld": "更新梅拉新闻以继续同步。"
       },
-      "pairAgain": "Pair again",
-      "unpairTitle": "Unpair this phone?",
-      "unpairBody": "This phone keeps its copy and stops using your server. Your server keeps its copy too.",
-      "line": "Can't reach your server.",
-      "unpairFirst": "Unpair your server first.",
-      "confirmErase": "Everything 梅拉新闻 keeps on this phone is erased, and this phone then shows only what your server holds.",
-      "backupsOffConfirm": "Backup stays off while this phone is paired.",
-      "erasePair": "Erase and pair",
-      "pageNote": "Whoever runs your server decides how your data is used. 梅拉实验室 still can't see your profile or your chats.",
-      "alreadyPairedElsewhere": "Your server is already paired with another device. Unpair that device first.",
-      "backupsOff": "Backups are off while this phone is paired with your server. Your earlier backups stay where they are.",
-      "codePhoneOld": "Update 梅拉新闻 to pair with this server.",
+      "pairAgain": "重新配对",
+      "unpairTitle": "要取消这部手机的配对吗？",
+      "unpairBody": "这部手机会保留其副本，并停止使用你的服务器。你的服务器也会保留它的副本。",
+      "line": "无法连接到你的服务器。",
+      "unpairFirst": "先取消与你的服务器的配对。",
+      "confirmErase": "梅拉新闻在这部手机上保存的所有内容都会被删除，之后这部手机只显示你的服务器所保存的内容。",
+      "backupsOffConfirm": "这部手机配对期间，备份保持关闭。",
+      "erasePair": "删除数据并配对",
+      "pageNote": "运行你服务器的人决定如何使用你的数据。梅拉实验室仍然看不到你的资料或聊天记录。",
+      "alreadyPairedElsewhere": "你的服务器已与另一台设备配对。需要先在那台设备上取消配对。",
+      "backupsOff": "这部手机与你的服务器配对期间，备份功能已关闭。你此前的备份仍保留在原处。",
+      "codePhoneOld": "更新梅拉新闻以与此服务器配对。",
       "toast": {
-        "unreachable": "Can't reach your server. Nothing was changed.",
-        "failed": "Your server couldn't save this. Try again."
+        "unreachable": "无法连接到你的服务器。未更改任何内容。",
+        "failed": "你的服务器无法保存此更改。再试一次。"
       },
-      "backupRunning": "A backup or restore is running. Try again when it ends."
+      "backupRunning": "正在进行备份或恢复。结束后再试。"
     },
-    "logoutPaired": "This phone is also unpaired from your server.",
-    "logoutOwn": "Your own service settings are removed from this phone."
+    "logoutPaired": "这部手机也已与你的服务器取消配对。",
+    "logoutOwn": "你自己的服务设置已从这部手机上移除。"
   }
 }

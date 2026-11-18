@@ -3303,7 +3303,7 @@
         "busy": "Dịch vụ này đang bận. Hãy thử lại sau một phút.",
         "failing": "Dịch vụ này gặp sự cố. Hãy thử lại sau."
       },
-      "warning": "Dịch vụ này không hỗ trợ điện toán bảo mật. Hồ sơ của bạn, cuộc trò chuyện và các bài báo Mera News đọc cho bạn đều được gửi tới người vận hành dịch vụ.",
+      "warning": "Người vận hành dịch vụ này có thể đọc hồ sơ, cuộc trò chuyện và các bài báo Mera News đọc cho bạn.",
       "switch": "Dùng dịch vụ này",
       "confirmTitle": "Dùng dịch vụ AI riêng của bạn?",
       "confirmYes": "Dùng",
@@ -3313,10 +3313,10 @@
         "uses": "Xếp hạng, lý do và trò chuyện sẽ dùng dịch vụ của bạn.",
         "off": "Tìm kiếm trên web và kiểm chứng sự kiện sẽ tắt.",
         "verify": "Xác minh chứng thực bị ẩn. Tính năng này chỉ kiểm tra đám mây riêng.",
-        "model": "How well Mera News ranks and explains the news depends on the model you choose."
+        "model": "Mera News xếp hạng và giải thích tin tức như thế nào tùy thuộc vào mô hình bạn chọn."
       },
-      "line": "Your AI service isn't answering. Check it in Mera Protocol.",
-      "confirmBody": "Your profile, your chats and the articles Mera News reads for you go to this service. Whoever runs it can read them and decides how they are used. Mera Labs still can't see your profile or your chats."
+      "line": "Dịch vụ AI của bạn không phản hồi. Hãy kiểm tra trong Mera Protocol.",
+      "confirmBody": "Hồ sơ, cuộc trò chuyện và các bài báo Mera News đọc cho bạn được gửi đến dịch vụ này. Người vận hành dịch vụ có thể đọc chúng và quyết định cách sử dụng. Mera Labs vẫn không thể xem hồ sơ hoặc cuộc trò chuyện của bạn."
     },
     "news": {
       "title": "Máy chủ tin tức riêng của bạn",
@@ -3333,9 +3333,9 @@
         "intro": "Máy chủ tin tức của bạn không cung cấp các mục này. Mera News hiển thị các trang này để trống.",
         "unknown": "Máy chủ tin tức của bạn không cho biết nó cung cấp những gì. Các trang nó không thể hiển thị sẽ để trống."
       },
-      "line": "Your news server isn't answering.",
-      "confirmTitle": "Use your own news server?",
-      "confirmBody": "Your topics go to this server. Whoever runs it can read them and decides how they are used. Mera Labs still can't see your profile or your chats."
+      "line": "Máy chủ tin tức của bạn không phản hồi.",
+      "confirmTitle": "Dùng máy chủ tin tức riêng của bạn?",
+      "confirmBody": "Chủ đề của bạn được gửi đến máy chủ này. Người vận hành máy chủ có thể đọc chúng và quyết định cách sử dụng. Mera Labs vẫn không thể xem hồ sơ hoặc cuộc trò chuyện của bạn."
     },
     "feature": {
       "search": "Tìm kiếm",
@@ -3348,59 +3348,59 @@
       "storyGrouping": "Gom nhóm tin",
       "publicationNames": "Tên nguồn tin"
     },
-    "podRow": "Your own Mera News server",
-    "usingPod": "Using your own Mera News server",
+    "podRow": "Máy chủ Mera News riêng của bạn",
+    "usingPod": "Đang dùng máy chủ Mera News riêng của bạn",
     "pod": {
-      "title": "Your own Mera News server",
-      "intro": "Your server reads and ranks the news. This phone shows the results.",
-      "pairButton": "Pair with your server",
-      "enterCodeRow": "Enter code instead",
-      "pairTitle": "Pair with your server",
-      "pairStep1": "On your server, run the pairing command.",
-      "pairStep2": "Scan its code with the Camera app, or open its link on this phone.",
-      "codeTitle": "Enter code",
-      "serverAddress": "Server address",
-      "code": "Pairing code",
-      "pair": "Pair",
-      "codeWrong": "This code didn't work.",
-      "codeExpired": "This code has expired. Run the pairing command again.",
-      "codeTooMany": "Too many tries. Try again in a minute.",
-      "confirmTitle": "Pair with {{host}}?",
-      "confirmBody": "Your server can see your profile, your chats and what you read. Pair only with a server you trust.",
-      "confirmOwnOff": "Your own AI service and news server turn off. Your server's are used instead.",
-      "alreadyPaired": "This phone is already paired with {{host}}. Unpair it first.",
-      "notSetUp": "Finish setting up Mera News, then open the link again.",
-      "linkInvalid": "This pairing link isn't valid.",
-      "server": "Server",
-      "lastSynced": "Last synced",
-      "readTheNews": "Read the news",
-      "syncNow": "Sync now",
-      "unpair": "Unpair",
+      "title": "Máy chủ Mera News riêng của bạn",
+      "intro": "Máy chủ của bạn đọc và xếp hạng tin tức. Điện thoại này hiển thị kết quả.",
+      "pairButton": "Ghép nối với máy chủ của bạn",
+      "enterCodeRow": "Nhập mã thay thế",
+      "pairTitle": "Ghép nối với máy chủ của bạn",
+      "pairStep1": "Trên máy chủ của bạn, chạy lệnh ghép nối.",
+      "pairStep2": "Quét mã của máy chủ bằng ứng dụng Camera, hoặc mở liên kết của máy chủ trên điện thoại này.",
+      "codeTitle": "Nhập mã",
+      "serverAddress": "Địa chỉ máy chủ",
+      "code": "Mã ghép nối",
+      "pair": "Ghép nối",
+      "codeWrong": "Mã này không dùng được.",
+      "codeExpired": "Mã này đã hết hạn. Hãy chạy lại lệnh ghép nối.",
+      "codeTooMany": "Đã thử quá nhiều lần. Hãy thử lại sau một phút.",
+      "confirmTitle": "Ghép nối với {{host}}?",
+      "confirmBody": "Máy chủ của bạn có thể xem hồ sơ, cuộc trò chuyện và những gì bạn đọc. Chỉ ghép nối với máy chủ bạn tin cậy.",
+      "confirmOwnOff": "Dịch vụ AI riêng của bạn và máy chủ tin tức riêng của bạn sẽ tắt. Máy chủ của bạn sẽ được dùng thay thế.",
+      "alreadyPaired": "Điện thoại này đã được ghép nối với {{host}}. Hãy hủy ghép nối trước.",
+      "notSetUp": "Hãy hoàn tất thiết lập Mera News, rồi mở lại liên kết.",
+      "linkInvalid": "Liên kết ghép nối này không hợp lệ.",
+      "server": "Máy chủ",
+      "lastSynced": "Đồng bộ lần cuối",
+      "readTheNews": "Đọc tin tức",
+      "syncNow": "Đồng bộ ngay",
+      "unpair": "Hủy ghép nối",
       "status": {
-        "unreachable": "Can't reach your server. Showing what this phone has.",
-        "refused": "Your server refused this phone. Pair again.",
-        "serverOld": "Your server needs an update.",
-        "phoneOld": "Update Mera News to keep syncing."
+        "unreachable": "Không kết nối được với máy chủ của bạn. Đang hiển thị dữ liệu hiện có trên điện thoại này.",
+        "refused": "Máy chủ của bạn đã từ chối điện thoại này. Hãy ghép nối lại.",
+        "serverOld": "Máy chủ của bạn cần được cập nhật.",
+        "phoneOld": "Hãy cập nhật Mera News để tiếp tục đồng bộ."
       },
-      "pairAgain": "Pair again",
-      "unpairTitle": "Unpair this phone?",
-      "unpairBody": "This phone keeps its copy and stops using your server. Your server keeps its copy too.",
-      "line": "Can't reach your server.",
-      "unpairFirst": "Unpair your server first.",
-      "confirmErase": "Everything Mera News keeps on this phone is erased, and this phone then shows only what your server holds.",
-      "backupsOffConfirm": "Backup stays off while this phone is paired.",
-      "erasePair": "Erase and pair",
-      "pageNote": "Whoever runs your server decides how your data is used. Mera Labs still can't see your profile or your chats.",
-      "alreadyPairedElsewhere": "Your server is already paired with another device. Unpair that device first.",
-      "backupsOff": "Backups are off while this phone is paired with your server. Your earlier backups stay where they are.",
-      "codePhoneOld": "Update Mera News to pair with this server.",
+      "pairAgain": "Ghép nối lại",
+      "unpairTitle": "Hủy ghép nối điện thoại này?",
+      "unpairBody": "Điện thoại này giữ bản sao của nó và ngừng dùng máy chủ của bạn. Máy chủ của bạn cũng giữ bản sao của nó.",
+      "line": "Không kết nối được với máy chủ của bạn.",
+      "unpairFirst": "Hãy hủy ghép nối máy chủ của bạn trước.",
+      "confirmErase": "Mọi thứ Mera News lưu trên điện thoại này sẽ bị xóa, và sau đó điện thoại này chỉ hiển thị những gì máy chủ của bạn đang giữ.",
+      "backupsOffConfirm": "Sao lưu vẫn tắt khi điện thoại này được ghép nối.",
+      "erasePair": "Xóa và ghép nối",
+      "pageNote": "Người vận hành máy chủ của bạn quyết định cách dữ liệu của bạn được sử dụng. Mera Labs vẫn không thể xem hồ sơ hoặc cuộc trò chuyện của bạn.",
+      "alreadyPairedElsewhere": "Máy chủ của bạn đã được ghép nối với một thiết bị khác. Hãy hủy ghép nối thiết bị đó trước.",
+      "backupsOff": "Sao lưu bị tắt khi điện thoại này được ghép nối với máy chủ của bạn. Các bản sao lưu trước đó của bạn vẫn được giữ nguyên.",
+      "codePhoneOld": "Hãy cập nhật Mera News để ghép nối với máy chủ này.",
       "toast": {
-        "unreachable": "Can't reach your server. Nothing was changed.",
-        "failed": "Your server couldn't save this. Try again."
+        "unreachable": "Không kết nối được với máy chủ của bạn. Không có gì được thay đổi.",
+        "failed": "Máy chủ của bạn không thể lưu thay đổi này. Hãy thử lại."
       },
-      "backupRunning": "A backup or restore is running. Try again when it ends."
+      "backupRunning": "Đang sao lưu hoặc khôi phục. Hãy thử lại khi việc này kết thúc."
     },
-    "logoutPaired": "This phone is also unpaired from your server.",
-    "logoutOwn": "Your own service settings are removed from this phone."
+    "logoutPaired": "Điện thoại này cũng được hủy ghép nối khỏi máy chủ của bạn.",
+    "logoutOwn": "Cài đặt dịch vụ riêng của bạn được xóa khỏi điện thoại này."
   }
 }

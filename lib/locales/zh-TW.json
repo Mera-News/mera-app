@@ -3303,7 +3303,7 @@
         "busy": "這個服務目前忙碌。請一分鐘後再試。",
         "failing": "這個服務發生問題。請稍後再試。"
       },
-      "warning": "這個服務沒有機密運算。你的個人資料、對話內容，以及梅拉新聞為你閱讀的文章，都會傳送給這個服務的營運方。",
+      "warning": "營運這項服務的人可以讀取你的個人資料、你的對話，以及梅拉新聞為你閱讀的文章。",
       "switch": "使用這個服務",
       "confirmTitle": "要使用你自己的 AI 服務嗎？",
       "confirmYes": "使用",
@@ -3313,10 +3313,10 @@
         "uses": "排序、理由和聊天會使用你的服務。",
         "off": "網路搜尋和事實查證會關閉。",
         "verify": "「驗證認證」已隱藏。它只會檢查私有雲。",
-        "model": "How well 梅拉新聞 ranks and explains the news depends on the model you choose."
+        "model": "梅拉新聞排序和說明新聞的表現，取決於你選擇的模型。"
       },
-      "line": "Your AI service isn't answering. Check it in 梅拉協定.",
-      "confirmBody": "Your profile, your chats and the articles 梅拉新聞 reads for you go to this service. Whoever runs it can read them and decides how they are used. 梅拉實驗室 still can't see your profile or your chats."
+      "line": "你自己的 AI 服務沒有回應。到梅拉協定檢查。",
+      "confirmBody": "你的個人資料、你的對話，以及梅拉新聞為你閱讀的文章，會傳送到這項服務。營運它的人可以讀取這些內容，並決定如何使用。梅拉實驗室仍然看不到你的個人資料或對話。"
     },
     "news": {
       "title": "你自己的新聞伺服器",
@@ -3333,9 +3333,9 @@
         "intro": "你的新聞伺服器不提供這些功能。梅拉新聞會將這些頁面顯示為空白。",
         "unknown": "你的新聞伺服器沒有說明它提供哪些功能。它無法顯示的頁面會保持空白。"
       },
-      "line": "Your news server isn't answering.",
-      "confirmTitle": "Use your own news server?",
-      "confirmBody": "Your topics go to this server. Whoever runs it can read them and decides how they are used. 梅拉實驗室 still can't see your profile or your chats."
+      "line": "你的新聞伺服器沒有回應。",
+      "confirmTitle": "要使用你自己的新聞伺服器嗎？",
+      "confirmBody": "你的主題會傳送到這台伺服器。營運它的人可以讀取這些主題，並決定如何使用。梅拉實驗室仍然看不到你的個人資料或對話。"
     },
     "feature": {
       "search": "搜尋",
@@ -3348,59 +3348,59 @@
       "storyGrouping": "報導分組",
       "publicationNames": "媒體名稱"
     },
-    "podRow": "Your own 梅拉新聞 server",
-    "usingPod": "Using your own 梅拉新聞 server",
+    "podRow": "你自己的梅拉新聞伺服器",
+    "usingPod": "正在使用你自己的梅拉新聞伺服器",
     "pod": {
-      "title": "Your own 梅拉新聞 server",
-      "intro": "Your server reads and ranks the news. This phone shows the results.",
-      "pairButton": "Pair with your server",
-      "enterCodeRow": "Enter code instead",
-      "pairTitle": "Pair with your server",
-      "pairStep1": "On your server, run the pairing command.",
-      "pairStep2": "Scan its code with the 相機應用程式, or open its link on this phone.",
-      "codeTitle": "Enter code",
-      "serverAddress": "Server address",
-      "code": "Pairing code",
-      "pair": "Pair",
-      "codeWrong": "This code didn't work.",
-      "codeExpired": "This code has expired. Run the pairing command again.",
-      "codeTooMany": "Too many tries. Try again in a minute.",
-      "confirmTitle": "Pair with {{host}}?",
-      "confirmBody": "Your server can see your profile, your chats and what you read. Pair only with a server you trust.",
-      "confirmOwnOff": "Your own AI service and news server turn off. Your server's are used instead.",
-      "alreadyPaired": "This phone is already paired with {{host}}. Unpair it first.",
-      "notSetUp": "Finish setting up 梅拉新聞, then open the link again.",
-      "linkInvalid": "This pairing link isn't valid.",
-      "server": "Server",
-      "lastSynced": "Last synced",
-      "readTheNews": "Read the news",
-      "syncNow": "Sync now",
-      "unpair": "Unpair",
+      "title": "你自己的梅拉新聞伺服器",
+      "intro": "你的伺服器負責讀取並排序新聞。這支手機則負責顯示結果。",
+      "pairButton": "與你的伺服器配對",
+      "enterCodeRow": "改為輸入代碼",
+      "pairTitle": "與你的伺服器配對",
+      "pairStep1": "在你的伺服器上執行配對指令。",
+      "pairStep2": "用相機掃描它的代碼，或在這支手機上開啟它的連結。",
+      "codeTitle": "輸入配對碼",
+      "serverAddress": "伺服器位址",
+      "code": "配對碼",
+      "pair": "配對",
+      "codeWrong": "這組代碼無法使用。",
+      "codeExpired": "這組代碼已過期。再執行一次配對指令。",
+      "codeTooMany": "嘗試次數過多。一分鐘後再試。",
+      "confirmTitle": "要與 {{host}} 配對嗎？",
+      "confirmBody": "你的伺服器可以看到你的個人資料、你的對話，以及你閱讀的內容。請只與你信任的伺服器配對。",
+      "confirmOwnOff": "你自己的 AI 服務和你自己的新聞伺服器會關閉。改為使用你伺服器提供的服務。",
+      "alreadyPaired": "這支手機已與 {{host}} 配對。請先解除配對。",
+      "notSetUp": "請先完成梅拉新聞的設定，然後再開啟這個連結。",
+      "linkInvalid": "這個配對連結無效。",
+      "server": "伺服器",
+      "lastSynced": "上次同步",
+      "readTheNews": "閱讀新聞",
+      "syncNow": "立即同步",
+      "unpair": "解除配對",
       "status": {
-        "unreachable": "Can't reach your server. Showing what this phone has.",
-        "refused": "Your server refused this phone. Pair again.",
-        "serverOld": "Your server needs an update.",
-        "phoneOld": "Update 梅拉新聞 to keep syncing."
+        "unreachable": "無法連上你的伺服器。目前顯示這支手機上已有的內容。",
+        "refused": "你的伺服器拒絕了這支手機。重新配對。",
+        "serverOld": "你的伺服器需要更新。",
+        "phoneOld": "更新梅拉新聞以持續同步。"
       },
-      "pairAgain": "Pair again",
-      "unpairTitle": "Unpair this phone?",
-      "unpairBody": "This phone keeps its copy and stops using your server. Your server keeps its copy too.",
-      "line": "Can't reach your server.",
-      "unpairFirst": "Unpair your server first.",
-      "confirmErase": "Everything 梅拉新聞 keeps on this phone is erased, and this phone then shows only what your server holds.",
-      "backupsOffConfirm": "Backup stays off while this phone is paired.",
-      "erasePair": "Erase and pair",
-      "pageNote": "Whoever runs your server decides how your data is used. 梅拉實驗室 still can't see your profile or your chats.",
-      "alreadyPairedElsewhere": "Your server is already paired with another device. Unpair that device first.",
-      "backupsOff": "Backups are off while this phone is paired with your server. Your earlier backups stay where they are.",
-      "codePhoneOld": "Update 梅拉新聞 to pair with this server.",
+      "pairAgain": "重新配對",
+      "unpairTitle": "要解除這支手機的配對嗎？",
+      "unpairBody": "這支手機會保留自己的副本，並停止使用你的伺服器。你的伺服器也會保留它的副本。",
+      "line": "無法連上你的伺服器。",
+      "unpairFirst": "請先解除與你伺服器的配對。",
+      "confirmErase": "梅拉新聞在這支手機上保存的所有內容都會被刪除，之後這支手機只會顯示你的伺服器所保存的內容。",
+      "backupsOffConfirm": "這支手機配對期間，備份會保持關閉。",
+      "erasePair": "刪除資料並配對",
+      "pageNote": "營運你伺服器的人會決定如何使用你的資料。梅拉實驗室仍然看不到你的個人資料或對話。",
+      "alreadyPairedElsewhere": "你的伺服器已與另一台裝置配對。請先在那台裝置上解除配對。",
+      "backupsOff": "這支手機與你的伺服器配對期間，備份會關閉。你先前的備份仍保留在原處。",
+      "codePhoneOld": "請更新梅拉新聞，才能與這台伺服器配對。",
       "toast": {
-        "unreachable": "Can't reach your server. Nothing was changed.",
-        "failed": "Your server couldn't save this. Try again."
+        "unreachable": "無法連上你的伺服器。沒有任何內容被變更。",
+        "failed": "你的伺服器無法儲存這項變更。再試一次。"
       },
-      "backupRunning": "A backup or restore is running. Try again when it ends."
+      "backupRunning": "正在進行備份或還原。請等它完成後再試。"
     },
-    "logoutPaired": "This phone is also unpaired from your server.",
-    "logoutOwn": "Your own service settings are removed from this phone."
+    "logoutPaired": "這支手機也會與你的伺服器解除配對。",
+    "logoutOwn": "你自己的服務設定會從這支手機移除。"
   }
 }

@@ -3303,7 +3303,7 @@
         "busy": "このサービスは混雑しています。しばらくしてから、もう一度試してください。",
         "failing": "このサービスで問題が起きました。あとでもう一度試してください。"
       },
-      "warning": "このサービスには機密コンピューティングがありません。あなたのプロフィール、チャット、メラニュースがあなたのために読む記事は、すべてサービスの運営者に渡ります。",
+      "warning": "このサービスを運営する人は、プロフィール、チャット、メラニュースがあなたに代わって読む記事を読むことができます。",
       "switch": "このサービスを使用",
       "confirmTitle": "お使いのAIサービスを使用しますか？",
       "confirmYes": "使用する",
@@ -3313,10 +3313,10 @@
         "uses": "ランキング、理由、チャットでは、お使いのサービスが使われます。",
         "off": "ウェブ検索とファクトチェックはオフになります。",
         "verify": "「認証を検証」は非表示になります。プライベートクラウドだけを確認する機能です。",
-        "model": "How well メラニュース ranks and explains the news depends on the model you choose."
+        "model": "メラニュースがニュースをどれだけ的確に順位付けし、説明するかは、選んだモデルによって決まります。"
       },
-      "line": "Your AI service isn't answering. Check it in メラ・プロトコル.",
-      "confirmBody": "Your profile, your chats and the articles メラニュース reads for you go to this service. Whoever runs it can read them and decides how they are used. メラ・ラボ still can't see your profile or your chats."
+      "line": "お使いのAIサービスが応答していません。 メラ・プロトコルで確認してください。",
+      "confirmBody": "プロフィール、チャット、メラニュースがあなたに代わって読む記事は、このサービスに送られます。 これを運営する人がそれらを読むことができ、どう使うかを決めます。 メラ・ラボは、あなたのプロフィールやチャットを今も見ることができません。"
     },
     "news": {
       "title": "お使いのニュースサーバー",
@@ -3333,9 +3333,9 @@
         "intro": "お使いのニュースサーバーはこれらを提供していません。メラニュースは、これらのページを空のまま表示します。",
         "unknown": "お使いのニュースサーバーは、提供している機能を示しませんでした。表示できないページは空のままになります。"
       },
-      "line": "Your news server isn't answering.",
-      "confirmTitle": "Use your own news server?",
-      "confirmBody": "Your topics go to this server. Whoever runs it can read them and decides how they are used. メラ・ラボ still can't see your profile or your chats."
+      "line": "お使いのニュースサーバーが応答していません。",
+      "confirmTitle": "お使いのニュースサーバーを使用しますか？",
+      "confirmBody": "あなたのトピックは、このサーバーに送られます。 これを運営する人がそれらを読むことができ、どう使うかを決めます。 メラ・ラボは、あなたのプロフィールやチャットを今も見ることができません。"
     },
     "feature": {
       "search": "検索",
@@ -3348,59 +3348,59 @@
       "storyGrouping": "ストーリーのグループ化",
       "publicationNames": "公開元の名前"
     },
-    "podRow": "Your own メラニュース server",
-    "usingPod": "Using your own メラニュース server",
+    "podRow": "お使いのメラニュースサーバー",
+    "usingPod": "お使いのメラニュースサーバーを使用中",
     "pod": {
-      "title": "Your own メラニュース server",
-      "intro": "Your server reads and ranks the news. This phone shows the results.",
-      "pairButton": "Pair with your server",
-      "enterCodeRow": "Enter code instead",
-      "pairTitle": "Pair with your server",
-      "pairStep1": "On your server, run the pairing command.",
-      "pairStep2": "Scan its code with the カメラアプリ, or open its link on this phone.",
-      "codeTitle": "Enter code",
-      "serverAddress": "Server address",
-      "code": "Pairing code",
-      "pair": "Pair",
-      "codeWrong": "This code didn't work.",
-      "codeExpired": "This code has expired. Run the pairing command again.",
-      "codeTooMany": "Too many tries. Try again in a minute.",
-      "confirmTitle": "Pair with {{host}}?",
-      "confirmBody": "Your server can see your profile, your chats and what you read. Pair only with a server you trust.",
-      "confirmOwnOff": "Your own AI service and news server turn off. Your server's are used instead.",
-      "alreadyPaired": "This phone is already paired with {{host}}. Unpair it first.",
-      "notSetUp": "Finish setting up メラニュース, then open the link again.",
-      "linkInvalid": "This pairing link isn't valid.",
-      "server": "Server",
-      "lastSynced": "Last synced",
-      "readTheNews": "Read the news",
-      "syncNow": "Sync now",
-      "unpair": "Unpair",
+      "title": "お使いのメラニュースサーバー",
+      "intro": "お使いのサーバーがニュースを読み、順位付けします。 この電話には、その結果が表示されます。",
+      "pairButton": "お使いのサーバーと連携する",
+      "enterCodeRow": "代わりにコードを入力",
+      "pairTitle": "お使いのサーバーと連携する",
+      "pairStep1": "お使いのサーバーで連携コマンドを実行してください。",
+      "pairStep2": "カメラアプリでそのコードを読み取るか、この電話でそのリンクを開いてください。",
+      "codeTitle": "コードを入力",
+      "serverAddress": "サーバーのアドレス",
+      "code": "連携コード",
+      "pair": "連携する",
+      "codeWrong": "このコードは使えませんでした。",
+      "codeExpired": "このコードの有効期限が切れています。 連携コマンドをもう一度実行してください。",
+      "codeTooMany": "試行回数が多すぎます。 1分後にもう一度試してください。",
+      "confirmTitle": "{{host}} と連携しますか？",
+      "confirmBody": "お使いのサーバーは、あなたのプロフィール、チャット、読んだ記事を見ることができます。 信頼できるサーバーとだけ連携してください。",
+      "confirmOwnOff": "お使いのAIサービスとニュースサーバーはオフになります。 代わりに、お使いのサーバーのものが使われます。",
+      "alreadyPaired": "この電話はすでに {{host}} と連携しています。 先に連携を解除してください。",
+      "notSetUp": "メラニュースの設定を完了してから、もう一度リンクを開いてください。",
+      "linkInvalid": "この連携リンクは無効です。",
+      "server": "サーバー",
+      "lastSynced": "最終同期",
+      "readTheNews": "ニュースを読む",
+      "syncNow": "今すぐ同期",
+      "unpair": "連携を解除",
       "status": {
-        "unreachable": "Can't reach your server. Showing what this phone has.",
-        "refused": "Your server refused this phone. Pair again.",
-        "serverOld": "Your server needs an update.",
-        "phoneOld": "Update メラニュース to keep syncing."
+        "unreachable": "お使いのサーバーに接続できません。 この電話に保存されているものを表示しています。",
+        "refused": "お使いのサーバーがこの電話を拒否しました。 もう一度連携してください。",
+        "serverOld": "お使いのサーバーには更新が必要です。",
+        "phoneOld": "同期を続けるには、メラニュースを更新してください。"
       },
-      "pairAgain": "Pair again",
-      "unpairTitle": "Unpair this phone?",
-      "unpairBody": "This phone keeps its copy and stops using your server. Your server keeps its copy too.",
-      "line": "Can't reach your server.",
-      "unpairFirst": "Unpair your server first.",
-      "confirmErase": "Everything メラニュース keeps on this phone is erased, and this phone then shows only what your server holds.",
-      "backupsOffConfirm": "Backup stays off while this phone is paired.",
-      "erasePair": "Erase and pair",
-      "pageNote": "Whoever runs your server decides how your data is used. メラ・ラボ still can't see your profile or your chats.",
-      "alreadyPairedElsewhere": "Your server is already paired with another device. Unpair that device first.",
-      "backupsOff": "Backups are off while this phone is paired with your server. Your earlier backups stay where they are.",
-      "codePhoneOld": "Update メラニュース to pair with this server.",
+      "pairAgain": "もう一度連携する",
+      "unpairTitle": "この電話の連携を解除しますか？",
+      "unpairBody": "この電話はコピーを残して、お使いのサーバーの利用をやめます。 お使いのサーバーもコピーを残します。",
+      "line": "お使いのサーバーに接続できません。",
+      "unpairFirst": "先にお使いのサーバーとの連携を解除してください。",
+      "confirmErase": "メラニュースがこの電話に保存しているものはすべて消去され、この電話にはその後、お使いのサーバーが保持しているものだけが表示されます。",
+      "backupsOffConfirm": "この電話が連携している間、バックアップはオフのままになり、削除されません。",
+      "erasePair": "消去して連携する",
+      "pageNote": "お使いのサーバーを運営する人が、あなたのデータの使い方を決めます。 メラ・ラボは、あなたのプロフィールやチャットを今も見ることができません。",
+      "alreadyPairedElsewhere": "お使いのサーバーは、すでに別の端末と連携しています。 先にその端末の連携を解除してください。",
+      "backupsOff": "この電話がお使いのサーバーと連携している間、バックアップはオフになります。 以前のバックアップは、今ある場所に残ります。",
+      "codePhoneOld": "このサーバーと連携するには、メラニュースのアプリを更新してください。",
       "toast": {
-        "unreachable": "Can't reach your server. Nothing was changed.",
-        "failed": "Your server couldn't save this. Try again."
+        "unreachable": "お使いのサーバーに接続できません。 何も変更されていません。",
+        "failed": "お使いのサーバーがこれを保存できませんでした。 もう一度試してください。"
       },
-      "backupRunning": "A backup or restore is running. Try again when it ends."
+      "backupRunning": "バックアップまたは復元が実行中です。 終わってから、もう一度試してください。"
     },
-    "logoutPaired": "This phone is also unpaired from your server.",
-    "logoutOwn": "Your own service settings are removed from this phone."
+    "logoutPaired": "この電話は、お使いのサーバーとの連携も解除されます。",
+    "logoutOwn": "お使いのサービスの設定は、この電話から削除されます。"
   }
 }

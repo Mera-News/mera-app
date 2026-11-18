@@ -3304,7 +3304,7 @@
         "busy": "บริการนี้กำลังยุ่ง ลองอีกครั้งในอีกหนึ่งนาที",
         "failing": "บริการนี้มีปัญหา ลองอีกครั้งในภายหลัง"
       },
-      "warning": "บริการนี้ไม่มีการประมวลผลแบบเก็บเป็นความลับ โปรไฟล์ของคุณ แชทของคุณ และบทความที่เมร่า นิวส์อ่านให้คุณ จะถูกส่งไปยังผู้ที่ดูแลบริการนี้ทั้งหมด",
+      "warning": "ผู้ที่ดูแลบริการนี้สามารถอ่านโปรไฟล์ แชท และบทความที่ เมร่า นิวส์ อ่านให้คุณได้",
       "switch": "ใช้บริการนี้",
       "confirmTitle": "ใช้บริการ AI ของคุณเองใช่ไหม?",
       "confirmYes": "ใช้เลย",
@@ -3314,10 +3314,10 @@
         "uses": "การจัดอันดับ เหตุผล และแชทใช้บริการของคุณ",
         "off": "การค้นหาเว็บและการตรวจสอบข้อเท็จจริงจะปิดอยู่",
         "verify": "ซ่อน ยืนยันการรับรอง อยู่ การยืนยันนี้ตรวจสอบเฉพาะคลาวด์ส่วนตัวเท่านั้น",
-        "model": "How well เมร่า นิวส์ ranks and explains the news depends on the model you choose."
+        "model": "การจัดอันดับและการอธิบายข่าวของ เมร่า นิวส์ ขึ้นอยู่กับโมเดลที่คุณเลือก"
       },
-      "line": "Your AI service isn't answering. Check it in เมร่า โปรโตคอล.",
-      "confirmBody": "Your profile, your chats and the articles เมร่า นิวส์ reads for you go to this service. Whoever runs it can read them and decides how they are used. เมร่า แล็บส์ still can't see your profile or your chats."
+      "line": "บริการ AI ของคุณไม่ตอบสนอง ตรวจสอบได้ที่ เมร่า โปรโตคอล",
+      "confirmBody": "โปรไฟล์ แชท และบทความที่ เมร่า นิวส์ อ่านให้คุณจะถูกส่งไปยังบริการนี้ ผู้ที่ดูแลบริการนี้สามารถอ่านข้อมูลเหล่านี้และตัดสินใจว่าจะนำไปใช้อย่างไร เมร่า แล็บส์ ยังคงมองไม่เห็นโปรไฟล์หรือแชทของคุณ"
     },
     "news": {
       "title": "เซิร์ฟเวอร์ข่าวของคุณเอง",
@@ -3334,9 +3334,9 @@
         "intro": "เซิร์ฟเวอร์ข่าวของคุณไม่มีสิ่งเหล่านี้ แอปแสดงหน้าเหล่านี้ว่างเปล่า",
         "unknown": "เซิร์ฟเวอร์ข่าวของคุณไม่ได้บอกว่ามีอะไรให้บ้าง หน้าที่แสดงไม่ได้จะยังว่างเปล่า"
       },
-      "line": "Your news server isn't answering.",
-      "confirmTitle": "Use your own news server?",
-      "confirmBody": "Your topics go to this server. Whoever runs it can read them and decides how they are used. เมร่า แล็บส์ still can't see your profile or your chats."
+      "line": "เซิร์ฟเวอร์ข่าวของคุณไม่ตอบสนอง",
+      "confirmTitle": "ใช้เซิร์ฟเวอร์ข่าวของคุณเองไหม?",
+      "confirmBody": "หัวข้อที่คุณสนใจจะถูกส่งไปยังเซิร์ฟเวอร์นี้ ผู้ที่ดูแลเซิร์ฟเวอร์นี้สามารถอ่านหัวข้อเหล่านั้นและตัดสินใจว่าจะนำไปใช้อย่างไร เมร่า แล็บส์ ยังคงมองไม่เห็นโปรไฟล์หรือแชทของคุณ"
     },
     "feature": {
       "search": "ค้นหา",
@@ -3349,59 +3349,59 @@
       "storyGrouping": "การจัดกลุ่มเรื่องข่าว",
       "publicationNames": "ชื่อสำนักข่าว"
     },
-    "podRow": "Your own เมร่า นิวส์ server",
-    "usingPod": "Using your own เมร่า นิวส์ server",
+    "podRow": "เซิร์ฟเวอร์ เมร่า นิวส์ ของคุณเอง",
+    "usingPod": "กำลังใช้เซิร์ฟเวอร์ เมร่า นิวส์ ของคุณเอง",
     "pod": {
-      "title": "Your own เมร่า นิวส์ server",
-      "intro": "Your server reads and ranks the news. This phone shows the results.",
-      "pairButton": "Pair with your server",
-      "enterCodeRow": "Enter code instead",
-      "pairTitle": "Pair with your server",
-      "pairStep1": "On your server, run the pairing command.",
-      "pairStep2": "Scan its code with the แอปกล้อง, or open its link on this phone.",
-      "codeTitle": "Enter code",
-      "serverAddress": "Server address",
-      "code": "Pairing code",
-      "pair": "Pair",
-      "codeWrong": "This code didn't work.",
-      "codeExpired": "This code has expired. Run the pairing command again.",
-      "codeTooMany": "Too many tries. Try again in a minute.",
-      "confirmTitle": "Pair with {{host}}?",
-      "confirmBody": "Your server can see your profile, your chats and what you read. Pair only with a server you trust.",
-      "confirmOwnOff": "Your own AI service and news server turn off. Your server's are used instead.",
-      "alreadyPaired": "This phone is already paired with {{host}}. Unpair it first.",
-      "notSetUp": "Finish setting up เมร่า นิวส์, then open the link again.",
-      "linkInvalid": "This pairing link isn't valid.",
-      "server": "Server",
-      "lastSynced": "Last synced",
-      "readTheNews": "Read the news",
-      "syncNow": "Sync now",
-      "unpair": "Unpair",
+      "title": "เซิร์ฟเวอร์ เมร่า นิวส์ ของคุณเอง",
+      "intro": "เซิร์ฟเวอร์ของคุณอ่านและจัดอันดับข่าว โทรศัพท์เครื่องนี้แสดงผลลัพธ์",
+      "pairButton": "จับคู่กับเซิร์ฟเวอร์ของคุณ",
+      "enterCodeRow": "ใส่รหัสแทน",
+      "pairTitle": "จับคู่กับเซิร์ฟเวอร์ของคุณ",
+      "pairStep1": "บนเซิร์ฟเวอร์ของคุณ รันคำสั่งจับคู่",
+      "pairStep2": "สแกนรหัสด้วยแอปกล้อง หรือเปิดลิงก์บนโทรศัพท์เครื่องนี้",
+      "codeTitle": "ใส่รหัส",
+      "serverAddress": "ที่อยู่เซิร์ฟเวอร์",
+      "code": "รหัสจับคู่",
+      "pair": "จับคู่",
+      "codeWrong": "รหัสนี้ใช้ไม่ได้",
+      "codeExpired": "รหัสนี้หมดอายุแล้ว รันคำสั่งจับคู่อีกครั้ง",
+      "codeTooMany": "ลองหลายครั้งเกินไป ลองใหม่ในอีกหนึ่งนาที",
+      "confirmTitle": "จับคู่กับ {{host}} ไหม?",
+      "confirmBody": "เซิร์ฟเวอร์ของคุณมองเห็นโปรไฟล์ แชท และสิ่งที่คุณอ่าน จับคู่เฉพาะกับเซิร์ฟเวอร์ที่คุณไว้ใจเท่านั้น",
+      "confirmOwnOff": "บริการ AI ของคุณเองและเซิร์ฟเวอร์ข่าวของคุณเองจะปิดลง ระบบจะใช้ของเซิร์ฟเวอร์ของคุณแทน",
+      "alreadyPaired": "โทรศัพท์เครื่องนี้จับคู่กับ {{host}} อยู่แล้ว ยกเลิกการจับคู่ก่อน",
+      "notSetUp": "ตั้งค่า เมร่า นิวส์ ให้เสร็จก่อน แล้วเปิดลิงก์อีกครั้ง",
+      "linkInvalid": "ลิงก์การจับคู่นี้ไม่ถูกต้อง",
+      "server": "เซิร์ฟเวอร์",
+      "lastSynced": "ซิงค์ครั้งล่าสุด",
+      "readTheNews": "อ่านข่าว",
+      "syncNow": "ซิงค์ตอนนี้",
+      "unpair": "ยกเลิกการจับคู่",
       "status": {
-        "unreachable": "Can't reach your server. Showing what this phone has.",
-        "refused": "Your server refused this phone. Pair again.",
-        "serverOld": "Your server needs an update.",
-        "phoneOld": "Update เมร่า นิวส์ to keep syncing."
+        "unreachable": "ติดต่อเซิร์ฟเวอร์ของคุณไม่ได้ กำลังแสดงข้อมูลที่มีอยู่ในโทรศัพท์เครื่องนี้",
+        "refused": "เซิร์ฟเวอร์ของคุณปฏิเสธโทรศัพท์เครื่องนี้ จับคู่อีกครั้ง",
+        "serverOld": "เซิร์ฟเวอร์ของคุณต้องอัปเดต",
+        "phoneOld": "อัปเดต เมร่า นิวส์ เพื่อซิงค์ต่อ"
       },
-      "pairAgain": "Pair again",
-      "unpairTitle": "Unpair this phone?",
-      "unpairBody": "This phone keeps its copy and stops using your server. Your server keeps its copy too.",
-      "line": "Can't reach your server.",
-      "unpairFirst": "Unpair your server first.",
-      "confirmErase": "Everything เมร่า นิวส์ keeps on this phone is erased, and this phone then shows only what your server holds.",
-      "backupsOffConfirm": "Backup stays off while this phone is paired.",
-      "erasePair": "Erase and pair",
-      "pageNote": "Whoever runs your server decides how your data is used. เมร่า แล็บส์ still can't see your profile or your chats.",
-      "alreadyPairedElsewhere": "Your server is already paired with another device. Unpair that device first.",
-      "backupsOff": "Backups are off while this phone is paired with your server. Your earlier backups stay where they are.",
-      "codePhoneOld": "Update เมร่า นิวส์ to pair with this server.",
+      "pairAgain": "จับคู่อีกครั้ง",
+      "unpairTitle": "ยกเลิกการจับคู่โทรศัพท์เครื่องนี้ไหม?",
+      "unpairBody": "โทรศัพท์เครื่องนี้เก็บสำเนาของตัวเองไว้และหยุดใช้เซิร์ฟเวอร์ของคุณ เซิร์ฟเวอร์ก็เก็บสำเนาของตัวเองไว้ด้วย",
+      "line": "ติดต่อเซิร์ฟเวอร์ของคุณไม่ได้",
+      "unpairFirst": "ยกเลิกการจับคู่เซิร์ฟเวอร์ของคุณก่อน",
+      "confirmErase": "ข้อมูลทั้งหมดที่ เมร่า นิวส์ เก็บไว้บนโทรศัพท์เครื่องนี้จะถูกลบ และโทรศัพท์เครื่องนี้จะแสดงเฉพาะสิ่งที่เซิร์ฟเวอร์ของคุณเก็บไว้",
+      "backupsOffConfirm": "สำรองข้อมูลจะปิดไว้ขณะที่โทรศัพท์เครื่องนี้จับคู่อยู่",
+      "erasePair": "ลบข้อมูลและจับคู่",
+      "pageNote": "ผู้ที่ดูแลเซิร์ฟเวอร์ของคุณเป็นผู้กำหนดว่าจะใช้ข้อมูลของคุณอย่างไร เมร่า แล็บส์ ยังคงมองไม่เห็นโปรไฟล์หรือแชทของคุณ",
+      "alreadyPairedElsewhere": "เซิร์ฟเวอร์ของคุณจับคู่กับอุปกรณ์อื่นอยู่แล้ว ยกเลิกการจับคู่อุปกรณ์นั้นก่อน",
+      "backupsOff": "สำรองข้อมูลจะปิดไว้ขณะที่โทรศัพท์เครื่องนี้จับคู่กับเซิร์ฟเวอร์ของคุณ ข้อมูลสำรองก่อนหน้านี้ของคุณยังคงอยู่ที่เดิม",
+      "codePhoneOld": "อัปเดต เมร่า นิวส์ เพื่อจับคู่กับเซิร์ฟเวอร์นี้",
       "toast": {
-        "unreachable": "Can't reach your server. Nothing was changed.",
-        "failed": "Your server couldn't save this. Try again."
+        "unreachable": "ติดต่อเซิร์ฟเวอร์ของคุณไม่ได้ ไม่มีอะไรถูกเปลี่ยน",
+        "failed": "เซิร์ฟเวอร์ของคุณบันทึกสิ่งนี้ไม่ได้ ลองอีกครั้ง"
       },
-      "backupRunning": "A backup or restore is running. Try again when it ends."
+      "backupRunning": "การสำรองข้อมูลหรือการกู้คืนกำลังทำงานอยู่ ลองอีกครั้งเมื่อทำเสร็จ"
     },
-    "logoutPaired": "This phone is also unpaired from your server.",
-    "logoutOwn": "Your own service settings are removed from this phone."
+    "logoutPaired": "โทรศัพท์เครื่องนี้จะยกเลิกการจับคู่กับเซิร์ฟเวอร์ของคุณด้วย",
+    "logoutOwn": "การตั้งค่าบริการของคุณเองจะถูกลบออกจากโทรศัพท์เครื่องนี้"
   }
 }

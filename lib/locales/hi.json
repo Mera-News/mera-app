@@ -3326,7 +3326,7 @@
         "busy": "यह सेवा अभी व्यस्त है। एक मिनट बाद फिर कोशिश करें।",
         "failing": "इस सेवा में कोई समस्या आई। बाद में फिर कोशिश करें।"
       },
-      "warning": "इस सेवा में कॉन्फ़िडेंशियल कंप्यूटिंग नहीं है। आपकी प्रोफ़ाइल, आपकी चैट और मेरा न्यूज़ आपके लिए जो लेख पढ़ता है, वे सब इसे चलाने वाले तक पहुँचते हैं।",
+      "warning": "इस सेवा को चलाने वाला व्यक्ति आपकी प्रोफ़ाइल, आपकी चैट और वे खबरें पढ़ सकता है जो मेरा न्यूज़ आपके लिए पढ़ता है।",
       "switch": "यह सेवा इस्तेमाल करें",
       "confirmTitle": "अपनी AI सेवा इस्तेमाल करें?",
       "confirmYes": "इसे इस्तेमाल करें",
@@ -3336,10 +3336,10 @@
         "uses": "रैंकिंग, कारण और चैट आपकी सेवा का इस्तेमाल करेंगे।",
         "off": "वेब खोज और फैक्ट चेक्स बंद रहेंगे।",
         "verify": "‘प्रमाणीकरण सत्यापित करें’ छिपा रहेगा। यह सिर्फ़ प्राइवेट क्लाउड की जाँच करता है।",
-        "model": "How well मेरा न्यूज़ ranks and explains the news depends on the model you choose."
+        "model": "मेरा न्यूज़ खबरों को कितनी अच्छी तरह रैंक करता और समझाता है, यह आपके चुने हुए मॉडल पर निर्भर करता है।"
       },
-      "line": "Your AI service isn't answering. Check it in मेरा प्रोटोकॉल.",
-      "confirmBody": "Your profile, your chats and the articles मेरा न्यूज़ reads for you go to this service. Whoever runs it can read them and decides how they are used. मेरा लैब्स still can't see your profile or your chats."
+      "line": "आपकी अपनी AI सेवा जवाब नहीं दे रही। इसे मेरा प्रोटोकॉल में जाँचें।",
+      "confirmBody": "आपकी प्रोफ़ाइल, आपकी चैट और मेरा न्यूज़ जो खबरें आपके लिए पढ़ता है, वे इस सेवा तक जाती हैं। इसे चलाने वाला इन्हें पढ़ सकता है और तय करता है कि इनका इस्तेमाल कैसे होगा। मेरा लैब्स अब भी आपकी प्रोफ़ाइल या चैट नहीं देख सकता।"
     },
     "news": {
       "title": "आपका अपना न्यूज़ सर्वर",
@@ -3356,9 +3356,9 @@
         "intro": "आपका न्यूज़ सर्वर ये सुविधाएँ नहीं देता। ऐप इन पन्नों को खाली दिखाता है।",
         "unknown": "आपके न्यूज़ सर्वर ने नहीं बताया कि वह क्या देता है। जो पन्ने वह नहीं दिखा सकता, वे खाली रहेंगे।"
       },
-      "line": "Your news server isn't answering.",
-      "confirmTitle": "Use your own news server?",
-      "confirmBody": "Your topics go to this server. Whoever runs it can read them and decides how they are used. मेरा लैब्स still can't see your profile or your chats."
+      "line": "आपका न्यूज़ सर्वर जवाब नहीं दे रहा।",
+      "confirmTitle": "क्या अपना न्यूज़ सर्वर इस्तेमाल करें?",
+      "confirmBody": "आपके विषय इस सर्वर तक जाते हैं। इसे चलाने वाला इन्हें पढ़ सकता है और तय करता है कि इनका इस्तेमाल कैसे होगा। मेरा लैब्स अब भी आपकी प्रोफ़ाइल या चैट नहीं देख सकता।"
     },
     "feature": {
       "search": "खोज",
@@ -3371,59 +3371,59 @@
       "storyGrouping": "कहानियों को समूह में रखना",
       "publicationNames": "प्रकाशनों के नाम"
     },
-    "podRow": "Your own मेरा न्यूज़ server",
-    "usingPod": "Using your own मेरा न्यूज़ server",
+    "podRow": "आपका अपना मेरा न्यूज़ सर्वर",
+    "usingPod": "आपका अपना मेरा न्यूज़ सर्वर इस्तेमाल हो रहा है",
     "pod": {
-      "title": "Your own मेरा न्यूज़ server",
-      "intro": "Your server reads and ranks the news. This phone shows the results.",
-      "pairButton": "Pair with your server",
-      "enterCodeRow": "Enter code instead",
-      "pairTitle": "Pair with your server",
-      "pairStep1": "On your server, run the pairing command.",
-      "pairStep2": "Scan its code with the कैमरा ऐप, or open its link on this phone.",
-      "codeTitle": "Enter code",
-      "serverAddress": "Server address",
-      "code": "Pairing code",
-      "pair": "Pair",
-      "codeWrong": "This code didn't work.",
-      "codeExpired": "This code has expired. Run the pairing command again.",
-      "codeTooMany": "Too many tries. Try again in a minute.",
-      "confirmTitle": "Pair with {{host}}?",
-      "confirmBody": "Your server can see your profile, your chats and what you read. Pair only with a server you trust.",
-      "confirmOwnOff": "Your own AI service and news server turn off. Your server's are used instead.",
-      "alreadyPaired": "This phone is already paired with {{host}}. Unpair it first.",
-      "notSetUp": "Finish setting up मेरा न्यूज़, then open the link again.",
-      "linkInvalid": "This pairing link isn't valid.",
-      "server": "Server",
-      "lastSynced": "Last synced",
-      "readTheNews": "Read the news",
-      "syncNow": "Sync now",
-      "unpair": "Unpair",
+      "title": "आपका अपना मेरा न्यूज़ सर्वर",
+      "intro": "आपका सर्वर खबरें पढ़ता और रैंक करता है। यह फ़ोन नतीजे दिखाता है।",
+      "pairButton": "अपने सर्वर से जोड़ें",
+      "enterCodeRow": "इसके बजाय कोड दर्ज करें",
+      "pairTitle": "अपने सर्वर से जोड़ें",
+      "pairStep1": "अपने सर्वर पर जोड़ने वाला कमांड चलाएँ।",
+      "pairStep2": "उसका कोड कैमरा ऐप से स्कैन करें, या उसका लिंक इस फ़ोन पर खोलें।",
+      "codeTitle": "कोड दर्ज करें",
+      "serverAddress": "सर्वर का पता",
+      "code": "जोड़ने का कोड",
+      "pair": "जोड़ें",
+      "codeWrong": "यह कोड काम नहीं आया।",
+      "codeExpired": "इस कोड की समय-सीमा खत्म हो गई है। जोड़ने वाला कमांड फिर से चलाएँ।",
+      "codeTooMany": "बहुत ज़्यादा प्रयास हो गए। एक मिनट बाद फिर कोशिश करें।",
+      "confirmTitle": "{{host}} से जोड़ें?",
+      "confirmBody": "आपके सर्वर को आपकी प्रोफ़ाइल, आपकी चैट और आप जो पढ़ते हैं, वह सब दिख सकता है। सिर्फ़ ऐसे सर्वर से जोड़ें जिस पर आप भरोसा करते हैं।",
+      "confirmOwnOff": "आपकी अपनी AI सेवा और न्यूज़ सर्वर बंद हो जाएँगे। उनकी जगह आपके सर्वर की सेवाएँ इस्तेमाल होंगी।",
+      "alreadyPaired": "यह फ़ोन पहले से {{host}} से जुड़ा है। पहले इसे अलग करें।",
+      "notSetUp": "मेरा न्यूज़ का सेटअप पूरा करें, फिर लिंक दोबारा खोलें।",
+      "linkInvalid": "यह जोड़ने वाला लिंक मान्य नहीं है।",
+      "server": "सर्वर",
+      "lastSynced": "आखिरी सिंक",
+      "readTheNews": "खबरें पढ़ें",
+      "syncNow": "अभी सिंक करें",
+      "unpair": "अलग करें",
       "status": {
-        "unreachable": "Can't reach your server. Showing what this phone has.",
-        "refused": "Your server refused this phone. Pair again.",
-        "serverOld": "Your server needs an update.",
-        "phoneOld": "Update मेरा न्यूज़ to keep syncing."
+        "unreachable": "आपके सर्वर तक पहुँच नहीं हो पा रही। अभी इस फ़ोन पर जो है, वही दिखा रहे हैं।",
+        "refused": "आपके सर्वर ने यह फ़ोन स्वीकार नहीं किया। फिर से जोड़ें।",
+        "serverOld": "आपके सर्वर को अपडेट की ज़रूरत है।",
+        "phoneOld": "सिंक जारी रखने के लिए मेरा न्यूज़ अपडेट करें।"
       },
-      "pairAgain": "Pair again",
-      "unpairTitle": "Unpair this phone?",
-      "unpairBody": "This phone keeps its copy and stops using your server. Your server keeps its copy too.",
-      "line": "Can't reach your server.",
-      "unpairFirst": "Unpair your server first.",
-      "confirmErase": "Everything मेरा न्यूज़ keeps on this phone is erased, and this phone then shows only what your server holds.",
-      "backupsOffConfirm": "Backup stays off while this phone is paired.",
-      "erasePair": "Erase and pair",
-      "pageNote": "Whoever runs your server decides how your data is used. मेरा लैब्स still can't see your profile or your chats.",
-      "alreadyPairedElsewhere": "Your server is already paired with another device. Unpair that device first.",
-      "backupsOff": "Backups are off while this phone is paired with your server. Your earlier backups stay where they are.",
-      "codePhoneOld": "Update मेरा न्यूज़ to pair with this server.",
+      "pairAgain": "फिर से जोड़ें",
+      "unpairTitle": "यह फ़ोन अलग करें?",
+      "unpairBody": "यह फ़ोन अपनी कॉपी रखता है और आपके सर्वर का इस्तेमाल बंद कर देता है। आपका सर्वर भी अपनी कॉपी रखता है।",
+      "line": "आपके सर्वर तक पहुँच नहीं हो पा रही।",
+      "unpairFirst": "पहले अपना सर्वर अलग करें।",
+      "confirmErase": "इस फ़ोन पर मेरा न्यूज़ जो कुछ रखता है, वह सब मिटा दिया जाएगा, और यह फ़ोन फिर सिर्फ़ वही दिखाएगा जो आपका सर्वर रखता है।",
+      "backupsOffConfirm": "जब तक यह फ़ोन जुड़ा है, बैकअप बंद रहेगा, हटेगा नहीं।",
+      "erasePair": "मिटाएँ और जोड़ें",
+      "pageNote": "आपका सर्वर चलाने वाला तय करता है कि आपके डेटा का इस्तेमाल कैसे होगा। मेरा लैब्स अब भी आपकी प्रोफ़ाइल या चैट नहीं देख सकता।",
+      "alreadyPairedElsewhere": "आपका सर्वर पहले से किसी दूसरे डिवाइस से जुड़ा है। पहले वह डिवाइस अलग करें।",
+      "backupsOff": "जब तक यह फ़ोन आपके सर्वर से जुड़ा है, बैकअप बंद रहते हैं। आपके पहले के बैकअप जहाँ हैं, वहीं रहेंगे।",
+      "codePhoneOld": "इस सर्वर से जुड़ने के लिए मेरा न्यूज़ अपडेट करें।",
       "toast": {
-        "unreachable": "Can't reach your server. Nothing was changed.",
-        "failed": "Your server couldn't save this. Try again."
+        "unreachable": "आपके सर्वर तक पहुँच नहीं हो पा रही। कुछ भी नहीं बदला गया।",
+        "failed": "आपके सर्वर पर यह सेव नहीं हो सका। फिर कोशिश करें।"
       },
-      "backupRunning": "A backup or restore is running. Try again when it ends."
+      "backupRunning": "बैकअप या रिस्टोर चल रहा है। उसके खत्म होने पर फिर कोशिश करें।"
     },
-    "logoutPaired": "This phone is also unpaired from your server.",
-    "logoutOwn": "Your own service settings are removed from this phone."
+    "logoutPaired": "यह फ़ोन आपके सर्वर से भी अलग कर दिया जाता है।",
+    "logoutOwn": "आपकी अपनी सेवा की सेटिंग इस फ़ोन से हटा दी जाती हैं।"
   }
 }

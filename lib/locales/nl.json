@@ -3324,7 +3324,7 @@
         "busy": "Deze service is druk. Probeer het over een minuut opnieuw.",
         "failing": "Deze service had een probleem. Probeer het later opnieuw."
       },
-      "warning": "Deze service heeft geen confidential computing. Je profiel, je chats en de artikelen die Mera News voor je leest, gaan naar wie de service beheert.",
+      "warning": "Wie deze service beheert, kan je profiel, je chats en de artikelen die Mera News voor je leest, lezen.",
       "switch": "Deze service gebruiken",
       "confirmTitle": "Je eigen AI-service gebruiken?",
       "confirmYes": "Gebruiken",
@@ -3334,10 +3334,10 @@
         "uses": "Rangschikking, redenen en chat gebruiken je service.",
         "off": "Webzoeken en feitchecks staan uit.",
         "verify": "‘Attestatie verifiëren’ is verborgen. Het controleert alleen de privécloud.",
-        "model": "How well Mera News ranks and explains the news depends on the model you choose."
+        "model": "Hoe goed Mera News het nieuws rangschikt en uitlegt, hangt af van het model dat je kiest."
       },
-      "line": "Your AI service isn't answering. Check it in Mera Protocol.",
-      "confirmBody": "Your profile, your chats and the articles Mera News reads for you go to this service. Whoever runs it can read them and decides how they are used. Mera Labs still can't see your profile or your chats."
+      "line": "Je AI-service antwoordt niet. Controleer hem in Mera Protocol.",
+      "confirmBody": "Je profiel, je chats en de artikelen die Mera News voor je leest, gaan naar deze service. Wie hem beheert, kan ze lezen en bepaalt hoe ze worden gebruikt. Mera Labs kan je profiel of je chats nog steeds niet zien."
     },
     "news": {
       "title": "Je eigen nieuwsserver",
@@ -3354,9 +3354,9 @@
         "intro": "Je nieuwsserver biedt deze niet aan. Mera News toont ze als leeg.",
         "unknown": "Je nieuwsserver heeft niet laten weten wat hij aanbiedt. Pagina's die hij niet kan tonen blijven leeg."
       },
-      "line": "Your news server isn't answering.",
-      "confirmTitle": "Use your own news server?",
-      "confirmBody": "Your topics go to this server. Whoever runs it can read them and decides how they are used. Mera Labs still can't see your profile or your chats."
+      "line": "Je nieuwsserver antwoordt niet.",
+      "confirmTitle": "Je eigen nieuwsserver gebruiken?",
+      "confirmBody": "Je onderwerpen gaan naar deze server. Wie hem beheert, kan ze lezen en bepaalt hoe ze worden gebruikt. Mera Labs kan je profiel of je chats nog steeds niet zien."
     },
     "feature": {
       "search": "Zoeken",
@@ -3369,59 +3369,59 @@
       "storyGrouping": "Verhalen groeperen",
       "publicationNames": "Namen van uitgevers"
     },
-    "podRow": "Your own Mera News server",
-    "usingPod": "Using your own Mera News server",
+    "podRow": "Je eigen Mera News-server",
+    "usingPod": "Je eigen Mera News-server in gebruik",
     "pod": {
-      "title": "Your own Mera News server",
-      "intro": "Your server reads and ranks the news. This phone shows the results.",
-      "pairButton": "Pair with your server",
-      "enterCodeRow": "Enter code instead",
-      "pairTitle": "Pair with your server",
-      "pairStep1": "On your server, run the pairing command.",
-      "pairStep2": "Scan its code with the Camera app, or open its link on this phone.",
-      "codeTitle": "Enter code",
-      "serverAddress": "Server address",
-      "code": "Pairing code",
-      "pair": "Pair",
-      "codeWrong": "This code didn't work.",
-      "codeExpired": "This code has expired. Run the pairing command again.",
-      "codeTooMany": "Too many tries. Try again in a minute.",
-      "confirmTitle": "Pair with {{host}}?",
-      "confirmBody": "Your server can see your profile, your chats and what you read. Pair only with a server you trust.",
-      "confirmOwnOff": "Your own AI service and news server turn off. Your server's are used instead.",
-      "alreadyPaired": "This phone is already paired with {{host}}. Unpair it first.",
-      "notSetUp": "Finish setting up Mera News, then open the link again.",
-      "linkInvalid": "This pairing link isn't valid.",
+      "title": "Je eigen Mera News-server",
+      "intro": "Je server leest het nieuws en rangschikt het. Deze telefoon toont de resultaten.",
+      "pairButton": "Koppelen met je server",
+      "enterCodeRow": "Voer in plaats daarvan een code in",
+      "pairTitle": "Koppelen met je server",
+      "pairStep1": "Voer op je server het koppelcommando uit.",
+      "pairStep2": "Scan de code met de Camera-app of open de link op deze telefoon.",
+      "codeTitle": "Code invoeren",
+      "serverAddress": "Serveradres",
+      "code": "Koppelcode",
+      "pair": "Koppelen",
+      "codeWrong": "Deze code werkte niet.",
+      "codeExpired": "Deze code is verlopen. Voer het koppelcommando opnieuw uit.",
+      "codeTooMany": "Te veel pogingen. Probeer het over een minuut opnieuw.",
+      "confirmTitle": "Koppelen met {{host}}?",
+      "confirmBody": "Je server kan je profiel, je chats en wat je leest zien. Koppel alleen met een server die je vertrouwt.",
+      "confirmOwnOff": "Je eigen AI-service en je eigen nieuwsserver worden uitgeschakeld. In plaats daarvan worden die van je server gebruikt.",
+      "alreadyPaired": "Deze telefoon is al gekoppeld aan {{host}}. Ontkoppel hem eerst.",
+      "notSetUp": "Rond het instellen van Mera News af en open daarna de link opnieuw.",
+      "linkInvalid": "Deze koppelingslink is niet geldig.",
       "server": "Server",
-      "lastSynced": "Last synced",
-      "readTheNews": "Read the news",
-      "syncNow": "Sync now",
-      "unpair": "Unpair",
+      "lastSynced": "Laatst gesynchroniseerd",
+      "readTheNews": "Lees het nieuws",
+      "syncNow": "Nu synchroniseren",
+      "unpair": "Ontkoppelen",
       "status": {
-        "unreachable": "Can't reach your server. Showing what this phone has.",
-        "refused": "Your server refused this phone. Pair again.",
-        "serverOld": "Your server needs an update.",
-        "phoneOld": "Update Mera News to keep syncing."
+        "unreachable": "Kan je server niet bereiken. Wat deze telefoon heeft, wordt getoond.",
+        "refused": "Je server heeft deze telefoon geweigerd. Koppel opnieuw.",
+        "serverOld": "Je server moet worden bijgewerkt.",
+        "phoneOld": "Werk Mera News bij om te blijven synchroniseren."
       },
-      "pairAgain": "Pair again",
-      "unpairTitle": "Unpair this phone?",
-      "unpairBody": "This phone keeps its copy and stops using your server. Your server keeps its copy too.",
-      "line": "Can't reach your server.",
-      "unpairFirst": "Unpair your server first.",
-      "confirmErase": "Everything Mera News keeps on this phone is erased, and this phone then shows only what your server holds.",
-      "backupsOffConfirm": "Backup stays off while this phone is paired.",
-      "erasePair": "Erase and pair",
-      "pageNote": "Whoever runs your server decides how your data is used. Mera Labs still can't see your profile or your chats.",
-      "alreadyPairedElsewhere": "Your server is already paired with another device. Unpair that device first.",
-      "backupsOff": "Backups are off while this phone is paired with your server. Your earlier backups stay where they are.",
-      "codePhoneOld": "Update Mera News to pair with this server.",
+      "pairAgain": "Opnieuw koppelen",
+      "unpairTitle": "Deze telefoon ontkoppelen?",
+      "unpairBody": "Deze telefoon houdt zijn kopie en gebruikt je server niet meer. Je server houdt zijn kopie ook.",
+      "line": "Kan je server niet bereiken.",
+      "unpairFirst": "Ontkoppel eerst je server.",
+      "confirmErase": "Alles wat Mera News op deze telefoon bewaart, wordt gewist, en deze telefoon toont daarna alleen wat je server bewaart.",
+      "backupsOffConfirm": "Back-up blijft uit zolang deze telefoon is gekoppeld en wordt niet verwijderd.",
+      "erasePair": "Wissen en koppelen",
+      "pageNote": "Wie je server beheert, bepaalt hoe je gegevens worden gebruikt. Mera Labs kan je profiel of je chats nog steeds niet zien.",
+      "alreadyPairedElsewhere": "Je server is al gekoppeld aan een ander apparaat. Ontkoppel eerst dat apparaat.",
+      "backupsOff": "Back-ups staan uit zolang deze telefoon met je server is gekoppeld. Je eerdere back-ups blijven waar ze zijn.",
+      "codePhoneOld": "Werk Mera News bij om met deze server te koppelen.",
       "toast": {
-        "unreachable": "Can't reach your server. Nothing was changed.",
-        "failed": "Your server couldn't save this. Try again."
+        "unreachable": "Kan je server niet bereiken. Er is niets gewijzigd.",
+        "failed": "Je server kon dit niet opslaan. Probeer het opnieuw."
       },
-      "backupRunning": "A backup or restore is running. Try again when it ends."
+      "backupRunning": "Een back-up of herstel is bezig. Probeer het opnieuw wanneer het klaar is."
     },
-    "logoutPaired": "This phone is also unpaired from your server.",
-    "logoutOwn": "Your own service settings are removed from this phone."
+    "logoutPaired": "Deze telefoon wordt ook ontkoppeld van je server.",
+    "logoutOwn": "Je eigen serviceinstellingen worden van deze telefoon verwijderd."
   }
 }

@@ -3330,7 +3330,7 @@
         "busy": "Este servicio está ocupado. Vuelve a intentarlo en un minuto.",
         "failing": "Este servicio tuvo un problema. Vuelve a intentarlo más tarde."
       },
-      "warning": "Este servicio no tiene computación confidencial. Tu perfil, tus chats y los artículos que Mera News lee por ti llegan a quien lo gestiona.",
+      "warning": "Quien gestione este servicio puede leer tu perfil, tus chats y los artículos que Mera News lee por ti.",
       "switch": "Usar este servicio",
       "confirmTitle": "¿Usar tu propio servicio de IA?",
       "confirmYes": "Usar",
@@ -3340,10 +3340,10 @@
         "uses": "Las clasificaciones, los motivos y el chat usan tu servicio.",
         "off": "La búsqueda web y las verificaciones de hechos están desactivadas.",
         "verify": "«Verificar atestación» está oculto. Solo comprueba la nube privada.",
-        "model": "How well Mera News ranks and explains the news depends on the model you choose."
+        "model": "La calidad con la que Mera News ordena y explica las noticias depende del modelo que elijas."
       },
-      "line": "Your AI service isn't answering. Check it in Mera Protocol.",
-      "confirmBody": "Your profile, your chats and the articles Mera News reads for you go to this service. Whoever runs it can read them and decides how they are used. Mera Labs still can't see your profile or your chats."
+      "line": "Tu servicio de IA no responde. Revísalo en Mera Protocol.",
+      "confirmBody": "Tu perfil, tus chats y los artículos que Mera News lee por ti llegan a este servicio. Quien lo gestiona puede leerlos y decide cómo se usan. Mera Labs sigue sin poder ver tu perfil ni tus chats."
     },
     "news": {
       "title": "Tu propio servidor de noticias",
@@ -3360,9 +3360,9 @@
         "intro": "Tu servidor de noticias no ofrece estas funciones. Mera News las muestra vacías.",
         "unknown": "Tu servidor de noticias no indicó qué ofrece. Las páginas que no puede mostrar quedan vacías."
       },
-      "line": "Your news server isn't answering.",
-      "confirmTitle": "Use your own news server?",
-      "confirmBody": "Your topics go to this server. Whoever runs it can read them and decides how they are used. Mera Labs still can't see your profile or your chats."
+      "line": "Tu servidor de noticias no responde.",
+      "confirmTitle": "¿Usar tu propio servidor de noticias?",
+      "confirmBody": "Tus temas llegan a este servidor. Quien lo gestiona puede leerlos y decide cómo se usan. Mera Labs sigue sin poder ver tu perfil ni tus chats."
     },
     "feature": {
       "search": "Buscar",
@@ -3375,59 +3375,59 @@
       "storyGrouping": "Agrupar historias",
       "publicationNames": "Nombres de medios"
     },
-    "podRow": "Your own Mera News server",
-    "usingPod": "Using your own Mera News server",
+    "podRow": "Tu propio servidor de Mera News",
+    "usingPod": "Usando tu propio servidor de Mera News",
     "pod": {
-      "title": "Your own Mera News server",
-      "intro": "Your server reads and ranks the news. This phone shows the results.",
-      "pairButton": "Pair with your server",
-      "enterCodeRow": "Enter code instead",
-      "pairTitle": "Pair with your server",
-      "pairStep1": "On your server, run the pairing command.",
-      "pairStep2": "Scan its code with the Camera app, or open its link on this phone.",
-      "codeTitle": "Enter code",
-      "serverAddress": "Server address",
-      "code": "Pairing code",
-      "pair": "Pair",
-      "codeWrong": "This code didn't work.",
-      "codeExpired": "This code has expired. Run the pairing command again.",
-      "codeTooMany": "Too many tries. Try again in a minute.",
-      "confirmTitle": "Pair with {{host}}?",
-      "confirmBody": "Your server can see your profile, your chats and what you read. Pair only with a server you trust.",
-      "confirmOwnOff": "Your own AI service and news server turn off. Your server's are used instead.",
-      "alreadyPaired": "This phone is already paired with {{host}}. Unpair it first.",
-      "notSetUp": "Finish setting up Mera News, then open the link again.",
-      "linkInvalid": "This pairing link isn't valid.",
-      "server": "Server",
-      "lastSynced": "Last synced",
-      "readTheNews": "Read the news",
-      "syncNow": "Sync now",
-      "unpair": "Unpair",
+      "title": "Tu propio servidor de Mera News",
+      "intro": "Tu servidor lee y ordena las noticias. Este teléfono muestra los resultados.",
+      "pairButton": "Vincular con tu servidor",
+      "enterCodeRow": "Introducir código en su lugar",
+      "pairTitle": "Vincular con tu servidor",
+      "pairStep1": "En tu servidor, ejecuta el comando de vinculación.",
+      "pairStep2": "Escanea su código con la app Cámara o abre su enlace en este teléfono.",
+      "codeTitle": "Introducir código",
+      "serverAddress": "Dirección del servidor",
+      "code": "Código de vinculación",
+      "pair": "Vincular",
+      "codeWrong": "Este código no ha funcionado.",
+      "codeExpired": "Este código ha caducado. Vuelve a ejecutar el comando de vinculación.",
+      "codeTooMany": "Demasiados intentos. Inténtalo de nuevo dentro de un minuto.",
+      "confirmTitle": "¿Vincular con {{host}}?",
+      "confirmBody": "Tu servidor puede ver tu perfil, tus chats y lo que lees. Vincula tu teléfono solo con un servidor en el que confíes.",
+      "confirmOwnOff": "Tu propio servicio de IA y tu servidor de noticias se desactivan. Se usan los de tu servidor en su lugar.",
+      "alreadyPaired": "Este teléfono ya está vinculado a {{host}}. Desvincúlalo primero.",
+      "notSetUp": "Termina de configurar Mera News y luego vuelve a abrir el enlace.",
+      "linkInvalid": "Este enlace de vinculación no es válido.",
+      "server": "Servidor",
+      "lastSynced": "Última sincronización",
+      "readTheNews": "Leer las noticias",
+      "syncNow": "Sincronizar ahora",
+      "unpair": "Desvincular",
       "status": {
-        "unreachable": "Can't reach your server. Showing what this phone has.",
-        "refused": "Your server refused this phone. Pair again.",
-        "serverOld": "Your server needs an update.",
-        "phoneOld": "Update Mera News to keep syncing."
+        "unreachable": "No se puede acceder a tu servidor. Se muestra lo que tiene este teléfono.",
+        "refused": "Tu servidor ha rechazado este teléfono. Vuelve a vincularlo.",
+        "serverOld": "Tu servidor necesita una actualización.",
+        "phoneOld": "Actualiza Mera News para seguir sincronizando."
       },
-      "pairAgain": "Pair again",
-      "unpairTitle": "Unpair this phone?",
-      "unpairBody": "This phone keeps its copy and stops using your server. Your server keeps its copy too.",
-      "line": "Can't reach your server.",
-      "unpairFirst": "Unpair your server first.",
-      "confirmErase": "Everything Mera News keeps on this phone is erased, and this phone then shows only what your server holds.",
-      "backupsOffConfirm": "Backup stays off while this phone is paired.",
-      "erasePair": "Erase and pair",
-      "pageNote": "Whoever runs your server decides how your data is used. Mera Labs still can't see your profile or your chats.",
-      "alreadyPairedElsewhere": "Your server is already paired with another device. Unpair that device first.",
-      "backupsOff": "Backups are off while this phone is paired with your server. Your earlier backups stay where they are.",
-      "codePhoneOld": "Update Mera News to pair with this server.",
+      "pairAgain": "Volver a vincular",
+      "unpairTitle": "¿Desvincular este teléfono?",
+      "unpairBody": "Este teléfono conserva su copia y deja de usar tu servidor. Tu servidor también conserva su copia.",
+      "line": "No se puede acceder a tu servidor.",
+      "unpairFirst": "Desvincula primero tu servidor.",
+      "confirmErase": "Todo lo que Mera News guarda en este teléfono se borra, y este teléfono muestra entonces solo lo que tiene tu servidor.",
+      "backupsOffConfirm": "La copia de seguridad se mantiene desactivada, sin borrar nada, mientras este teléfono esté vinculado.",
+      "erasePair": "Borrar y vincular",
+      "pageNote": "Quien gestione tu servidor decide cómo se usan tus datos. Mera Labs sigue sin poder ver tu perfil ni tus chats.",
+      "alreadyPairedElsewhere": "Tu servidor ya está vinculado a otro dispositivo. Desvincula primero ese dispositivo.",
+      "backupsOff": "Las copias de seguridad están desactivadas mientras este teléfono esté vinculado a tu servidor. Tus copias anteriores siguen donde están.",
+      "codePhoneOld": "Actualiza Mera News para vincularte con este servidor.",
       "toast": {
-        "unreachable": "Can't reach your server. Nothing was changed.",
-        "failed": "Your server couldn't save this. Try again."
+        "unreachable": "No se puede acceder a tu servidor. No se ha cambiado nada.",
+        "failed": "Tu servidor no pudo guardar esto. Inténtalo de nuevo."
       },
-      "backupRunning": "A backup or restore is running. Try again when it ends."
+      "backupRunning": "Hay una copia de seguridad o una restauración en curso. Inténtalo de nuevo cuando termine."
     },
-    "logoutPaired": "This phone is also unpaired from your server.",
-    "logoutOwn": "Your own service settings are removed from this phone."
+    "logoutPaired": "Este teléfono también se desvincula de tu servidor.",
+    "logoutOwn": "Los ajustes de tu propio servicio se eliminan de este teléfono."
   }
 }

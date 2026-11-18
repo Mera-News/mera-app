@@ -3303,7 +3303,7 @@
         "busy": "이 서비스에 요청이 몰려 있습니다. 잠시 후 다시 시도해 주세요.",
         "failing": "이 서비스에 문제가 있었습니다. 나중에 다시 시도해 주세요."
       },
-      "warning": "이 서비스에는 기밀 컴퓨팅이 없습니다. 회원님의 프로필과 채팅, 메라 뉴스가 회원님을 위해 읽는 기사는 모두 이 서비스의 운영 주체에게 전달됩니다.",
+      "warning": "이 서비스를 운영하는 사람은 프로필, 대화, 메라 뉴스가 대신 읽는 기사를 읽을 수 있습니다.",
       "switch": "이 서비스 사용",
       "confirmTitle": "내 AI 서비스를 사용하시겠습니까?",
       "confirmYes": "사용",
@@ -3313,10 +3313,10 @@
         "uses": "순위, 이유, 채팅에 회원님의 서비스를 사용합니다.",
         "off": "웹 검색과 팩트 체크가 꺼집니다.",
         "verify": "‘증명 확인’은 숨겨집니다. 프라이빗 클라우드만 확인하는 기능입니다.",
-        "model": "How well 메라 뉴스 ranks and explains the news depends on the model you choose."
+        "model": "메라 뉴스가 뉴스의 순위를 얼마나 잘 매기고 설명하는지는 선택한 모델에 달려 있습니다."
       },
-      "line": "Your AI service isn't answering. Check it in 메라 프로토콜.",
-      "confirmBody": "Your profile, your chats and the articles 메라 뉴스 reads for you go to this service. Whoever runs it can read them and decides how they are used. 메라 랩스 still can't see your profile or your chats."
+      "line": "내 AI 서비스가 응답하지 않습니다. 메라 프로토콜에서 확인해 보시기 바랍니다.",
+      "confirmBody": "프로필, 대화, 메라 뉴스가 대신 읽는 기사는 이 서비스로 전송됩니다. 이 서비스를 운영하는 사람은 이를 읽을 수 있고, 데이터를 어떻게 사용할지도 결정합니다. 메라 랩스는 여전히 프로필이나 대화를 볼 수 없습니다."
     },
     "news": {
       "title": "내 뉴스 서버",
@@ -3333,9 +3333,9 @@
         "intro": "회원님의 뉴스 서버는 이 기능들을 제공하지 않습니다. 메라 뉴스는 이 기능들을 빈 상태로 보여 줍니다.",
         "unknown": "회원님의 뉴스 서버가 어떤 기능을 제공하는지 알려 주지 않았습니다. 표시할 수 없는 페이지는 빈 상태로 남습니다."
       },
-      "line": "Your news server isn't answering.",
-      "confirmTitle": "Use your own news server?",
-      "confirmBody": "Your topics go to this server. Whoever runs it can read them and decides how they are used. 메라 랩스 still can't see your profile or your chats."
+      "line": "내 뉴스 서버가 응답하지 않습니다.",
+      "confirmTitle": "내 뉴스 서버를 사용하시겠습니까?",
+      "confirmBody": "관심 주제는 이 서버로 전송됩니다. 이 서버를 운영하는 사람은 이를 읽을 수 있고, 데이터를 어떻게 사용할지도 결정합니다. 메라 랩스는 여전히 프로필이나 대화를 볼 수 없습니다."
     },
     "feature": {
       "search": "검색",
@@ -3348,59 +3348,59 @@
       "storyGrouping": "스토리 묶기",
       "publicationNames": "언론사 이름"
     },
-    "podRow": "Your own 메라 뉴스 server",
-    "usingPod": "Using your own 메라 뉴스 server",
+    "podRow": "내 메라 뉴스 서버",
+    "usingPod": "내 메라 뉴스 서버 사용 중",
     "pod": {
-      "title": "Your own 메라 뉴스 server",
-      "intro": "Your server reads and ranks the news. This phone shows the results.",
-      "pairButton": "Pair with your server",
-      "enterCodeRow": "Enter code instead",
-      "pairTitle": "Pair with your server",
-      "pairStep1": "On your server, run the pairing command.",
-      "pairStep2": "Scan its code with the 카메라 앱, or open its link on this phone.",
-      "codeTitle": "Enter code",
-      "serverAddress": "Server address",
-      "code": "Pairing code",
-      "pair": "Pair",
-      "codeWrong": "This code didn't work.",
-      "codeExpired": "This code has expired. Run the pairing command again.",
-      "codeTooMany": "Too many tries. Try again in a minute.",
-      "confirmTitle": "Pair with {{host}}?",
-      "confirmBody": "Your server can see your profile, your chats and what you read. Pair only with a server you trust.",
-      "confirmOwnOff": "Your own AI service and news server turn off. Your server's are used instead.",
-      "alreadyPaired": "This phone is already paired with {{host}}. Unpair it first.",
-      "notSetUp": "Finish setting up 메라 뉴스, then open the link again.",
-      "linkInvalid": "This pairing link isn't valid.",
-      "server": "Server",
-      "lastSynced": "Last synced",
-      "readTheNews": "Read the news",
-      "syncNow": "Sync now",
-      "unpair": "Unpair",
+      "title": "내 메라 뉴스 서버",
+      "intro": "내 서버가 뉴스를 읽고 순위를 매깁니다. 이 휴대폰은 그 결과를 보여 줍니다.",
+      "pairButton": "내 서버에 연결하기",
+      "enterCodeRow": "대신 코드 입력",
+      "pairTitle": "내 서버에 연결하기",
+      "pairStep1": "내 서버에서 연결 명령을 실행해야 합니다.",
+      "pairStep2": "카메라 앱으로 서버의 코드를 스캔하거나, 이 휴대폰에서 서버의 링크를 열어야 합니다.",
+      "codeTitle": "코드 입력",
+      "serverAddress": "서버 주소",
+      "code": "연결 코드",
+      "pair": "연결하기",
+      "codeWrong": "이 코드는 작동하지 않았습니다.",
+      "codeExpired": "이 코드는 만료되었습니다. 연결 명령을 다시 실행해야 합니다.",
+      "codeTooMany": "시도 횟수가 너무 많습니다. 1분 후에 다시 시도해야 합니다.",
+      "confirmTitle": "{{host}} 서버와 연결하시겠습니까?",
+      "confirmBody": "내 서버는 내 프로필, 대화, 읽은 내용을 볼 수 있습니다. 신뢰하는 서버와만 연결해야 합니다.",
+      "confirmOwnOff": "내 AI 서비스와 뉴스 서버가 꺼집니다. 대신 내 서버의 것이 사용됩니다.",
+      "alreadyPaired": "이 휴대폰은 이미 {{host}} 서버와 연결되어 있습니다. 먼저 연결을 해제해야 합니다.",
+      "notSetUp": "메라 뉴스 설정을 마친 다음 링크를 다시 열어야 합니다.",
+      "linkInvalid": "이 연결 링크는 올바르지 않습니다.",
+      "server": "서버",
+      "lastSynced": "마지막 동기화",
+      "readTheNews": "뉴스 읽기",
+      "syncNow": "지금 동기화",
+      "unpair": "연결 해제",
       "status": {
-        "unreachable": "Can't reach your server. Showing what this phone has.",
-        "refused": "Your server refused this phone. Pair again.",
-        "serverOld": "Your server needs an update.",
-        "phoneOld": "Update 메라 뉴스 to keep syncing."
+        "unreachable": "내 서버에 연결할 수 없습니다. 이 휴대폰에 있는 내용만 보여 주고 있습니다.",
+        "refused": "내 서버가 이 휴대폰의 연결을 거부했습니다. 다시 연결해야 합니다.",
+        "serverOld": "내 서버를 업데이트해야 합니다.",
+        "phoneOld": "동기화를 계속하려면 메라 뉴스를 업데이트해야 합니다."
       },
-      "pairAgain": "Pair again",
-      "unpairTitle": "Unpair this phone?",
-      "unpairBody": "This phone keeps its copy and stops using your server. Your server keeps its copy too.",
-      "line": "Can't reach your server.",
-      "unpairFirst": "Unpair your server first.",
-      "confirmErase": "Everything 메라 뉴스 keeps on this phone is erased, and this phone then shows only what your server holds.",
-      "backupsOffConfirm": "Backup stays off while this phone is paired.",
-      "erasePair": "Erase and pair",
-      "pageNote": "Whoever runs your server decides how your data is used. 메라 랩스 still can't see your profile or your chats.",
-      "alreadyPairedElsewhere": "Your server is already paired with another device. Unpair that device first.",
-      "backupsOff": "Backups are off while this phone is paired with your server. Your earlier backups stay where they are.",
-      "codePhoneOld": "Update 메라 뉴스 to pair with this server.",
+      "pairAgain": "다시 연결하기",
+      "unpairTitle": "이 휴대폰의 연결을 해제하시겠습니까?",
+      "unpairBody": "이 휴대폰은 사본을 그대로 보관하고 내 서버 사용을 멈춥니다. 내 서버도 사본을 보관합니다.",
+      "line": "내 서버에 연결할 수 없습니다.",
+      "unpairFirst": "먼저 내 서버의 연결을 해제해야 합니다.",
+      "confirmErase": "메라 뉴스가 이 휴대폰에 보관하는 모든 내용은 삭제되고, 이후 이 휴대폰에는 내 서버가 보관한 내용만 표시됩니다.",
+      "backupsOffConfirm": "이 휴대폰이 연결되어 있는 동안 백업은 계속 꺼져 있으며 삭제되지 않습니다.",
+      "erasePair": "지우고 연결하기",
+      "pageNote": "내 서버를 운영하는 사람이 데이터를 어떻게 사용할지 결정합니다. 메라 랩스는 여전히 프로필이나 대화를 볼 수 없습니다.",
+      "alreadyPairedElsewhere": "내 서버는 이미 다른 기기와 연결되어 있습니다. 먼저 그 기기의 연결을 해제해야 합니다.",
+      "backupsOff": "이 휴대폰이 내 서버와 연결된 동안 백업이 꺼집니다. 이전 백업은 그대로 남아 있습니다.",
+      "codePhoneOld": "이 서버와 연결하려면 메라 뉴스를 업데이트해야 합니다.",
       "toast": {
-        "unreachable": "Can't reach your server. Nothing was changed.",
-        "failed": "Your server couldn't save this. Try again."
+        "unreachable": "내 서버에 연결할 수 없습니다. 아무것도 변경되지 않았습니다.",
+        "failed": "내 서버가 이 내용을 저장하지 못했습니다. 다시 시도해야 합니다."
       },
-      "backupRunning": "A backup or restore is running. Try again when it ends."
+      "backupRunning": "백업 또는 복원이 진행 중입니다. 끝난 후에 다시 시도해야 합니다."
     },
-    "logoutPaired": "This phone is also unpaired from your server.",
-    "logoutOwn": "Your own service settings are removed from this phone."
+    "logoutPaired": "이 휴대폰은 내 서버와의 연결도 해제됩니다.",
+    "logoutOwn": "내 서비스 설정이 이 휴대폰에서 삭제됩니다."
   }
 }
