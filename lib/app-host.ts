@@ -179,6 +179,7 @@ const host: PlatformHost = {
     return require('@/lib/utils/secure-store-adapter').secureStore;
   },
   getLocales: () => localization().getLocales(),
+  taskNeedsMeraSignIn: (name) => require('@/lib/own-services/sign-in-need').taskNeedsMeraSignIn(name),
 
   auth: {
     getJwtToken: () => authClient().getJwtToken(),
