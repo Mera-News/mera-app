@@ -192,6 +192,9 @@ jest.mock(
 // jest.advanceTimersByTimeAsync no longer runs DB work in step. So that one call is set on both
 // clocks and runs once, on whichever fires first. Every other timer is untouched. If an upgrade
 // changes that line, setup throws instead of silently falling back to the wedge.
+// The queue's 1.5 s "stuck queue" warning timer is set on every write queued behind another and is
+// never cleared, so a file ending within 1.5 s of one left its worker alive past the end and jest
+// force-exited it. That timer runs on the real clock, unref'd, so it never holds a worker open.
 jest.doMock('@nozbe/watermelondb/Database/WorkQueue', () => {
   const path = require('path');
   const file = require.resolve('@nozbe/watermelondb/Database/WorkQueue');
@@ -217,10 +220,19 @@ jest.doMock('@nozbe/watermelondb/Database/WorkQueue', () => {
     realSetTimeout(once, 0);
     return setTimeout(once, 0);
   };
+  const stuckWarning = /setTimeout\((function \(\) \{\s*var queue = _this\._queue;)/g;
+  if ((source.match(stuckWarning)?.length ?? 0) !== 1) {
+    throw new Error(`jest.setup.integration.js 7b: expected one stuck-queue warning timer in ${file}. Re-check the WorkQueue patch.`);
+  }
+  const unrefTimeout = (fn, ms) => {
+    const t = realSetTimeout(fn, ms);
+    t.unref?.();
+    return t;
+  };
   const mod = { exports: {} };
   const load = (p) => jest.requireActual(p.startsWith('.') ? path.join(path.dirname(file), p) : p);
-  const patched = source.replace(call, '__bothClocks($1)');
-  new Function('exports', 'require', 'module', '__bothClocks', patched)(mod.exports, load, mod, bothClocks);
+  const patched = source.replace(call, '__bothClocks($1)').replace(stuckWarning, '__unrefTimeout($1');
+  new Function('exports', 'require', 'module', '__bothClocks', '__unrefTimeout', patched)(mod.exports, load, mod, bothClocks, unrefTimeout);
   return mod.exports;
 });
 
