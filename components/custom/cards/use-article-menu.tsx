@@ -624,6 +624,11 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     // A host that unmounts mid-dismissal (the row scrolled away, the screen
     // closed) still runs what the reader picked, once.
     useEffect(() => () => flushPending(), [flushPending]);
+    // The prefetch reads storage and the database: never after the row that asked has gone.
+    const prepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(() => () => {
+        if (prepTimerRef.current) clearTimeout(prepTimerRef.current);
+    }, []);
 
     // Every LEAF of every level, so an item moved into a level stays a
     // VoiceOver custom action on the card.
@@ -798,7 +803,11 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
             // After the sheet is up: this reads the database on the JS thread, so
             // starting it with the tap holds the sheet back. `enterTree` starts it
             // itself if a reader gets there first.
-            setTimeout(prepareTree, PREPARE_TREE_DELAY_MS);
+            if (prepTimerRef.current) clearTimeout(prepTimerRef.current);
+            prepTimerRef.current = setTimeout(() => {
+                prepTimerRef.current = null;
+                prepareTree();
+            }, PREPARE_TREE_DELAY_MS);
             setDirection('none');
             setStack([{ kind: 'main' }]);
             setMounted(true);
