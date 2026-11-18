@@ -1,4 +1,5 @@
 // NOTE(app-rethink wave): still LIVE on the article/suggestion detail screens.
+import { useServerFactChecksOffered } from '@/lib/own-services/server-features';
 // This widget owns the detail screens' feedback STATE; the row itself is
 // components/custom/cards/CardActionBar, which is now the one action row across
 // cards, detail screens and the standalone card. New surfaces should render
@@ -96,9 +97,11 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     archiveItem,
     track,
     share,
-    factCheck,
+    factCheck: factCheckProp,
     publicationName,
 }) => {
+    // Server fact checks are Mera's only: no tick while an own news server or pod is on.
+    const factCheck = useServerFactChecksOffered() ? factCheckProp : undefined;
     const [verdict, setVerdict] = useState<Verdict | null>(null);
     // Follow lives in the ••• menu, which owns its state and dialogs. `track`
     // carries the stable cluster id when known; the fallback keeps the menu's

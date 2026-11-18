@@ -53,6 +53,7 @@ import { useEffect, useState } from 'react';
 import database from '@/lib/database';
 import FactCheckRecord from '@/lib/database/models/FactCheckRecord';
 import type { StoredFactCheck } from '@/lib/database/services/fact-check-record-service';
+import { useServerFactChecksOffered } from '@/lib/own-services/server-features';
 import { requestFactCheck } from '@/lib/fact-check/fact-check-graphql-client';
 import { listAskedFactChecks, onFactCheckAsked } from '@/lib/fact-check/fact-check-settled';
 import type { FactCheckRow } from '@/lib/fact-check/fact-check-types';
@@ -79,6 +80,8 @@ export interface UseFactCheckResult {
      *  with `isTerminalStatus(row.status)` itself, the same predicate this hook
      *  uses to compute `phase`. */
     readonly rows: readonly StoredFactCheck<FactCheckRow>[];
+    /** True while an own news server or pod is on: nothing is polled or sent, stored rows still show. */
+    readonly notOffered: boolean;
 }
 
 const collection = () => database.get<FactCheckRecord>('fact_checks');
@@ -136,6 +139,7 @@ function oldestProcessingStartedAt(rows: readonly StoredFactCheck<FactCheckRow>[
 
 export function useFactCheck(articleId: string | null | undefined): UseFactCheckResult {
     const [rows, setRows] = useState<readonly StoredFactCheck<FactCheckRow>[]>([]);
+    const offered = useServerFactChecksOffered();
 
     useEffect(() => {
         if (!articleId) {
@@ -181,7 +185,7 @@ export function useFactCheck(articleId: string | null | undefined): UseFactCheck
         // clean poll session. This IS "re-read once on next mount": the
         // effect's first action below is an immediate, unconditional poll.
         setPollGaveUp(false);
-        if (!articleId || localPhase === 'terminal') return;
+        if (!articleId || localPhase === 'terminal' || !offered) return;
 
         let cancelled = false;
         let timerId: ReturnType<typeof setTimeout> | null = null;
@@ -234,7 +238,7 @@ export function useFactCheck(articleId: string | null | undefined): UseFactCheck
             cancelled = true;
             if (timerId) clearTimeout(timerId);
         };
-    }, [articleId, localPhase, askVersion]);
+    }, [articleId, localPhase, askVersion, offered]);
 
     // 'stalled' is the ONLY state a caller can't get by reading `localPhase`
     // alone — it must never collapse into 'absent' (nothing rendered) or into
@@ -260,5 +264,5 @@ export function useFactCheck(articleId: string | null | undefined): UseFactCheck
         // terminal must re-arm the gate off ITS OWN `requestedAt`.
     }, [phase, rows]);
 
-    return { phase, showProgress, rows };
+    return { phase, showProgress, rows, notOffered: !offered };
 }

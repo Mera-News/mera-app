@@ -26,6 +26,7 @@ import {
 } from '@/lib/fact-check/fact-check-text';
 import type { FactCheckRow } from '@/lib/fact-check/fact-check-types';
 import { useFactCheck } from '@/lib/fact-check/use-fact-check';
+import { podPaired } from '@/lib/own-services/pod-state';
 import { hapticLight } from '@/lib/haptics';
 import logger from '@/lib/logger';
 import { toastManager } from '@/lib/toast-manager';
@@ -94,7 +95,7 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
 }) => {
     const { t } = useTranslation();
     const c = useColors();
-    const { phase, showProgress, rows } = useFactCheck(articleId);
+    const { phase, showProgress, rows, notOffered } = useFactCheck(articleId);
 
     // OPEN by default and not persisted: the header no longer carries the
     // finding, so a folded card would hide everything. Keyed by row id so a
@@ -107,11 +108,13 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
     if (phase === 'absent' && !startedByReader) return null;
 
     const terminalRows = rows.filter((row) => isTerminalStatus(row.status));
-    const showWorking =
-        (phase === 'processing' && (showProgress || startedByReader)) ||
-        (phase === 'absent' && startedByReader);
-    const showStalled = phase === 'stalled';
-    if (terminalRows.length === 0 && !showWorking && !showStalled) return null;
+    // Own news or pod: a row still in flight gets one off line, never a spinner or "stalled".
+    const showOff = notOffered && rows.some((row) => !isTerminalStatus(row.status));
+    const showWorking = !notOffered &&
+        ((phase === 'processing' && (showProgress || startedByReader)) ||
+        (phase === 'absent' && startedByReader));
+    const showStalled = !notOffered && phase === 'stalled';
+    if (terminalRows.length === 0 && !showWorking && !showStalled && !showOff) return null;
 
     const box = [styles.card, { backgroundColor: c.surface, borderColor: c.line }];
 
@@ -122,6 +125,14 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                 // which is no longer honest once the poll has given up.
                 <View style={[box, styles.padded]} testID={`${testIDPrefix}-stalled`}>
                     <Text size="sm" style={{ color: c.ink }}>{t('factCheck.stillChecking')}</Text>
+                </View>
+            ) : null}
+
+            {showOff ? (
+                <View style={[box, styles.padded]} testID={`${testIDPrefix}-off`}>
+                    <Text size="sm" style={{ color: c.ink }}>
+                        {t(podPaired() ? 'factCheck.notOffered.pod' : 'factCheck.notOffered.ownNews')}
+                    </Text>
                 </View>
             ) : null}
 
@@ -147,6 +158,7 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                     open={collapsed[row.id] !== true}
                     onToggle={() => toggle(row.id)}
                     article={article}
+                    notOffered={notOffered}
                     testIDPrefix={`${testIDPrefix}-${index}`}
                 />
             ))}
@@ -159,8 +171,9 @@ const FactCheckResult: React.FC<{
     readonly open: boolean;
     readonly onToggle: () => void;
     readonly article?: FactCheckShareArticle;
+    readonly notOffered: boolean;
     readonly testIDPrefix: string;
-}> = ({ row, open, onToggle, article, testIDPrefix: id }) => {
+}> = ({ row, open, onToggle, article, notOffered, testIDPrefix: id }) => {
     const { t } = useTranslation();
     const c = useColors();
     const note = useNoteInk();
@@ -406,15 +419,17 @@ const FactCheckResult: React.FC<{
                                 onPress={() => { void share(); }}
                                 testID={`${id}-share`}
                             />
-                            <OutlinedPill
-                                icon="refresh"
-                                label={recheck === 'recent' ? t('factCheck.checkedRecently') : t('factCheck.again')}
-                                onPress={() => { void askAgain(); }}
-                                disabled={recheck !== 'available' || asking}
-                                testID={`${id}-again`}
-                            />
+                            {notOffered ? null : (
+                                <OutlinedPill
+                                    icon="refresh"
+                                    label={recheck === 'recent' ? t('factCheck.checkedRecently') : t('factCheck.again')}
+                                    onPress={() => { void askAgain(); }}
+                                    disabled={recheck !== 'available' || asking}
+                                    testID={`${id}-again`}
+                                />
+                            )}
                         </View>
-                        <Text style={[styles.caption, { color: c.ink3, textAlign: 'center' }]}>{t('factCheck.againHint')}</Text>
+                        {notOffered ? null : <Text style={[styles.caption, { color: c.ink3, textAlign: 'center' }]}>{t('factCheck.againHint')}</Text>}
                     </View>
                 </>
             )}

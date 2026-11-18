@@ -1,4 +1,5 @@
 import ActionSheet, { ActionSheetRow, type ArticleMenuItem } from '@/components/custom/cards/ArticleOverflowMenu';
+import { useServerFactChecksOffered } from '@/lib/own-services/server-features';
 import type { FeedbackLabelContext } from '@/components/custom/feedback-tree/label-vars';
 import { useFeedbackHub, type HubLevel } from '@/components/custom/feedback-tree/use-feedback-hub';
 import type { FeedbackTree, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree/types';
@@ -173,6 +174,7 @@ function liveChatEnabled(): boolean {
  * of which article this user read, which invariant 9 rules out.
  */
 export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
+    const factChecksOffered = useServerFactChecksOffered();
     // The app language from i18n, which the language store keeps in step. Read
     // here rather than through the store hook: that store pulls the settings
     // service (and the database) into every card's import graph.
@@ -412,7 +414,8 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
             }
         }
         if (archiveItem) list.push(archiveItem);
-        if (onCheckFacts) {
+        // Server fact checks are Mera's only: off on every surface while an own news server or pod is on.
+        if (onCheckFacts && factChecksOffered) {
             list.push({
                 key: 'check-facts',
                 label: t('articleMenu.checkFacts'),
@@ -453,7 +456,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
             run: () => showLevel({ kind: 'support' }),
         });
         return list;
-    }, [t, publication, publicationShown, tracked, enterTree, onCheckFacts, publisherId, extraItems, rowActions, archiveItem, showLevel]);
+    }, [t, publication, publicationShown, tracked, enterTree, onCheckFacts, factChecksOffered, publisherId, extraItems, rowActions, archiveItem, showLevel]);
 
     /** The publisher's level: About this source, Not preferred. */
     const sourceItems = useMemo<ArticleMenuItem[]>(() => {
