@@ -18,13 +18,11 @@
 // place.
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
 import logger from '@/lib/logger';
+import { APP_SLUG, OWN_AI_KEY, OWN_NEWS_KEY, POD_PAIRING_KEY } from '@/lib/own-services/keys';
 import { yieldToEventLoop } from '@/lib/scheduler/idle';
 import { HAS_LAUNCHED_SETTING_KEY } from '@/lib/security/install-boundary';
 import { secureStore } from '@/lib/utils/secure-store-adapter';
-
-const APP_SLUG = Constants.expoConfig?.slug || 'app';
 
 /**
  * Every keychain item that holds user state. Slug-scoped keys first, then the
@@ -66,6 +64,10 @@ const SECURE_STORE_KEYS = [
   `${APP_SLUG}_pin_attempts`,
   `${APP_SLUG}_app_lock_enabled`,
   `${APP_SLUG}_backup_key`,
+  // Own-service keys are not session keys: the next account must not inherit a previous person's servers.
+  OWN_AI_KEY,
+  OWN_NEWS_KEY,
+  POD_PAIRING_KEY,
   'async_pipeline_privkey',
   'async_inference_pending_job_privkey',
 ];
