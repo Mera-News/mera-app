@@ -3312,7 +3312,8 @@
         "title": "달라지는 점",
         "uses": "순위, 이유, 채팅에 회원님의 서비스를 사용합니다.",
         "off": "웹 검색과 팩트 체크가 꺼집니다.",
-        "verify": "‘증명 확인’은 숨겨집니다. 프라이빗 클라우드만 확인하는 기능입니다."
+        "verify": "‘증명 확인’은 숨겨집니다. 프라이빗 클라우드만 확인하는 기능입니다.",
+        "model": "How well 메라 뉴스 ranks and explains the news depends on the model you choose."
       },
       "line": "Your AI service isn't answering. Check it in 메라 프로토콜.",
       "confirmBody": "Your profile, your chats and the articles 메라 뉴스 reads for you go to this service. Whoever runs it can read them and decides how they are used. 메라 랩스 still can't see your profile or your chats."

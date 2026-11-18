@@ -9,7 +9,12 @@ import { ServicePage } from './ModeSwitchRow';
 export default function WhatChangesScreen({ onBack }: { readonly onBack?: () => void }) {
     const { t } = useTranslation();
     const colors = useColors();
-    const lines = [t('ownServices.ai.changes.uses'), t('ownServices.ai.changes.off'), t('ownServices.ai.changes.verify')];
+    const lines = [
+        t('ownServices.ai.changes.uses'),
+        t('ownServices.ai.changes.off'),
+        t('ownServices.ai.changes.verify'),
+        t('ownServices.ai.changes.model'),
+    ];
     return (
         <ServicePage title={t('ownServices.ai.changes.title')} onBack={onBack}>
             <View style={{ gap: 12, marginHorizontal: 4 }}>

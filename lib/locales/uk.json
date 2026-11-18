@@ -3481,7 +3481,8 @@
         "title": "Що зміниться",
         "uses": "Ранжування, пояснення та чат використовуватимуть ваш сервіс.",
         "off": "Пошук у мережі та перевірки фактів вимкнено.",
-        "verify": "«Перевірити засвідчення» приховано. Ця перевірка стосується лише приватної хмари."
+        "verify": "«Перевірити засвідчення» приховано. Ця перевірка стосується лише приватної хмари.",
+        "model": "How well Мера Ньюз ranks and explains the news depends on the model you choose."
       },
       "line": "Your AI service isn't answering. Check it in Протокол Мера.",
       "confirmBody": "Your profile, your chats and the articles Мера Ньюз reads for you go to this service. Whoever runs it can read them and decides how they are used. Мера Лабс still can't see your profile or your chats."

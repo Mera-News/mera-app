@@ -3477,7 +3477,8 @@
         "title": "Co się zmienia",
         "uses": "Ranking, powody i czat korzystają z tej usługi.",
         "off": "Wyszukiwanie w sieci i weryfikacje faktów są wyłączone.",
-        "verify": "„Zweryfikuj poświadczenie” jest ukryte. Sprawdza tylko prywatną chmurę."
+        "verify": "„Zweryfikuj poświadczenie” jest ukryte. Sprawdza tylko prywatną chmurę.",
+        "model": "How well Mera News ranks and explains the news depends on the model you choose."
       },
       "line": "Your AI service isn't answering. Check it in Mera Protocol.",
       "confirmBody": "Your profile, your chats and the articles Mera News reads for you go to this service. Whoever runs it can read them and decides how they are used. Mera Labs still can't see your profile or your chats."

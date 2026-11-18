@@ -3313,7 +3313,8 @@
         "title": "สิ่งที่เปลี่ยนไป",
         "uses": "การจัดอันดับ เหตุผล และแชทใช้บริการของคุณ",
         "off": "การค้นหาเว็บและการตรวจสอบข้อเท็จจริงจะปิดอยู่",
-        "verify": "ซ่อน ยืนยันการรับรอง อยู่ การยืนยันนี้ตรวจสอบเฉพาะคลาวด์ส่วนตัวเท่านั้น"
+        "verify": "ซ่อน ยืนยันการรับรอง อยู่ การยืนยันนี้ตรวจสอบเฉพาะคลาวด์ส่วนตัวเท่านั้น",
+        "model": "How well เมร่า นิวส์ ranks and explains the news depends on the model you choose."
       },
       "line": "Your AI service isn't answering. Check it in เมร่า โปรโตคอล.",
       "confirmBody": "Your profile, your chats and the articles เมร่า นิวส์ reads for you go to this service. Whoever runs it can read them and decides how they are used. เมร่า แล็บส์ still can't see your profile or your chats."

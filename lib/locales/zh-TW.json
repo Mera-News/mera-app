@@ -3312,7 +3312,8 @@
         "title": "會有哪些變化",
         "uses": "排序、理由和聊天會使用你的服務。",
         "off": "網路搜尋和事實查證會關閉。",
-        "verify": "「驗證認證」已隱藏。它只會檢查私有雲。"
+        "verify": "「驗證認證」已隱藏。它只會檢查私有雲。",
+        "model": "How well 梅拉新聞 ranks and explains the news depends on the model you choose."
       },
       "line": "Your AI service isn't answering. Check it in 梅拉協定.",
       "confirmBody": "Your profile, your chats and the articles 梅拉新聞 reads for you go to this service. Whoever runs it can read them and decides how they are used. 梅拉實驗室 still can't see your profile or your chats."

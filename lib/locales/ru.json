@@ -3477,7 +3477,8 @@
         "title": "Что изменится",
         "uses": "Ранжирование, пояснения и чат работают через ваш сервис.",
         "off": "Поиск в интернете и проверка фактов отключены.",
-        "verify": "«Проверить аттестацию» скрыто. Эта проверка работает только с частным облаком."
+        "verify": "«Проверить аттестацию» скрыто. Эта проверка работает только с частным облаком.",
+        "model": "How well Мера Ньюс ranks and explains the news depends on the model you choose."
       },
       "line": "Your AI service isn't answering. Check it in Протокол Мера.",
       "confirmBody": "Your profile, your chats and the articles Мера Ньюс reads for you go to this service. Whoever runs it can read them and decides how they are used. Мера Лабс still can't see your profile or your chats."

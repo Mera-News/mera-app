@@ -3333,7 +3333,8 @@
         "title": "Was sich ändert",
         "uses": "Rangfolge, Begründungen und Chat nutzen deinen Dienst.",
         "off": "Websuche und Faktenchecks sind aus.",
-        "verify": "„Attestation überprüfen“ ist ausgeblendet. Es prüft nur die Private Cloud."
+        "verify": "„Attestation überprüfen“ ist ausgeblendet. Es prüft nur die Private Cloud.",
+        "model": "How well Mera News ranks and explains the news depends on the model you choose."
       },
       "line": "Your AI service isn't answering. Check it in Mera Protocol.",
       "confirmBody": "Your profile, your chats and the articles Mera News reads for you go to this service. Whoever runs it can read them and decides how they are used. Mera Labs still can't see your profile or your chats."

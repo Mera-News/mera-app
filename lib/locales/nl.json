@@ -3333,7 +3333,8 @@
         "title": "Wat verandert",
         "uses": "Rangschikking, redenen en chat gebruiken je service.",
         "off": "Webzoeken en feitchecks staan uit.",
-        "verify": "‘Attestatie verifiëren’ is verborgen. Het controleert alleen de privécloud."
+        "verify": "‘Attestatie verifiëren’ is verborgen. Het controleert alleen de privécloud.",
+        "model": "How well Mera News ranks and explains the news depends on the model you choose."
       },
       "line": "Your AI service isn't answering. Check it in Mera Protocol.",
       "confirmBody": "Your profile, your chats and the articles Mera News reads for you go to this service. Whoever runs it can read them and decides how they are used. Mera Labs still can't see your profile or your chats."

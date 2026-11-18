@@ -3345,7 +3345,8 @@
         "title": "Ce qui change",
         "uses": "Le classement, les raisons et le chat utilisent votre service.",
         "off": "La recherche web et les vérifications de faits sont désactivées.",
-        "verify": "« Vérifier l'attestation » est masqué. Il ne contrôle que le cloud privé."
+        "verify": "« Vérifier l'attestation » est masqué. Il ne contrôle que le cloud privé.",
+        "model": "How well Mera News ranks and explains the news depends on the model you choose."
       },
       "line": "Your AI service isn't answering. Check it in Mera Protocol.",
       "confirmBody": "Your profile, your chats and the articles Mera News reads for you go to this service. Whoever runs it can read them and decides how they are used. Mera Labs still can't see your profile or your chats."

@@ -3312,7 +3312,8 @@
         "title": "会有哪些变化",
         "uses": "排序、理由和聊天会使用你的服务。",
         "off": "网页搜索和事实核查将关闭。",
-        "verify": "「验证证明」已隐藏。它只检查私有云。"
+        "verify": "「验证证明」已隐藏。它只检查私有云。",
+        "model": "How well 梅拉新闻 ranks and explains the news depends on the model you choose."
       },
       "line": "Your AI service isn't answering. Check it in 梅拉协议.",
       "confirmBody": "Your profile, your chats and the articles 梅拉新闻 reads for you go to this service. Whoever runs it can read them and decides how they are used. 梅拉实验室 still can't see your profile or your chats."

@@ -3312,7 +3312,8 @@
         "title": "変更点",
         "uses": "ランキング、理由、チャットでは、お使いのサービスが使われます。",
         "off": "ウェブ検索とファクトチェックはオフになります。",
-        "verify": "「認証を検証」は非表示になります。プライベートクラウドだけを確認する機能です。"
+        "verify": "「認証を検証」は非表示になります。プライベートクラウドだけを確認する機能です。",
+        "model": "How well メラニュース ranks and explains the news depends on the model you choose."
       },
       "line": "Your AI service isn't answering. Check it in メラ・プロトコル.",
       "confirmBody": "Your profile, your chats and the articles メラニュース reads for you go to this service. Whoever runs it can read them and decides how they are used. メラ・ラボ still can't see your profile or your chats."

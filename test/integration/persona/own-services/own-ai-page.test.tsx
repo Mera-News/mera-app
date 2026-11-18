@@ -230,4 +230,16 @@ describe('own AI service page', () => {
         expect(screen.getByText('Verify attestation is hidden. It checks the private cloud only.')).toBeTruthy();
         expect(screen.queryByText(/daily limit/i)).toBeNull();
     });
+
+    it('What changes ends by saying the feed depends on the chosen model, and names no model or provider', async () => {
+        await render(<WhatChangesScreen />);
+        const texts: string[] = [];
+        const walk = (n: unknown): void => {
+            if (typeof n === 'string') texts.push(n);
+            else if (Array.isArray(n)) n.forEach(walk);
+            else if (n && typeof n === 'object') walk((n as { children?: unknown }).children);
+        };
+        walk(screen.toJSON());
+        expect(texts.at(-1)).toBe('How well Mera News ranks and explains the news depends on the model you choose.');
+    });
 });

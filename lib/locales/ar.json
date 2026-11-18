@@ -3610,7 +3610,8 @@
         "title": "ما الذي يتغير",
         "uses": "يستخدم الترتيب والأسباب والدردشة خدمتك.",
         "off": "البحث على الويب والتحقق من الحقائق متوقفان.",
-        "verify": "«تحقق من الشهادة» مخفي. وهو يتحقق من السحابة الخاصة فقط."
+        "verify": "«تحقق من الشهادة» مخفي. وهو يتحقق من السحابة الخاصة فقط.",
+        "model": "How well ميرا نيوز ranks and explains the news depends on the model you choose."
       },
       "line": "Your AI service isn't answering. Check it in بروتوكول ميرا.",
       "confirmBody": "Your profile, your chats and the articles ميرا نيوز reads for you go to this service. Whoever runs it can read them and decides how they are used. ميرا لابز still can't see your profile or your chats."
