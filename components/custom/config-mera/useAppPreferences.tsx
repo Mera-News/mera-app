@@ -16,6 +16,7 @@ import { TEXT_SCALE_STEPS } from '@/lib/algorithms/scale';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import React, { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { logoutLine } from './own-services/pod-dialogs';
 import { useDeleteAccount } from './use-delete-account';
 
 
@@ -92,9 +93,10 @@ export function useAppPreferences() {
     };
 
     const confirmLogout = async () => {
+        const extra = await logoutLine(t);
         const ok = await showDialog({
             title: t('preferences.signOutModalTitle'),
-            body: t('preferences.signOutConfirm'),
+            body: extra ? `${t('preferences.signOutConfirm')}\n\n${extra}` : t('preferences.signOutConfirm'),
             confirmLabel: t('preferences.signOut'),
             cancelLabel: t('common.cancel'),
             destructive: true,

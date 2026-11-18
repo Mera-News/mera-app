@@ -103,7 +103,12 @@ async function leave(withRevoke: boolean): Promise<void> {
   await forgetPairing();
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { isBreakerOpen } = require('@/lib/auth-failure-breaker') as typeof import('@/lib/auth-failure-breaker');
-  if (!isBreakerOpen()) void AppScheduler.trigger('feed-sync', undefined, { bypassDebounce: true }).catch(() => undefined);
+  // Back on Mera's feed at once. A phone with no account persona yet has nothing to read: feed sync would fail.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { useUserStore } = require('@/lib/stores/user-store') as typeof import('@/lib/stores/user-store');
+  if (!isBreakerOpen() && useUserStore.getState().userPersona) {
+    void AppScheduler.trigger('feed-sync', undefined, { bypassDebounce: true }).catch(() => undefined);
+  }
 }
 
 /** The phone leaves the server and keeps every row it has; the server is told on a best-effort basis. */

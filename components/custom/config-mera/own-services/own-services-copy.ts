@@ -29,6 +29,24 @@ export const ADDRESS_ERROR_KEY = {
     invalid: 'ownServices.address.invalid',
 } as const;
 
+/** The line under the code field for each way a pairing is refused. */
+export const POD_CODE_ERROR_KEY = {
+    wrong_code: 'ownServices.pod.codeWrong',
+    pairing_closed: 'ownServices.pod.codeExpired',
+    too_many_tries: 'ownServices.pod.codeTooMany',
+    already_paired: 'ownServices.pod.alreadyPairedElsewhere',
+    'phone-old': 'ownServices.pod.codePhoneOld',
+    'server-old': 'ownServices.pod.status.serverOld',
+} as const;
+
+/** The paired page's one status line, by health. A healthy server says nothing. */
+export const POD_HEALTH_KEY = {
+    unreachable: 'ownServices.pod.status.unreachable',
+    refused: 'ownServices.pod.status.refused',
+    'phone-old': 'ownServices.pod.status.phoneOld',
+    'server-old': 'ownServices.pod.status.serverOld',
+} as const;
+
 export const FEATURE_KEY = {
     search: 'ownServices.feature.search',
     worldHeadlines: 'ownServices.feature.worldHeadlines',
@@ -47,6 +65,8 @@ export const OWN_ROUTES = {
     aiChanges: `${YOU}/own-ai-changes`,
     news: `${YOU}/own-news`,
     pod: `${YOU}/own-pod`,
+    podPair: `${YOU}/own-pod-pair`,
+    podCode: `${YOU}/own-pod-code`,
     newsMissing: `${YOU}/own-news-missing`,
     // The link opens Mera Protocol with its On this phone control focused.
     onDevice: `${YOU}/mera-protocol?focus=on-device`,

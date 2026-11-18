@@ -46,6 +46,7 @@ import { useMeraProtocolSettings, type ModelRowState } from './useMeraProtocolSe
 import { OWN_ROUTES } from './own-services/own-services-copy';
 import { ownAiOn, ownAiState } from '@/lib/own-services/own-ai-state';
 import { ownNewsOn, ownNewsState } from '@/lib/own-services/own-news-state';
+import { podPaired, podState } from '@/lib/own-services/pod-state';
 
 /** The downloadable model is Apache 2.0 (it ships no LICENSE file), so the tab links the licence text. */
 const MODELS_LICENSE_URL = 'https://www.apache.org/licenses/LICENSE-2.0';
@@ -102,7 +103,9 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     const insets = useSafeAreaInsets();
     const aiOn = ownAiState.useStore((s) => s.hydrated && s.value?.on === true);
     const newsOn = ownNewsState.useStore((s) => s.hydrated && s.value?.on === true);
+    const podOn = podState.useStore((s) => s.hydrated && s.value?.state === 'active');
     useEffect(() => {
+        podState.hydrate().catch(() => {});
         // A failed read leaves both modes off here; the pages themselves refuse to open on one.
         ownAiState.hydrate().catch(() => {});
         ownNewsState.hydrate().catch(() => {});
@@ -127,7 +130,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         if (isLoading || focus !== 'on-device' || pickedRef.current) return;
         pickedRef.current = true;
         // A link can never put the phone on device under an own mode.
-        if (!onDeviceIntent && !ownAiOn() && !ownNewsOn()) void selectMode(ProcessingMode.OnDevice);
+        if (!onDeviceIntent && !ownAiOn() && !ownNewsOn() && !podPaired()) void selectMode(ProcessingMode.OnDevice);
         // Once, when the load lands: selectMode is a fresh closure every render.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isLoading]);
@@ -550,7 +553,12 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
 
     const renderContent = () => (
         <>
-            {aiOn ? (
+            {podOn ? (
+                <View onLayout={onSectionLayout} style={{ paddingHorizontal: 14, marginBottom: 16 }}>
+                    {sectionHead(t('meraProtocol.howRuns'), 'modes', onModesHeadLayout)}
+                    {usingRow('mera-protocol-using-pod', t('ownServices.usingPod'), () => router.push(OWN_ROUTES.pod as Href))}
+                </View>
+            ) : aiOn ? (
                 <View onLayout={onSectionLayout} style={{ paddingHorizontal: 14, marginBottom: 16 }}>
                     {sectionHead(t('meraProtocol.howRuns'), 'modes', onModesHeadLayout)}
                     {newsOn
@@ -620,7 +628,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             </>)}
 
             {/* Verify (it names each provider): whenever chat or the feed reaches the cloud. It checks the private cloud only, so an own AI service hides it. */}
-            {!aiOn && (!onPhoneTab || runsInCloudMeanwhile || steps.cloudChat) ? (
+            {!aiOn && !podOn && (!onPhoneTab || runsInCloudMeanwhile || steps.cloudChat) ? (
                 <View style={{ marginTop: 12 }}>
                     <AttestationVerificationRow />
                 </View>
@@ -679,6 +687,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 <Group>
                     <Row testID="mera-protocol-own-ai" title={t('ownServices.aiRow')} onPress={() => router.push(OWN_ROUTES.ai as Href)} />
                     <Row testID="mera-protocol-own-news" title={t('ownServices.newsRow')} onPress={() => router.push(OWN_ROUTES.news as Href)} />
+                    <Row testID="mera-protocol-own-pod" title={t('ownServices.podRow')} onPress={() => router.push(OWN_ROUTES.pod as Href)} />
                 </Group>
                 <View style={{ marginTop: 8 }}>
                     <Help>{processingMode === ProcessingMode.OnDevice ? t('ownServices.footerOnDevice') : t('ownServices.footer')}</Help>

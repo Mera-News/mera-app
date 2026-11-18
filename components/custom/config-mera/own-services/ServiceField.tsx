@@ -9,8 +9,8 @@ type Props = {
     readonly label: string;
     readonly value: string;
     readonly onChangeText: (text: string) => void;
-    /** `address` takes the URL keyboard, `key` hides its text until Show key. */
-    readonly kind: 'address' | 'text' | 'key';
+    /** `address` takes the URL keyboard, `key` hides its text until Show key, `code` is a one-time code in capitals. */
+    readonly kind: 'address' | 'text' | 'key' | 'code';
     readonly error?: string | null;
     readonly testID: string;
 };
@@ -20,7 +20,10 @@ export function ServiceField({ label, value, onChangeText, kind, error, testID }
     const { t } = useTranslation();
     const colors = useColors();
     const [shown, setShown] = useState(false);
-    const off = { autoCapitalize: 'none', autoCorrect: false, autoComplete: 'off', textContentType: 'none', importantForAutofill: 'no' } as const;
+    const off =
+        kind === 'code'
+            ? ({ autoCapitalize: 'characters', autoCorrect: false, autoComplete: 'one-time-code', textContentType: 'oneTimeCode' } as const)
+            : ({ autoCapitalize: 'none', autoCorrect: false, autoComplete: 'off', textContentType: 'none', importantForAutofill: 'no' } as const);
     return (
         <View style={{ marginTop: 14 }}>
             <Text style={{ color: colors.ink2, fontSize: 13, fontWeight: '600', marginBottom: 6, marginHorizontal: 4 }}>{label}</Text>
@@ -62,7 +65,7 @@ export function ServiceField({ label, value, onChangeText, kind, error, testID }
                 ) : null}
             </View>
             {error ? (
-                <Text style={{ color: colors.negative, fontSize: 13, lineHeight: 18, marginTop: 6, marginHorizontal: 4 }}>{error}</Text>
+                <Text accessibilityLiveRegion="polite" style={{ color: colors.negative, fontSize: 13, lineHeight: 18, marginTop: 6, marginHorizontal: 4 }}>{error}</Text>
             ) : null}
         </View>
     );

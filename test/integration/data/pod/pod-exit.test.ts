@@ -24,6 +24,7 @@ import { forgetPairing, podPaired, podState, savePairing, type PodPairing } from
 import { reportSecrets, setReportSecrets } from '@/lib/own-services/report-secrets';
 import { platform } from '@/lib/platform';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
+import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
 import { signOutAndWipe, wipeAllLocalUserData } from '@/lib/security/local-wipe';
 import { useDatabaseStore } from '@/lib/stores/database-store';
 import { useUserStore } from '@/lib/stores/user-store';
@@ -152,6 +153,16 @@ describe('unpairing', () => {
     expect(podPaired()).toBe(false);
     expect(hostCommand()).toBeUndefined();
     for (const name of TASKS_PAUSED_WHILE_PAIRED) expect(AppScheduler.isPaused(name)).toBe(false);
+  });
+
+  it('with no account persona on the phone, unpairing starts no feed sync that could only fail', async () => {
+    await paired();
+    useUserStore.setState({ userPersona: null });
+    const ops = recordOps();
+    await unpairPod();
+    await new Promise<void>((r) => setImmediate(r));
+    expect(useSchedulerStore.getState().isRunning('feed-sync')).toBe(false);
+    expect(await ops.count('GetArticleIdsForPersona')).toBe(0);
   });
 
   it('with the auth breaker open, unpairing leaves feed sync paused and asks Mera for nothing', async () => {

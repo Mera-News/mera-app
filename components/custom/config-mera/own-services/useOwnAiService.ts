@@ -2,6 +2,7 @@ import { parseServiceAddress } from '@/lib/own-services/address';
 import { checkOwnAi } from '@/lib/own-services/check-ai';
 import { OwnServiceError, ownServicesAllowed } from '@/lib/own-services/gate';
 import { ownAiState, recordOwnAiCheck, saveOwnAiFields, setOwnAiOn } from '@/lib/own-services/own-ai-state';
+import { podState } from '@/lib/own-services/pod-state';
 import { useRestartHold } from '@/lib/app-restart';
 import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { router, type Href } from 'expo-router';
@@ -15,6 +16,7 @@ export function useOwnAiService() {
     const { t } = useTranslation();
     const cfg = ownAiState.useStore((s) => s.value);
     const onDevice = useIsOnDeviceProcessing();
+    const paired = podState.useStore((s) => s.value?.state === 'active');
     const [address, setAddress] = useState(cfg?.baseUrl ?? '');
     const [model, setModel] = useState(cfg?.model ?? '');
     const [key, setKey] = useState(cfg?.key ?? '');
@@ -47,7 +49,10 @@ export function useOwnAiService() {
 
     const gated = !on && !ownServicesAllowed();
     const blocked = !on && onDevice;
-    const reason = gated
+    // Pairing turned this service off; the person unpairs before using it again.
+    const reason = paired
+        ? { line: t('ownServices.pod.unpairFirst') }
+        : gated
         ? { line: t('ownServices.gate.line'), button: { label: t('ownServices.gate.button'), onPress: () => router.push(OWN_ROUTES.plans as Href) } }
         : blocked
           ? { line: t('ownServices.onDevice.line'), button: { label: t('ownServices.onDevice.button'), onPress: () => router.navigate(OWN_ROUTES.onDevice as Href) } }
@@ -109,7 +114,7 @@ export function useOwnAiService() {
         statusLine,
         offLine,
         switchValue: on,
-        switchDisabled: !on && (dirty || cfg?.status !== 'connected' || gated || blocked),
+        switchDisabled: !on && (dirty || cfg?.status !== 'connected' || gated || blocked || paired),
         reason,
         error,
         toggle,

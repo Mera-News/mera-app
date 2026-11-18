@@ -15,8 +15,18 @@ export async function confirmTurnOn(o: {
     body: string;
     yes: string;
     cancel: string;
+    /** A red consequence line under the body. */
+    warning?: string;
+    destructive?: boolean;
     privacyVersion: string | null;
 }): Promise<Confirmation | null> {
-    const yes = await showDialog({ title: o.title, body: o.body, confirmLabel: o.yes, cancelLabel: o.cancel });
+    const yes = await showDialog({
+        title: o.title,
+        body: o.body,
+        warning: o.warning,
+        confirmLabel: o.yes,
+        cancelLabel: o.cancel,
+        destructive: o.destructive,
+    });
     return yes ? { at: Date.now(), privacyVersion: o.privacyVersion } : null;
 }
