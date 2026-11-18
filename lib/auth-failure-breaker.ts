@@ -1,6 +1,7 @@
 import { AppState } from 'react-native';
 
 import logger from '@/lib/logger';
+import { modeHoldsFeedSync } from '@/lib/own-services/mode-hold';
 
 // Circuit breaker for the app's soft-fail auth handling.
 //
@@ -133,6 +134,8 @@ function pauseFeedSync(): void {
 }
 
 function resumeFeedSync(): void {
+  // A task paused for an own mode is not the breaker's to resume.
+  if (modeHoldsFeedSync()) return;
   try {
     const { AppScheduler } =
       require('@/lib/scheduler/AppScheduler') as typeof import('@/lib/scheduler/AppScheduler');

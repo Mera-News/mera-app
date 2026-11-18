@@ -96,6 +96,20 @@ export function defineInferenceTask(): void {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { enforceInstallBoundary } = require('@/lib/security/install-boundary') as typeof import('@/lib/security/install-boundary');
       await enforceInstallBoundary();
+      // Pushes only name gateway jobs: with a host transport there is nothing to unpack.
+      // A locked keychain ends the wake quietly, as in the OS background task.
+      try {
+        // Lazy, like every other step: this file loads from index.js before the router, so it imports no client module.
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { ownAiState } = require('@/lib/own-services/own-ai-state') as typeof import('@/lib/own-services/own-ai-state');
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { ownNewsState } = require('@/lib/own-services/own-news-state') as typeof import('@/lib/own-services/own-news-state');
+        await Promise.all([ownAiState.hydrate(), ownNewsState.hydrate()]);
+      } catch {
+        return;
+      }
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      if (!(require('@/lib/llm/cloudComplete') as typeof import('@/lib/llm/cloudComplete')).usesGateway()) return;
       // expo-notifications registerTaskAsync delivers the push payload in
       // body.data.notification.request.content.data. Fall back to 'silent-push'
       // if the shape is anything else.

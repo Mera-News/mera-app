@@ -21,6 +21,8 @@
 import { AppState, type AppStateStatus } from 'react-native';
 
 import logger from '@/lib/logger';
+import { transportServesJobs } from '@/lib/llm/cloudComplete';
+import { ownAiState } from '@/lib/own-services/own-ai-state';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import type { DiffResult } from '@/lib/scheduler/feed-sync/feed-sync-steps';
 import type { BackgroundSyncHooks } from '@/lib/scheduler/feed-sync/feed-sync-types';
@@ -165,6 +167,8 @@ export async function runBackgroundFeedSync(opts: {
   }
 
   await hydrateRunPrerequisites();
+  // Callable on its own: an unread own AI item leaves the transport failing closed, so no submit.
+  await ownAiState.hydrate().catch(() => undefined);
 
   // A met target stops only the persona ids. Followed stories keep updating
   // (owner ruling), so the run goes on with a budget of zero for the rest.
@@ -181,8 +185,9 @@ export async function runBackgroundFeedSync(opts: {
   const hooks: BackgroundSyncHooks = {
     shapeDiff: (diff) => shapeBackgroundDiff(diff, now, fetchBudget),
     // On-device mode fetches and persists only: scoring needs the local model,
-    // which a background run never loads.
-    submit: onDevice
+    // which a background run never loads. A transport with no async jobs
+    // scores inline on the next open.
+    submit: onDevice || !transportServesJobs()
       ? null
       : async (articleIds) => {
           // eslint-disable-next-line @typescript-eslint/no-require-imports

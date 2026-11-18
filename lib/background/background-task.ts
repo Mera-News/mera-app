@@ -128,6 +128,18 @@ export async function runBackgroundRefresh(now: number = Date.now()): Promise<Re
       }
       if (typeof cookie !== 'string' || cookie.length === 0) return { stoppedBy: 'signed-out' };
 
+      // Which transport serves this wake is read from the keychain, never assumed.
+      try {
+        // Lazy, like every other step: this file loads from index.js before the router, so it imports no client module.
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { ownAiState } = require('@/lib/own-services/own-ai-state') as typeof import('@/lib/own-services/own-ai-state');
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { ownNewsState } = require('@/lib/own-services/own-news-state') as typeof import('@/lib/own-services/own-news-state');
+        await Promise.all([ownAiState.hydrate(), ownNewsState.hydrate()]);
+      } catch {
+        return { stoppedBy: 'locked' };
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const pipeline = require('@/lib/services/scoring-pipeline') as typeof import('@/lib/services/scoring-pipeline');
       // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -135,8 +147,12 @@ export async function runBackgroundRefresh(now: number = Date.now()): Promise<Re
 
       // 4. Collect: the device's waiting batches first, so the next open has
       //    notes, and so their slots are free for step (b).
-      const collected = await trackBackgroundCollect(pipeline.advanceWaitingForBackground({ deadlineAt }));
-      breadcrumb('collect finished', { stoppedBy: collected.stoppedBy });
+      // Collecting polls the gateway's jobs, so a host transport has nothing to collect.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      if ((require('@/lib/llm/cloudComplete') as typeof import('@/lib/llm/cloudComplete')).usesGateway()) {
+        const collected = await trackBackgroundCollect(pipeline.advanceWaitingForBackground({ deadlineAt }));
+        breadcrumb('collect finished', { stoppedBy: collected.stoppedBy });
+      }
 
       // 5. Fetch, only if a submit would still fit.
       if (Date.now() > deadlineAt - FETCH_START_RESERVE_MS) return { stoppedBy: 'deadline' };
