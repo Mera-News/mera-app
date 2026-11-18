@@ -3280,7 +3280,7 @@
     "groupTitle": "Kendi hizmetlerin",
     "aiRow": "Kendi yapay zekâ hizmetin",
     "newsRow": "Kendi haber sunucun",
-    "footer": "Kendi yapay zekâ ya da haber sunucusunu işletenler için. Çoğu kişinin buna ihtiyacı yok.",
+    "footer": "Kendi yapay zekâ hizmetini ya da haber sunucusunu çalıştıranlar için. Çoğu kişinin buna ihtiyacı yok.",
     "footerOnDevice": "Bunları kullanmak için “Bu telefonda” modunu kapat.",
     "usingAi": "Kendi yapay zekâ hizmetin kullanılıyor",
     "usingNews": "Kendi haber sunucun kullanılıyor",
@@ -3300,7 +3300,7 @@
     "checking": "Denetleniyor",
     "checkAgain": "Yeniden denetle",
     "status": {
-      "connected": "Bağlandı",
+      "connected": "Bağlı",
       "unreachable": "Bu adrese ulaşılamıyor.",
       "redirect": "Bu adres yönlendiriyor. Son adresi kullan."
     },
@@ -3326,7 +3326,7 @@
         "busy": "Bu hizmet meşgul. Bir dakika sonra yeniden dene.",
         "failing": "Bu hizmette bir sorun oluştu. Daha sonra yeniden dene."
       },
-      "warning": "Bu hizmette gizli bilgi işlem yok. Profilin, sohbetlerin ve Mera News'in senin için okuduğu makaleler, hizmeti çalıştıran kişiye gider.",
+      "warning": "Bu hizmette gizli bilgi işlem yok. Profilin, sohbetlerin ve Mera News'in senin için okuduğu makaleler, hizmeti kim çalıştırıyorsa ona gider.",
       "switch": "Bu hizmeti kullan",
       "confirmTitle": "Kendi yapay zekâ hizmetin kullanılsın mı?",
       "confirmYes": "Kullan",
@@ -3346,7 +3346,7 @@
         "noFeed": "Bu sunucu akış oluşturamıyor."
       },
       "switch": "Bu sunucuyu kullan",
-      "topicsLine": "Konuların bu sunucuya gider. Bu açıkken Mera News sunucuları hiçbir haber isteği almaz.",
+      "topicsLine": "Konuların bu sunucuya gider. Bu seçenek açıkken Mera News sunucuları hiçbir haber isteği almaz.",
       "missingRow": "Burada kullanılamaz",
       "missing": {
         "title": "Burada kullanılamaz",

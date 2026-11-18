@@ -443,7 +443,7 @@
           "busy": "Ce service est occupé. Réessayez dans une minute.",
           "failing": "Ce service a rencontré un problème. Réessayez plus tard."
         },
-        "warning": "Ce service ne propose pas de calcul confidentiel. Votre profil, vos conversations et les articles que Mera News lit pour vous sont transmis à la personne qui l'exploite.",
+        "warning": "Ce service ne propose pas de calcul confidentiel. Votre profil, vos conversations et les articles que Mera News lit pour vous sont transmis à qui exploite le service.",
         "switch": "Utiliser ce service",
         "confirmTitle": "Utiliser votre propre service d'IA ?",
         "confirmYes": "Utiliser",
@@ -835,7 +835,7 @@
           "busy": "このサービスは混雑しています。しばらくしてから、もう一度試してください。",
           "failing": "このサービスで問題が起きました。あとでもう一度試してください。"
         },
-        "warning": "このサービスには機密コンピューティングがありません。あなたのプロフィール、チャット、メラニュースがあなたのために読む記事は、すべてサービスを運営する人に渡ります。",
+        "warning": "このサービスには機密コンピューティングがありません。あなたのプロフィール、チャット、メラニュースがあなたのために読む記事は、すべてサービスの運営者に渡ります。",
         "switch": "このサービスを使用",
         "confirmTitle": "お使いのAIサービスを使用しますか？",
         "confirmYes": "使用する",
@@ -855,7 +855,7 @@
           "noFeed": "このサーバーはフィードを作成できません。"
         },
         "switch": "このサーバーを使用",
-        "topicsLine": "お使いのトピックはこのサーバーに送られます。メラニュースのサーバーは、オンの間ニュースのリクエストを一切受け取りません。",
+        "topicsLine": "お使いのトピックはこのサーバーに送られます。このサーバーがオンの間、メラニュースのサーバーはニュースのリクエストを一切受け取りません。",
         "missingRow": "こちらでは利用できません",
         "missing": {
           "title": "こちらでは利用できません",
@@ -887,7 +887,7 @@
       "groupTitle": "내 서비스",
       "aiRow": "내 AI 서비스",
       "newsRow": "내 뉴스 서버",
-      "footer": "AI나 뉴스 서버를 직접 운영하는 분을 위한 기능입니다. 대부분은 필요하지 않습니다.",
+      "footer": "AI나 뉴스 서버를 직접 운영하는 분을 위한 기능입니다. 대부분의 분들에게는 필요하지 않습니다.",
       "footerOnDevice": "이 기능을 사용하려면 ‘이 휴대폰에’ 모드를 꺼 주세요.",
       "usingAi": "내 AI 서비스 사용 중",
       "usingNews": "내 뉴스 서버 사용 중",
@@ -909,7 +909,7 @@
       "status": {
         "connected": "연결됨",
         "unreachable": "이 주소에 연결할 수 없습니다.",
-        "redirect": "이 주소는 다른 주소로 연결됩니다. 최종 주소를 사용해 주세요."
+        "redirect": "이 주소는 다른 주소로 넘어갑니다. 최종 주소를 사용해 주세요."
       },
       "lastCheckFailed": "마지막 확인에 실패했습니다. {{reason}}",
       "offUntilChecked": "이 주소를 확인할 때까지 꺼져 있습니다.",
@@ -924,18 +924,18 @@
       },
       "ai": {
         "title": "내 AI 서비스",
-        "intro": "OpenAI API와 함께 작동하는 서비스라면 무엇이든 사용할 수 있습니다.",
+        "intro": "OpenAI API와 호환되는 서비스라면 무엇이든 사용할 수 있습니다.",
         "model": "모델",
         "status": {
           "refused": "서비스가 이 키를 거부했습니다.",
-          "notOpenai": "이 주소는 OpenAI API와 함께 작동하지 않습니다.",
+          "notOpenai": "이 주소는 OpenAI API와 호환되지 않습니다.",
           "noModel": "이 모델은 이 서비스에 없습니다.",
-          "busy": "이 서비스가 바쁩니다. 잠시 후 다시 시도해 주세요.",
+          "busy": "이 서비스에 요청이 몰려 있습니다. 잠시 후 다시 시도해 주세요.",
           "failing": "이 서비스에 문제가 있었습니다. 나중에 다시 시도해 주세요."
         },
-        "warning": "이 서비스에는 기밀 컴퓨팅이 없습니다. 회원님의 프로필, 회원님의 채팅, 메라 뉴스가 회원님을 위해 읽는 기사가 모두 이 서비스를 운영하는 사람에게 전달됩니다.",
+        "warning": "이 서비스에는 기밀 컴퓨팅이 없습니다. 회원님의 프로필과 채팅, 메라 뉴스가 회원님을 위해 읽는 기사는 모두 이 서비스의 운영 주체에게 전달됩니다.",
         "switch": "이 서비스 사용",
-        "confirmTitle": "내 AI 서비스를 사용할까요?",
+        "confirmTitle": "내 AI 서비스를 사용하시겠습니까?",
         "confirmYes": "사용",
         "whatChanges": "달라지는 점",
         "changes": {
@@ -957,8 +957,8 @@
         "missingRow": "여기서는 사용할 수 없음",
         "missing": {
           "title": "여기서는 사용할 수 없음",
-          "intro": "회원님의 뉴스 서버는 이 기능을 제공하지 않습니다. 메라 뉴스는 해당 페이지를 빈 상태로 표시합니다.",
-          "unknown": "회원님의 뉴스 서버가 제공하는 기능을 알려 주지 않았습니다. 표시할 수 없는 페이지는 빈 상태로 남습니다."
+          "intro": "회원님의 뉴스 서버는 이 기능들을 제공하지 않습니다. 메라 뉴스는 이 기능들을 빈 상태로 보여 줍니다.",
+          "unknown": "회원님의 뉴스 서버가 어떤 기능을 제공하는지 알려 주지 않았습니다. 표시할 수 없는 페이지는 빈 상태로 남습니다."
         }
       },
       "feature": {
@@ -1475,7 +1475,7 @@
       "groupTitle": "Kendi hizmetlerin",
       "aiRow": "Kendi yapay zekâ hizmetin",
       "newsRow": "Kendi haber sunucun",
-      "footer": "Kendi yapay zekâ ya da haber sunucusunu işletenler için. Çoğu kişinin buna ihtiyacı yok.",
+      "footer": "Kendi yapay zekâ hizmetini ya da haber sunucusunu çalıştıranlar için. Çoğu kişinin buna ihtiyacı yok.",
       "footerOnDevice": "Bunları kullanmak için “Bu telefonda” modunu kapat.",
       "usingAi": "Kendi yapay zekâ hizmetin kullanılıyor",
       "usingNews": "Kendi haber sunucun kullanılıyor",
@@ -1495,7 +1495,7 @@
       "checking": "Denetleniyor",
       "checkAgain": "Yeniden denetle",
       "status": {
-        "connected": "Bağlandı",
+        "connected": "Bağlı",
         "unreachable": "Bu adrese ulaşılamıyor.",
         "redirect": "Bu adres yönlendiriyor. Son adresi kullan."
       },
@@ -1521,7 +1521,7 @@
           "busy": "Bu hizmet meşgul. Bir dakika sonra yeniden dene.",
           "failing": "Bu hizmette bir sorun oluştu. Daha sonra yeniden dene."
         },
-        "warning": "Bu hizmette gizli bilgi işlem yok. Profilin, sohbetlerin ve Mera News'in senin için okuduğu makaleler, hizmeti çalıştıran kişiye gider.",
+        "warning": "Bu hizmette gizli bilgi işlem yok. Profilin, sohbetlerin ve Mera News'in senin için okuduğu makaleler, hizmeti kim çalıştırıyorsa ona gider.",
         "switch": "Bu hizmeti kullan",
         "confirmTitle": "Kendi yapay zekâ hizmetin kullanılsın mı?",
         "confirmYes": "Kullan",
@@ -1541,7 +1541,7 @@
           "noFeed": "Bu sunucu akış oluşturamıyor."
         },
         "switch": "Bu sunucuyu kullan",
-        "topicsLine": "Konuların bu sunucuya gider. Bu açıkken Mera News sunucuları hiçbir haber isteği almaz.",
+        "topicsLine": "Konuların bu sunucuya gider. Bu seçenek açıkken Mera News sunucuları hiçbir haber isteği almaz.",
         "missingRow": "Burada kullanılamaz",
         "missing": {
           "title": "Burada kullanılamaz",
@@ -1815,7 +1815,7 @@
           "busy": "此服务繁忙。请一分钟后再试。",
           "failing": "此服务出现问题。请稍后再试。"
         },
-        "warning": "此服务没有机密计算。你的个人资料、你的聊天记录，以及梅拉新闻为你阅读的文章，都会交给运行该服务的人。",
+        "warning": "此服务没有机密计算。你的个人资料、你的聊天记录，以及梅拉新闻为你阅读的文章，都会交给该服务的运营方。",
         "switch": "使用此服务",
         "confirmTitle": "要使用你自己的 AI 服务吗？",
         "confirmYes": "使用",
@@ -1913,7 +1913,7 @@
           "busy": "這個服務目前忙碌。請一分鐘後再試。",
           "failing": "這個服務發生問題。請稍後再試。"
         },
-        "warning": "這個服務沒有機密運算。你的個人資料、對話內容，以及梅拉新聞為你閱讀的文章，都會傳送給營運這個服務的人。",
+        "warning": "這個服務沒有機密運算。你的個人資料、對話內容，以及梅拉新聞為你閱讀的文章，都會傳送給這個服務的營運方。",
         "switch": "使用這個服務",
         "confirmTitle": "要使用你自己的 AI 服務嗎？",
         "confirmYes": "使用",

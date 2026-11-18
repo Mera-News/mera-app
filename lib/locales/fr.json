@@ -3336,7 +3336,7 @@
         "busy": "Ce service est occupé. Réessayez dans une minute.",
         "failing": "Ce service a rencontré un problème. Réessayez plus tard."
       },
-      "warning": "Ce service ne propose pas de calcul confidentiel. Votre profil, vos conversations et les articles que Mera News lit pour vous sont transmis à la personne qui l'exploite.",
+      "warning": "Ce service ne propose pas de calcul confidentiel. Votre profil, vos conversations et les articles que Mera News lit pour vous sont transmis à qui exploite le service.",
       "switch": "Utiliser ce service",
       "confirmTitle": "Utiliser votre propre service d'IA ?",
       "confirmYes": "Utiliser",
