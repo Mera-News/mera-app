@@ -22,3 +22,5 @@ export type { GatewayCall, GatewayReply, GatewayResponder, GatewayRoute } from '
 export { mockGql, mockGqlError } from './gql';
 export { fixture } from './fixture';
 export { renderHookInScreen } from './screen';
+export { fakePod, podSnapshotFrom, POD_URL } from './fake-pod';
+export type { FakePodRequest } from './fake-pod';

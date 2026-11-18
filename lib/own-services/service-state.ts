@@ -4,9 +4,9 @@ import { setReportSecrets } from './report-secrets';
 
 type Secrets = { hosts: string[]; secrets: string[] };
 
-export function createServiceState<T extends { on: boolean }>(opts: {
+export function createServiceState<T extends object>(opts: {
   key: string;
-  kind: 'ownAi' | 'ownNews';
+  kind: 'ownAi' | 'ownNews' | 'pod';
   parse(raw: unknown): T | null;
   secrets(value: T): Secrets;
 }) {
