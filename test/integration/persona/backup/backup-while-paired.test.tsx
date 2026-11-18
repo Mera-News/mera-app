@@ -161,6 +161,35 @@ describe('a pairing in progress and a backup never overlap', () => {
   });
 });
 
+describe('pairing from the code page while a backup runs', () => {
+  it('says a backup or restore is running, and sends nothing to the server', async () => {
+    await setUpBackup();
+    const pod = fakePod();
+    // A provider that has not answered yet keeps the backup running.
+    let answer!: (v: boolean) => void;
+    const slow = { ...icloudProvider, isAvailable: () => new Promise<boolean>((r) => (answer = r)) };
+    const backup = runBackup(slow).catch(() => undefined);
+    const { default: PodCodeScreen } = await import('@/components/custom/config-mera/own-services/PodCodeScreen');
+    const { settleDialog, useDialogQueue } = await import('@/lib/dialog');
+    useDialogQueue.setState({ queue: [] });
+    await render(<PodCodeScreen />);
+    await act(async () => {
+      fireEvent.changeText(screen.getByTestId('own-pod-address'), 'https://pod.own.test');
+      fireEvent.changeText(screen.getByTestId('own-pod-code'), 'K7Q2M9XD');
+    });
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('own-pod-code-pair'));
+    });
+    await act(async () => {
+      settleDialog(useDialogQueue.getState().queue[0].id, true);
+    });
+    expect(await screen.findByText('A backup or restore is running. Try again when it ends.')).toBeTruthy();
+    expect(pod.requests).toEqual([]);
+    answer(false);
+    await backup;
+  });
+});
+
 describe('after unpairing', () => {
   it('backup works again with the same settings, and nothing runs by itself at the moment of unpairing', async () => {
     await setUpBackup();

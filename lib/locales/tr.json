@@ -3420,7 +3420,8 @@
       "toast": {
         "unreachable": "Can't reach your server. Nothing was changed.",
         "failed": "Your server couldn't save this. Try again."
-      }
+      },
+      "backupRunning": "A backup or restore is running. Try again when it ends."
     },
     "logoutPaired": "This phone is also unpaired from your server.",
     "logoutOwn": "Your own service settings are removed from this phone."

@@ -37,6 +37,7 @@ export const POD_CODE_ERROR_KEY = {
     already_paired: 'ownServices.pod.alreadyPairedElsewhere',
     'phone-old': 'ownServices.pod.codePhoneOld',
     'server-old': 'ownServices.pod.status.serverOld',
+    backup_running: 'ownServices.pod.backupRunning',
 } as const;
 
 /** The paired page's one status line, by health. A healthy server says nothing. */
