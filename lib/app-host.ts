@@ -62,6 +62,9 @@ async function hydrateAppState(): Promise<void> {
     require('@/components/custom/mera-button/corner').hydrateMeraButtonCorner(),
     // The Feed's view and minimap rows, the same memoised load the startup gate awaits.
     require('@/components/custom/feed/feed-view-prefs').loadFeedViewPrefs(),
+    // Whether an own AI service or news server is on, before any scoring or feed call picks its host.
+    require('@/lib/own-services/own-ai-state').ownAiState.hydrate(),
+    require('@/lib/own-services/own-news-state').ownNewsState.hydrate(),
     // The backup preferences mirror, then the OS task re-synced to the hydrated cadence: the only
     // moment the cadence is known to be right. Never rejects.
     require('@/lib/backup/backup-settings')
@@ -90,6 +93,8 @@ async function resetAppState(): Promise<void> {
   require('@/components/custom/nav/navigate-to-page').resetPendingPage();
   require('@/components/custom/mera-button/corner').resetMeraButtonCorner();
   require('@/components/custom/feed/feed-view-prefs').resetFeedViewPrefs();
+  require('@/lib/own-services/own-ai-state').ownAiState.resetMemory();
+  require('@/lib/own-services/own-news-state').ownNewsState.resetMemory();
   // LAST, and deliberately so: the device's memory of its last resolved subscription tier. Without
   // it, user B on user A's device inherits A's tier and walks past the pre-onboarding entitlement
   // gate as a subscriber. The tier is written by a fire-and-forget `recordResolvedTier()` that reads
@@ -154,6 +159,10 @@ const host: PlatformHost = {
   },
   submitFeatureRequest: (title, summary) => require('@/lib/feedback').submitFeatureRequest(title, summary),
   devDump,
+
+  get llmTransport() {
+    return require('@/lib/own-services/own-ai-transport').currentTransport();
+  },
 
   get fetch() {
     return expoFetch();
