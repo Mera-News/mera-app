@@ -1771,6 +1771,10 @@
       "rated": "Calificación de {{organisation}}: {{rating}}",
       "ratedSaid": "Calificación de {{organisation}}: {{rating}}. «{{summary}}»",
       "footer": "Verificado el {{date}}. Compartido a través de {{downloadUrl}}"
+    },
+    "notOffered": {
+      "ownNews": "Fact checks are off while you use your own news server.",
+      "pod": "Fact checks are off while you use your own Mera News server."
     }
   },
   "consent": {
@@ -3275,5 +3279,95 @@
   "chatSample": {
     "profileLabel": "Perfil de ejemplo",
     "storiesLabel": "Historias de ejemplo"
+  },
+  "ownServices": {
+    "groupTitle": "Your own services",
+    "aiRow": "Your own AI service",
+    "newsRow": "Your own news server",
+    "footer": "For people who run their own AI or news server. Most people don't need this.",
+    "footerOnDevice": "Turn off On this phone to use these.",
+    "usingAi": "Using your own AI service",
+    "usingNews": "Using your own news server",
+    "usingBoth": "Using your own services",
+    "field": {
+      "address": "Address",
+      "key": "Key (optional)",
+      "showKey": "Show key",
+      "hideKey": "Hide key"
+    },
+    "address": {
+      "notHttps": "Use an address that starts with https://",
+      "userinfo": "Remove the name and password from this address.",
+      "invalid": "This isn't a web address."
+    },
+    "check": "Check connection",
+    "checking": "Checking",
+    "checkAgain": "Check again",
+    "status": {
+      "connected": "Connected",
+      "unreachable": "Can't reach this address.",
+      "redirect": "This address redirects. Use the final address."
+    },
+    "lastCheckFailed": "Last check failed. {{reason}}",
+    "offUntilChecked": "Off until you check this address.",
+    "gate": {
+      "line": "Your own AI service needs a Mera News plan.",
+      "lineNews": "Your own news server needs a Mera News plan.",
+      "button": "See plans"
+    },
+    "onDevice": {
+      "line": "Turn off On this phone first.",
+      "button": "Go to On this phone"
+    },
+    "ai": {
+      "title": "Your own AI service",
+      "intro": "Use any service that works with the OpenAI API.",
+      "model": "Model",
+      "status": {
+        "refused": "The service refused this key.",
+        "notOpenai": "This address doesn't work with the OpenAI API.",
+        "noModel": "This model isn't on this service.",
+        "busy": "This service is busy. Try again in a minute.",
+        "failing": "This service had a problem. Try again later."
+      },
+      "warning": "This service has no confidential computing. Your profile, your chats and the articles Mera News reads for you go to whoever runs it.",
+      "switch": "Use this service",
+      "confirmTitle": "Use your own AI service?",
+      "confirmYes": "Use it",
+      "whatChanges": "What changes",
+      "changes": {
+        "title": "What changes",
+        "uses": "Ranking, reasons and chat use your service.",
+        "off": "Web search and fact checks are off.",
+        "verify": "Verify is hidden. It checks the private cloud only."
+      }
+    },
+    "news": {
+      "title": "Your own news server",
+      "intro": "Use a news server you run.",
+      "status": {
+        "refused": "The server refused this key.",
+        "noFeed": "This server can't make a feed."
+      },
+      "switch": "Use this server",
+      "topicsLine": "Your topics go to this server. Mera News servers get no news requests while it's on.",
+      "missingRow": "Not available here",
+      "missing": {
+        "title": "Not available here",
+        "intro": "Your news server doesn't offer these. Mera News shows them as empty.",
+        "unknown": "Your news server didn't say what it offers. Pages it can't show stay empty."
+      }
+    },
+    "feature": {
+      "search": "Search",
+      "worldHeadlines": "World headlines",
+      "relatedArticles": "Related articles",
+      "storyUpdates": "Story updates",
+      "publicationPages": "Publication pages",
+      "placeSearch": "Finding a place",
+      "factChecks": "Fact checks",
+      "storyGrouping": "Grouping stories",
+      "publicationNames": "Publication names"
+    }
   }
 }
