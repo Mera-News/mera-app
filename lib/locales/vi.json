@@ -1747,8 +1747,8 @@
       "footer": "Đã kiểm chứng ngày {{date}}. Chia sẻ qua {{downloadUrl}}"
     },
     "notOffered": {
-      "ownNews": "Fact checks are off while you use your own news server.",
-      "pod": "Fact checks are off while you use your own Mera News server."
+      "ownNews": "Kiểm chứng sự kiện đang tắt khi bạn dùng máy chủ tin tức riêng.",
+      "pod": "Kiểm chứng sự kiện đang tắt khi bạn dùng máy chủ Mera News riêng."
     }
   },
   "consent": {
@@ -3254,93 +3254,93 @@
     "storiesLabel": "Tin mẫu"
   },
   "ownServices": {
-    "groupTitle": "Your own services",
-    "aiRow": "Your own AI service",
-    "newsRow": "Your own news server",
-    "footer": "For people who run their own AI or news server. Most people don't need this.",
-    "footerOnDevice": "Turn off On this phone to use these.",
-    "usingAi": "Using your own AI service",
-    "usingNews": "Using your own news server",
-    "usingBoth": "Using your own services",
+    "groupTitle": "Dịch vụ riêng của bạn",
+    "aiRow": "Dịch vụ AI riêng của bạn",
+    "newsRow": "Máy chủ tin tức riêng của bạn",
+    "footer": "Dành cho người tự vận hành dịch vụ AI hoặc máy chủ tin tức riêng. Hầu hết mọi người không cần đến tính năng này.",
+    "footerOnDevice": "Tắt chế độ Trên điện thoại này để dùng các dịch vụ này.",
+    "usingAi": "Đang dùng dịch vụ AI riêng của bạn",
+    "usingNews": "Đang dùng máy chủ tin tức riêng của bạn",
+    "usingBoth": "Đang dùng dịch vụ riêng của bạn",
     "field": {
-      "address": "Address",
-      "key": "Key (optional)",
-      "showKey": "Show key",
-      "hideKey": "Hide key"
+      "address": "Địa chỉ",
+      "key": "Khóa (không bắt buộc)",
+      "showKey": "Hiện khóa",
+      "hideKey": "Ẩn khóa"
     },
     "address": {
-      "notHttps": "Use an address that starts with https://",
-      "userinfo": "Remove the name and password from this address.",
-      "invalid": "This isn't a web address."
+      "notHttps": "Dùng địa chỉ bắt đầu bằng https://",
+      "userinfo": "Xóa tên và mật khẩu khỏi địa chỉ này.",
+      "invalid": "Đây không phải địa chỉ web."
     },
-    "check": "Check connection",
-    "checking": "Checking",
-    "checkAgain": "Check again",
+    "check": "Kiểm tra kết nối",
+    "checking": "Đang kiểm tra",
+    "checkAgain": "Kiểm tra lại",
     "status": {
-      "connected": "Connected",
-      "unreachable": "Can't reach this address.",
-      "redirect": "This address redirects. Use the final address."
+      "connected": "Đã kết nối",
+      "unreachable": "Không thể kết nối tới địa chỉ này.",
+      "redirect": "Địa chỉ này được chuyển hướng. Hãy dùng địa chỉ cuối cùng."
     },
-    "lastCheckFailed": "Last check failed. {{reason}}",
-    "offUntilChecked": "Off until you check this address.",
+    "lastCheckFailed": "Lần kiểm tra gần nhất thất bại. {{reason}}",
+    "offUntilChecked": "Tắt cho tới khi bạn kiểm tra địa chỉ này.",
     "gate": {
-      "line": "Your own AI service needs a Mera News plan.",
-      "lineNews": "Your own news server needs a Mera News plan.",
-      "button": "See plans"
+      "line": "Dịch vụ AI riêng của bạn cần gói Mera News.",
+      "lineNews": "Máy chủ tin tức riêng của bạn cần gói Mera News.",
+      "button": "Xem các gói"
     },
     "onDevice": {
-      "line": "Turn off On this phone first.",
-      "button": "Go to On this phone"
+      "line": "Hãy tắt chế độ Trên điện thoại này trước.",
+      "button": "Đi tới chế độ Trên điện thoại này"
     },
     "ai": {
-      "title": "Your own AI service",
-      "intro": "Use any service that works with the OpenAI API.",
-      "model": "Model",
+      "title": "Dịch vụ AI riêng của bạn",
+      "intro": "Dùng bất kỳ dịch vụ nào hoạt động với OpenAI API.",
+      "model": "Mô hình",
       "status": {
-        "refused": "The service refused this key.",
-        "notOpenai": "This address doesn't work with the OpenAI API.",
-        "noModel": "This model isn't on this service.",
-        "busy": "This service is busy. Try again in a minute.",
-        "failing": "This service had a problem. Try again later."
+        "refused": "Dịch vụ này đã từ chối khóa này.",
+        "notOpenai": "Địa chỉ này không hoạt động với OpenAI API.",
+        "noModel": "Mô hình này không có trên dịch vụ này.",
+        "busy": "Dịch vụ này đang bận. Hãy thử lại sau một phút.",
+        "failing": "Dịch vụ này gặp sự cố. Hãy thử lại sau."
       },
-      "warning": "This service has no confidential computing. Your profile, your chats and the articles Mera News reads for you go to whoever runs it.",
-      "switch": "Use this service",
-      "confirmTitle": "Use your own AI service?",
-      "confirmYes": "Use it",
-      "whatChanges": "What changes",
+      "warning": "Dịch vụ này không hỗ trợ điện toán bảo mật. Hồ sơ của bạn, cuộc trò chuyện và các bài báo Mera News đọc cho bạn đều được gửi tới người vận hành dịch vụ.",
+      "switch": "Dùng dịch vụ này",
+      "confirmTitle": "Dùng dịch vụ AI riêng của bạn?",
+      "confirmYes": "Dùng",
+      "whatChanges": "Điều gì thay đổi",
       "changes": {
-        "title": "What changes",
-        "uses": "Ranking, reasons and chat use your service.",
-        "off": "Web search and fact checks are off.",
-        "verify": "Verify is hidden. It checks the private cloud only."
+        "title": "Điều gì thay đổi",
+        "uses": "Xếp hạng, lý do và trò chuyện sẽ dùng dịch vụ của bạn.",
+        "off": "Tìm kiếm trên web và kiểm chứng sự kiện sẽ tắt.",
+        "verify": "Xác minh chứng thực bị ẩn. Tính năng này chỉ kiểm tra đám mây riêng."
       }
     },
     "news": {
-      "title": "Your own news server",
-      "intro": "Use a news server you run.",
+      "title": "Máy chủ tin tức riêng của bạn",
+      "intro": "Dùng máy chủ tin tức do bạn vận hành.",
       "status": {
-        "refused": "The server refused this key.",
-        "noFeed": "This server can't make a feed."
+        "refused": "Máy chủ này đã từ chối khóa này.",
+        "noFeed": "Máy chủ này không thể tạo bảng tin."
       },
-      "switch": "Use this server",
-      "topicsLine": "Your topics go to this server. Mera News servers get no news requests while it's on.",
-      "missingRow": "Not available here",
+      "switch": "Dùng máy chủ này",
+      "topicsLine": "Chủ đề của bạn được gửi tới máy chủ này. Máy chủ Mera News không nhận yêu cầu tin tức nào khi máy chủ này đang bật.",
+      "missingRow": "Không có sẵn ở đây",
       "missing": {
-        "title": "Not available here",
-        "intro": "Your news server doesn't offer these. Mera News shows them as empty.",
-        "unknown": "Your news server didn't say what it offers. Pages it can't show stay empty."
+        "title": "Không có sẵn ở đây",
+        "intro": "Máy chủ tin tức của bạn không cung cấp các mục này. Mera News hiển thị các trang này để trống.",
+        "unknown": "Máy chủ tin tức của bạn không cho biết nó cung cấp những gì. Các trang nó không thể hiển thị sẽ để trống."
       }
     },
     "feature": {
-      "search": "Search",
-      "worldHeadlines": "World headlines",
-      "relatedArticles": "Related articles",
-      "storyUpdates": "Story updates",
-      "publicationPages": "Publication pages",
-      "placeSearch": "Finding a place",
-      "factChecks": "Fact checks",
-      "storyGrouping": "Grouping stories",
-      "publicationNames": "Publication names"
+      "search": "Tìm kiếm",
+      "worldHeadlines": "Tiêu đề tin thế giới",
+      "relatedArticles": "Bài báo liên quan",
+      "storyUpdates": "Cập nhật tin",
+      "publicationPages": "Trang nguồn tin",
+      "placeSearch": "Tìm địa điểm",
+      "factChecks": "Kiểm chứng sự kiện",
+      "storyGrouping": "Gom nhóm tin",
+      "publicationNames": "Tên nguồn tin"
     }
   }
 }

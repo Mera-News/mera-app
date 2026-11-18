@@ -1932,8 +1932,8 @@
       "footer": "تم التحقق في {{date}}. تمت المشاركة عبر {{downloadUrl}}"
     },
     "notOffered": {
-      "ownNews": "Fact checks are off while you use your own news server.",
-      "pod": "Fact checks are off while you use your own ميرا نيوز server."
+      "ownNews": "التحقق من الحقائق متوقف أثناء استخدامك خادم أخبارك الخاص.",
+      "pod": "التحقق من الحقائق متوقف أثناء استخدامك خادم ميرا نيوز الخاص بك."
     }
   },
   "consent": {
@@ -3552,93 +3552,93 @@
     "storiesLabel": "أخبار مثال"
   },
   "ownServices": {
-    "groupTitle": "Your own services",
-    "aiRow": "Your own AI service",
-    "newsRow": "Your own news server",
-    "footer": "For people who run their own AI or news server. Most people don't need this.",
-    "footerOnDevice": "Turn off On this phone to use these.",
-    "usingAi": "Using your own AI service",
-    "usingNews": "Using your own news server",
-    "usingBoth": "Using your own services",
+    "groupTitle": "خدماتك الخاصة",
+    "aiRow": "خدمة الذكاء الاصطناعي الخاصة بك",
+    "newsRow": "خادم الأخبار الخاص بك",
+    "footer": "للأشخاص الذين يديرون خدمة الذكاء الاصطناعي أو خادم الأخبار الخاص بهم. معظم الناس لا يحتاجون إلى هذا.",
+    "footerOnDevice": "أوقف تشغيل «على هذا الهاتف» لاستخدام هذه.",
+    "usingAi": "تستخدم خدمة الذكاء الاصطناعي الخاصة بك",
+    "usingNews": "تستخدم خادم الأخبار الخاص بك",
+    "usingBoth": "تستخدم خدماتك الخاصة",
     "field": {
-      "address": "Address",
-      "key": "Key (optional)",
-      "showKey": "Show key",
-      "hideKey": "Hide key"
+      "address": "العنوان",
+      "key": "المفتاح (اختياري)",
+      "showKey": "إظهار المفتاح",
+      "hideKey": "إخفاء المفتاح"
     },
     "address": {
-      "notHttps": "Use an address that starts with https://",
-      "userinfo": "Remove the name and password from this address.",
-      "invalid": "This isn't a web address."
+      "notHttps": "استخدم عنواناً يبدأ بـ https://",
+      "userinfo": "أزل الاسم وكلمة المرور من هذا العنوان.",
+      "invalid": "هذا ليس عنوان ويب."
     },
-    "check": "Check connection",
-    "checking": "Checking",
-    "checkAgain": "Check again",
+    "check": "تحقق من الاتصال",
+    "checking": "جارٍ التحقق",
+    "checkAgain": "تحقق مرة أخرى",
     "status": {
-      "connected": "Connected",
-      "unreachable": "Can't reach this address.",
-      "redirect": "This address redirects. Use the final address."
+      "connected": "متصل",
+      "unreachable": "تعذّر الوصول إلى هذا العنوان.",
+      "redirect": "يعيد هذا العنوان التوجيه. استخدم العنوان النهائي."
     },
-    "lastCheckFailed": "Last check failed. {{reason}}",
-    "offUntilChecked": "Off until you check this address.",
+    "lastCheckFailed": "فشل آخر تحقق. {{reason}}",
+    "offUntilChecked": "متوقف إلى أن تتحقق من هذا العنوان.",
     "gate": {
-      "line": "Your own AI service needs a ميرا نيوز plan.",
-      "lineNews": "Your own news server needs a ميرا نيوز plan.",
-      "button": "See plans"
+      "line": "تحتاج خدمة الذكاء الاصطناعي الخاصة بك إلى خطة من ميرا نيوز.",
+      "lineNews": "يحتاج خادم الأخبار الخاص بك إلى خطة من ميرا نيوز.",
+      "button": "عرض الخطط"
     },
     "onDevice": {
-      "line": "Turn off On this phone first.",
-      "button": "Go to On this phone"
+      "line": "أوقف تشغيل «على هذا الهاتف» أولاً.",
+      "button": "الانتقال إلى «على هذا الهاتف»"
     },
     "ai": {
-      "title": "Your own AI service",
-      "intro": "Use any service that works with the OpenAI API.",
-      "model": "Model",
+      "title": "خدمة الذكاء الاصطناعي الخاصة بك",
+      "intro": "استخدم أي خدمة تعمل مع OpenAI API.",
+      "model": "النموذج",
       "status": {
-        "refused": "The service refused this key.",
-        "notOpenai": "This address doesn't work with the OpenAI API.",
-        "noModel": "This model isn't on this service.",
-        "busy": "This service is busy. Try again in a minute.",
-        "failing": "This service had a problem. Try again later."
+        "refused": "رفضت الخدمة هذا المفتاح.",
+        "notOpenai": "لا يعمل هذا العنوان مع OpenAI API.",
+        "noModel": "هذا النموذج غير متوفر في هذه الخدمة.",
+        "busy": "هذه الخدمة مشغولة. حاول مرة أخرى بعد دقيقة.",
+        "failing": "واجهت هذه الخدمة مشكلة. حاول لاحقاً."
       },
-      "warning": "This service has no confidential computing. Your profile, your chats and the articles ميرا نيوز reads for you go to whoever runs it.",
-      "switch": "Use this service",
-      "confirmTitle": "Use your own AI service?",
-      "confirmYes": "Use it",
-      "whatChanges": "What changes",
+      "warning": "لا تحتوي هذه الخدمة على حوسبة سرية. ملفك الشخصي ودردشاتك والمقالات التي تقرأها ميرا نيوز نيابةً عنك تصل جميعها إلى من يشغّل الخدمة.",
+      "switch": "استخدم هذه الخدمة",
+      "confirmTitle": "هل تريد استخدام خدمة الذكاء الاصطناعي الخاصة بك؟",
+      "confirmYes": "استخدمها",
+      "whatChanges": "ما الذي يتغير",
       "changes": {
-        "title": "What changes",
-        "uses": "Ranking, reasons and chat use your service.",
-        "off": "Web search and fact checks are off.",
-        "verify": "Verify is hidden. It checks the private cloud only."
+        "title": "ما الذي يتغير",
+        "uses": "يستخدم الترتيب والأسباب والدردشة خدمتك.",
+        "off": "البحث على الويب والتحقق من الحقائق متوقفان.",
+        "verify": "«تحقق من الشهادة» مخفي. وهو يتحقق من السحابة الخاصة فقط."
       }
     },
     "news": {
-      "title": "Your own news server",
-      "intro": "Use a news server you run.",
+      "title": "خادم الأخبار الخاص بك",
+      "intro": "استخدم خادم أخبار تديره بنفسك.",
       "status": {
-        "refused": "The server refused this key.",
-        "noFeed": "This server can't make a feed."
+        "refused": "رفض الخادم هذا المفتاح.",
+        "noFeed": "لا يستطيع هذا الخادم إنشاء خلاصة."
       },
-      "switch": "Use this server",
-      "topicsLine": "Your topics go to this server. ميرا نيوز servers get no news requests while it's on.",
-      "missingRow": "Not available here",
+      "switch": "استخدم هذا الخادم",
+      "topicsLine": "تنتقل مواضيعك إلى هذا الخادم. لا تتلقى خوادم ميرا نيوز أي طلبات للأخبار ما دام مفعّلاً.",
+      "missingRow": "غير متوفر هنا",
       "missing": {
-        "title": "Not available here",
-        "intro": "Your news server doesn't offer these. ميرا نيوز shows them as empty.",
-        "unknown": "Your news server didn't say what it offers. Pages it can't show stay empty."
+        "title": "غير متوفر هنا",
+        "intro": "لا يقدّم خادم أخبارك هذه الميزات. تعرض ميرا نيوز هذه الصفحات فارغة.",
+        "unknown": "لم يذكر خادم أخبارك ما يقدّمه. ستبقى الصفحات التي لا يستطيع عرضها فارغة."
       }
     },
     "feature": {
-      "search": "Search",
-      "worldHeadlines": "World headlines",
-      "relatedArticles": "Related articles",
-      "storyUpdates": "Story updates",
-      "publicationPages": "Publication pages",
-      "placeSearch": "Finding a place",
-      "factChecks": "Fact checks",
-      "storyGrouping": "Grouping stories",
-      "publicationNames": "Publication names"
+      "search": "البحث",
+      "worldHeadlines": "عناوين العالم",
+      "relatedArticles": "مقالات ذات صلة",
+      "storyUpdates": "تحديثات القصص",
+      "publicationPages": "صفحات الناشرين",
+      "placeSearch": "البحث عن مكان",
+      "factChecks": "التحققات من الحقائق",
+      "storyGrouping": "تجميع القصص",
+      "publicationNames": "أسماء الناشرين"
     }
   }
 }

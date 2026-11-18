@@ -1,0 +1,1963 @@
+{
+  "_comment": "Own services, translated (wave pubparts P9). Spliced with --allow-overwrite over every key.",
+  "en": {
+    "ownServices": {
+      "groupTitle": "Your own services",
+      "aiRow": "Your own AI service",
+      "newsRow": "Your own news server",
+      "footer": "For people who run their own AI or news server. Most people don't need this.",
+      "footerOnDevice": "Turn off On this phone to use these.",
+      "usingAi": "Using your own AI service",
+      "usingNews": "Using your own news server",
+      "usingBoth": "Using your own services",
+      "field": {
+        "address": "Address",
+        "key": "Key (optional)",
+        "showKey": "Show key",
+        "hideKey": "Hide key"
+      },
+      "address": {
+        "notHttps": "Use an address that starts with https://",
+        "userinfo": "Remove the name and password from this address.",
+        "invalid": "This isn't a web address."
+      },
+      "check": "Check connection",
+      "checking": "Checking",
+      "checkAgain": "Check again",
+      "status": {
+        "connected": "Connected",
+        "unreachable": "Can't reach this address.",
+        "redirect": "This address redirects. Use the final address."
+      },
+      "lastCheckFailed": "Last check failed. {{reason}}",
+      "offUntilChecked": "Off until you check this address.",
+      "gate": {
+        "line": "Your own AI service needs a Mera News plan.",
+        "lineNews": "Your own news server needs a Mera News plan.",
+        "button": "See plans"
+      },
+      "onDevice": {
+        "line": "Turn off On this phone first.",
+        "button": "Go to On this phone"
+      },
+      "ai": {
+        "title": "Your own AI service",
+        "intro": "Use any service that works with the OpenAI API.",
+        "model": "Model",
+        "status": {
+          "refused": "The service refused this key.",
+          "notOpenai": "This address doesn't work with the OpenAI API.",
+          "noModel": "This model isn't on this service.",
+          "busy": "This service is busy. Try again in a minute.",
+          "failing": "This service had a problem. Try again later."
+        },
+        "warning": "This service has no confidential computing. Your profile, your chats and the articles Mera News reads for you go to whoever runs it.",
+        "switch": "Use this service",
+        "confirmTitle": "Use your own AI service?",
+        "confirmYes": "Use it",
+        "whatChanges": "What changes",
+        "changes": {
+          "title": "What changes",
+          "uses": "Ranking, reasons and chat use your service.",
+          "off": "Web search and fact checks are off.",
+          "verify": "Verify attestation is hidden. It checks the private cloud only."
+        }
+      },
+      "news": {
+        "title": "Your own news server",
+        "intro": "Use a news server you run.",
+        "status": {
+          "refused": "The server refused this key.",
+          "noFeed": "This server can't make a feed."
+        },
+        "switch": "Use this server",
+        "topicsLine": "Your topics go to this server. Mera News servers get no news requests while it's on.",
+        "missingRow": "Not available here",
+        "missing": {
+          "title": "Not available here",
+          "intro": "Your news server doesn't offer these. Mera News shows them as empty.",
+          "unknown": "Your news server didn't say what it offers. Pages it can't show stay empty."
+        }
+      },
+      "feature": {
+        "search": "Search",
+        "worldHeadlines": "World headlines",
+        "relatedArticles": "Related articles",
+        "storyUpdates": "Story updates",
+        "publicationPages": "Publication pages",
+        "placeSearch": "Finding a place",
+        "factChecks": "Fact checks",
+        "storyGrouping": "Grouping stories",
+        "publicationNames": "Publication names"
+      }
+    },
+    "factCheck": {
+      "notOffered": {
+        "ownNews": "Fact checks are off while you use your own news server.",
+        "pod": "Fact checks are off while you use your own Mera News server."
+      }
+    }
+  },
+  "ar": {
+    "ownServices": {
+      "groupTitle": "خدماتك الخاصة",
+      "aiRow": "خدمة الذكاء الاصطناعي الخاصة بك",
+      "newsRow": "خادم الأخبار الخاص بك",
+      "footer": "للأشخاص الذين يديرون خدمة الذكاء الاصطناعي أو خادم الأخبار الخاص بهم. معظم الناس لا يحتاجون إلى هذا.",
+      "footerOnDevice": "أوقف تشغيل «على هذا الهاتف» لاستخدام هذه.",
+      "usingAi": "تستخدم خدمة الذكاء الاصطناعي الخاصة بك",
+      "usingNews": "تستخدم خادم الأخبار الخاص بك",
+      "usingBoth": "تستخدم خدماتك الخاصة",
+      "field": {
+        "address": "العنوان",
+        "key": "المفتاح (اختياري)",
+        "showKey": "إظهار المفتاح",
+        "hideKey": "إخفاء المفتاح"
+      },
+      "address": {
+        "notHttps": "استخدم عنواناً يبدأ بـ https://",
+        "userinfo": "أزل الاسم وكلمة المرور من هذا العنوان.",
+        "invalid": "هذا ليس عنوان ويب."
+      },
+      "check": "تحقق من الاتصال",
+      "checking": "جارٍ التحقق",
+      "checkAgain": "تحقق مرة أخرى",
+      "status": {
+        "connected": "متصل",
+        "unreachable": "تعذّر الوصول إلى هذا العنوان.",
+        "redirect": "يعيد هذا العنوان التوجيه. استخدم العنوان النهائي."
+      },
+      "lastCheckFailed": "فشل آخر تحقق. {{reason}}",
+      "offUntilChecked": "متوقف إلى أن تتحقق من هذا العنوان.",
+      "gate": {
+        "line": "تحتاج خدمة الذكاء الاصطناعي الخاصة بك إلى خطة من ميرا نيوز.",
+        "lineNews": "يحتاج خادم الأخبار الخاص بك إلى خطة من ميرا نيوز.",
+        "button": "عرض الخطط"
+      },
+      "onDevice": {
+        "line": "أوقف تشغيل «على هذا الهاتف» أولاً.",
+        "button": "الانتقال إلى «على هذا الهاتف»"
+      },
+      "ai": {
+        "title": "خدمة الذكاء الاصطناعي الخاصة بك",
+        "intro": "استخدم أي خدمة تعمل مع OpenAI API.",
+        "model": "النموذج",
+        "status": {
+          "refused": "رفضت الخدمة هذا المفتاح.",
+          "notOpenai": "لا يعمل هذا العنوان مع OpenAI API.",
+          "noModel": "هذا النموذج غير متوفر في هذه الخدمة.",
+          "busy": "هذه الخدمة مشغولة. حاول مرة أخرى بعد دقيقة.",
+          "failing": "واجهت هذه الخدمة مشكلة. حاول لاحقاً."
+        },
+        "warning": "لا تحتوي هذه الخدمة على حوسبة سرية. ملفك الشخصي ودردشاتك والمقالات التي تقرأها ميرا نيوز نيابةً عنك تصل جميعها إلى من يشغّل الخدمة.",
+        "switch": "استخدم هذه الخدمة",
+        "confirmTitle": "هل تريد استخدام خدمة الذكاء الاصطناعي الخاصة بك؟",
+        "confirmYes": "استخدمها",
+        "whatChanges": "ما الذي يتغير",
+        "changes": {
+          "title": "ما الذي يتغير",
+          "uses": "يستخدم الترتيب والأسباب والدردشة خدمتك.",
+          "off": "البحث على الويب والتحقق من الحقائق متوقفان.",
+          "verify": "«تحقق من الشهادة» مخفي. وهو يتحقق من السحابة الخاصة فقط."
+        }
+      },
+      "news": {
+        "title": "خادم الأخبار الخاص بك",
+        "intro": "استخدم خادم أخبار تديره بنفسك.",
+        "status": {
+          "refused": "رفض الخادم هذا المفتاح.",
+          "noFeed": "لا يستطيع هذا الخادم إنشاء خلاصة."
+        },
+        "switch": "استخدم هذا الخادم",
+        "topicsLine": "تنتقل مواضيعك إلى هذا الخادم. لا تتلقى خوادم ميرا نيوز أي طلبات للأخبار ما دام مفعّلاً.",
+        "missingRow": "غير متوفر هنا",
+        "missing": {
+          "title": "غير متوفر هنا",
+          "intro": "لا يقدّم خادم أخبارك هذه الميزات. تعرض ميرا نيوز هذه الصفحات فارغة.",
+          "unknown": "لم يذكر خادم أخبارك ما يقدّمه. ستبقى الصفحات التي لا يستطيع عرضها فارغة."
+        }
+      },
+      "feature": {
+        "search": "البحث",
+        "worldHeadlines": "عناوين العالم",
+        "relatedArticles": "مقالات ذات صلة",
+        "storyUpdates": "تحديثات القصص",
+        "publicationPages": "صفحات الناشرين",
+        "placeSearch": "البحث عن مكان",
+        "factChecks": "التحققات من الحقائق",
+        "storyGrouping": "تجميع القصص",
+        "publicationNames": "أسماء الناشرين"
+      }
+    },
+    "factCheck": {
+      "notOffered": {
+        "ownNews": "التحقق من الحقائق متوقف أثناء استخدامك خادم أخبارك الخاص.",
+        "pod": "التحقق من الحقائق متوقف أثناء استخدامك خادم ميرا نيوز الخاص بك."
+      }
+    }
+  },
+  "de": {
+    "ownServices": {
+      "groupTitle": "Deine eigenen Dienste",
+      "aiRow": "Dein eigener KI-Dienst",
+      "newsRow": "Dein eigener Nachrichtenserver",
+      "footer": "Für Leute, die ihre eigene KI oder ihren eigenen Nachrichtenserver betreiben. Die meisten brauchen das nicht.",
+      "footerOnDevice": "Schalte „Auf diesem Telefon“ aus, um diese zu nutzen.",
+      "usingAi": "Du nutzt deinen eigenen KI-Dienst",
+      "usingNews": "Du nutzt deinen eigenen Nachrichtenserver",
+      "usingBoth": "Du nutzt deine eigenen Dienste",
+      "field": {
+        "address": "Adresse",
+        "key": "Schlüssel (optional)",
+        "showKey": "Schlüssel anzeigen",
+        "hideKey": "Schlüssel verbergen"
+      },
+      "address": {
+        "notHttps": "Verwende eine Adresse, die mit https:// beginnt",
+        "userinfo": "Entferne Name und Passwort aus dieser Adresse.",
+        "invalid": "Das ist keine Webadresse."
+      },
+      "check": "Verbindung prüfen",
+      "checking": "Wird geprüft",
+      "checkAgain": "Erneut prüfen",
+      "status": {
+        "connected": "Verbunden",
+        "unreachable": "Diese Adresse ist nicht erreichbar.",
+        "redirect": "Diese Adresse leitet weiter. Verwende die endgültige Adresse."
+      },
+      "lastCheckFailed": "Letzte Prüfung fehlgeschlagen. {{reason}}",
+      "offUntilChecked": "Aus, bis du diese Adresse prüfst.",
+      "gate": {
+        "line": "Für deinen eigenen KI-Dienst brauchst du einen Mera News Tarif.",
+        "lineNews": "Für deinen eigenen Nachrichtenserver brauchst du einen Mera News Tarif.",
+        "button": "Tarife ansehen"
+      },
+      "onDevice": {
+        "line": "Schalte zuerst „Auf diesem Telefon“ aus.",
+        "button": "Zu „Auf diesem Telefon“"
+      },
+      "ai": {
+        "title": "Dein eigener KI-Dienst",
+        "intro": "Nutze jeden Dienst, der mit der OpenAI API funktioniert.",
+        "model": "Modell",
+        "status": {
+          "refused": "Der Dienst hat diesen Schlüssel abgelehnt.",
+          "notOpenai": "Diese Adresse funktioniert nicht mit der OpenAI API.",
+          "noModel": "Dieses Modell gibt es bei diesem Dienst nicht.",
+          "busy": "Dieser Dienst ist gerade ausgelastet. Versuch es in einer Minute erneut.",
+          "failing": "Bei diesem Dienst gab es ein Problem. Versuch es später erneut."
+        },
+        "warning": "Dieser Dienst nutzt kein Confidential Computing. Dein Profil, deine Chats und die Artikel, die Mera News für dich liest, gehen alle an den Betreiber des Dienstes.",
+        "switch": "Diesen Dienst nutzen",
+        "confirmTitle": "Deinen eigenen KI-Dienst nutzen?",
+        "confirmYes": "Ja, nutzen",
+        "whatChanges": "Was sich ändert",
+        "changes": {
+          "title": "Was sich ändert",
+          "uses": "Rangfolge, Begründungen und Chat nutzen deinen Dienst.",
+          "off": "Websuche und Faktenchecks sind aus.",
+          "verify": "„Attestation überprüfen“ ist ausgeblendet. Es prüft nur die Private Cloud."
+        }
+      },
+      "news": {
+        "title": "Dein eigener Nachrichtenserver",
+        "intro": "Nutze einen Nachrichtenserver, den du selbst betreibst.",
+        "status": {
+          "refused": "Der Server hat diesen Schlüssel abgelehnt.",
+          "noFeed": "Dieser Server kann keinen Feed erstellen."
+        },
+        "switch": "Diesen Server nutzen",
+        "topicsLine": "Deine Themen gehen an diesen Server. Die Server von Mera News erhalten keine Nachrichtenanfragen, solange er eingeschaltet ist.",
+        "missingRow": "Hier nicht verfügbar",
+        "missing": {
+          "title": "Hier nicht verfügbar",
+          "intro": "Dein Nachrichtenserver bietet diese nicht an. Mera News zeigt sie als leer an.",
+          "unknown": "Dein Nachrichtenserver hat nicht gesagt, was er anbietet. Seiten, die er nicht zeigen kann, bleiben leer."
+        }
+      },
+      "feature": {
+        "search": "Suche",
+        "worldHeadlines": "Weltschlagzeilen",
+        "relatedArticles": "Verwandte Artikel",
+        "storyUpdates": "Story-Updates",
+        "publicationPages": "Seiten der Medien",
+        "placeSearch": "Orte finden",
+        "factChecks": "Faktenchecks",
+        "storyGrouping": "Gruppierung von Stories",
+        "publicationNames": "Namen der Medien"
+      }
+    },
+    "factCheck": {
+      "notOffered": {
+        "ownNews": "Faktenchecks sind aus, solange du deinen eigenen Nachrichtenserver nutzt.",
+        "pod": "Faktenchecks sind aus, solange du deinen eigenen Mera News Server nutzt."
+      }
+    }
+  },
+  "es": {
+    "ownServices": {
+      "groupTitle": "Tus propios servicios",
+      "aiRow": "Tu propio servicio de IA",
+      "newsRow": "Tu propio servidor de noticias",
+      "footer": "Para quienes gestionan su propio servicio de IA o servidor de noticias. La mayoría no lo necesita.",
+      "footerOnDevice": "Desactiva «En este teléfono» para usar estos.",
+      "usingAi": "Usando tu propio servicio de IA",
+      "usingNews": "Usando tu propio servidor de noticias",
+      "usingBoth": "Usando tus propios servicios",
+      "field": {
+        "address": "Dirección",
+        "key": "Clave (opcional)",
+        "showKey": "Mostrar clave",
+        "hideKey": "Ocultar clave"
+      },
+      "address": {
+        "notHttps": "Usa una dirección que empiece por https://",
+        "userinfo": "Quita el nombre y la contraseña de esta dirección.",
+        "invalid": "Esto no es una dirección web."
+      },
+      "check": "Comprobar conexión",
+      "checking": "Comprobando",
+      "checkAgain": "Comprobar de nuevo",
+      "status": {
+        "connected": "Conectado",
+        "unreachable": "No se puede acceder a esta dirección.",
+        "redirect": "Esta dirección redirige. Usa la dirección final."
+      },
+      "lastCheckFailed": "La última comprobación falló. {{reason}}",
+      "offUntilChecked": "Desactivado hasta que compruebes esta dirección.",
+      "gate": {
+        "line": "Tu propio servicio de IA necesita un plan de Mera News.",
+        "lineNews": "Tu propio servidor de noticias necesita un plan de Mera News.",
+        "button": "Ver planes"
+      },
+      "onDevice": {
+        "line": "Desactiva primero «En este teléfono».",
+        "button": "Ir a «En este teléfono»"
+      },
+      "ai": {
+        "title": "Tu propio servicio de IA",
+        "intro": "Usa cualquier servicio que funcione con la OpenAI API.",
+        "model": "Modelo",
+        "status": {
+          "refused": "El servicio rechazó esta clave.",
+          "notOpenai": "Esta dirección no funciona con la OpenAI API.",
+          "noModel": "Este modelo no está en este servicio.",
+          "busy": "Este servicio está ocupado. Vuelve a intentarlo en un minuto.",
+          "failing": "Este servicio tuvo un problema. Vuelve a intentarlo más tarde."
+        },
+        "warning": "Este servicio no tiene computación confidencial. Tu perfil, tus chats y los artículos que Mera News lee por ti llegan a quien lo gestiona.",
+        "switch": "Usar este servicio",
+        "confirmTitle": "¿Usar tu propio servicio de IA?",
+        "confirmYes": "Usar",
+        "whatChanges": "Qué cambia",
+        "changes": {
+          "title": "Qué cambia",
+          "uses": "Las clasificaciones, los motivos y el chat usan tu servicio.",
+          "off": "La búsqueda web y las verificaciones de hechos están desactivadas.",
+          "verify": "«Verificar atestación» está oculto. Solo comprueba la nube privada."
+        }
+      },
+      "news": {
+        "title": "Tu propio servidor de noticias",
+        "intro": "Usa un servidor de noticias que tú gestionas.",
+        "status": {
+          "refused": "El servidor rechazó esta clave.",
+          "noFeed": "Este servidor no puede generar noticias."
+        },
+        "switch": "Usar este servidor",
+        "topicsLine": "Tus temas llegan a este servidor. Los servidores de Mera News no reciben solicitudes de noticias mientras este servidor esté activado.",
+        "missingRow": "No disponible aquí",
+        "missing": {
+          "title": "No disponible aquí",
+          "intro": "Tu servidor de noticias no ofrece estas funciones. Mera News las muestra vacías.",
+          "unknown": "Tu servidor de noticias no indicó qué ofrece. Las páginas que no puede mostrar quedan vacías."
+        }
+      },
+      "feature": {
+        "search": "Buscar",
+        "worldHeadlines": "Titulares del mundo",
+        "relatedArticles": "Artículos relacionados",
+        "storyUpdates": "Novedades de historias",
+        "publicationPages": "Páginas de medios",
+        "placeSearch": "Encontrar un lugar",
+        "factChecks": "Verificaciones de hechos",
+        "storyGrouping": "Agrupar historias",
+        "publicationNames": "Nombres de medios"
+      }
+    },
+    "factCheck": {
+      "notOffered": {
+        "ownNews": "Las verificaciones de hechos están desactivadas mientras usas tu propio servidor de noticias.",
+        "pod": "Las verificaciones de hechos están desactivadas mientras usas tu propio servidor de Mera News."
+      }
+    }
+  },
+  "fr": {
+    "ownServices": {
+      "groupTitle": "Vos propres services",
+      "aiRow": "Votre propre service d'IA",
+      "newsRow": "Votre propre serveur d'actualités",
+      "footer": "Pour les personnes qui font tourner leur propre service d'IA ou serveur d'actualités. La plupart des gens n'en ont pas besoin.",
+      "footerOnDevice": "Désactivez « Sur ce téléphone » pour les utiliser.",
+      "usingAi": "Utilisation de votre propre service d'IA",
+      "usingNews": "Utilisation de votre propre serveur d'actualités",
+      "usingBoth": "Utilisation de vos propres services",
+      "field": {
+        "address": "Adresse",
+        "key": "Clé (facultatif)",
+        "showKey": "Afficher la clé",
+        "hideKey": "Masquer la clé"
+      },
+      "address": {
+        "notHttps": "Utilisez une adresse qui commence par https://",
+        "userinfo": "Retirez le nom et le mot de passe de cette adresse.",
+        "invalid": "Ce n'est pas une adresse web."
+      },
+      "check": "Vérifier la connexion",
+      "checking": "Vérification",
+      "checkAgain": "Vérifier à nouveau",
+      "status": {
+        "connected": "Connecté",
+        "unreachable": "Impossible de joindre cette adresse.",
+        "redirect": "Cette adresse redirige. Utilisez l'adresse finale."
+      },
+      "lastCheckFailed": "La dernière vérification a échoué. {{reason}}",
+      "offUntilChecked": "Désactivé tant que vous n'avez pas vérifié cette adresse.",
+      "gate": {
+        "line": "Votre propre service d'IA nécessite une offre Mera News.",
+        "lineNews": "Votre propre serveur d'actualités nécessite une offre Mera News.",
+        "button": "Voir les offres"
+      },
+      "onDevice": {
+        "line": "Désactivez d'abord « Sur ce téléphone ».",
+        "button": "Aller à « Sur ce téléphone »"
+      },
+      "ai": {
+        "title": "Votre propre service d'IA",
+        "intro": "Utilisez n'importe quel service compatible avec l'API OpenAI.",
+        "model": "Modèle",
+        "status": {
+          "refused": "Le service a refusé cette clé.",
+          "notOpenai": "Cette adresse ne fonctionne pas avec l'API OpenAI.",
+          "noModel": "Ce modèle n'est pas disponible sur ce service.",
+          "busy": "Ce service est occupé. Réessayez dans une minute.",
+          "failing": "Ce service a rencontré un problème. Réessayez plus tard."
+        },
+        "warning": "Ce service ne propose pas de calcul confidentiel. Votre profil, vos conversations et les articles que Mera News lit pour vous sont transmis à la personne qui l'exploite.",
+        "switch": "Utiliser ce service",
+        "confirmTitle": "Utiliser votre propre service d'IA ?",
+        "confirmYes": "Utiliser",
+        "whatChanges": "Ce qui change",
+        "changes": {
+          "title": "Ce qui change",
+          "uses": "Le classement, les raisons et le chat utilisent votre service.",
+          "off": "La recherche web et les vérifications de faits sont désactivées.",
+          "verify": "« Vérifier l'attestation » est masqué. Il ne contrôle que le cloud privé."
+        }
+      },
+      "news": {
+        "title": "Votre propre serveur d'actualités",
+        "intro": "Utilisez un serveur d'actualités que vous faites tourner.",
+        "status": {
+          "refused": "Le serveur a refusé cette clé.",
+          "noFeed": "Ce serveur ne peut pas créer de fil d'actu."
+        },
+        "switch": "Utiliser ce serveur",
+        "topicsLine": "Vos sujets sont envoyés à ce serveur. Les serveurs de Mera News ne reçoivent aucune demande d'actualités tant qu'il est activé.",
+        "missingRow": "Non disponible ici",
+        "missing": {
+          "title": "Non disponible ici",
+          "intro": "Votre serveur d'actualités ne propose pas ces éléments. Mera News les affiche vides.",
+          "unknown": "Votre serveur d'actualités n'a pas indiqué ce qu'il propose. Les pages qu'il ne peut pas afficher restent vides."
+        }
+      },
+      "feature": {
+        "search": "Recherche",
+        "worldHeadlines": "Titres du monde",
+        "relatedArticles": "Articles associés",
+        "storyUpdates": "Mises à jour d'un sujet",
+        "publicationPages": "Pages des éditeurs",
+        "placeSearch": "Recherche de lieux",
+        "factChecks": "Vérifications de faits",
+        "storyGrouping": "Regroupement des articles",
+        "publicationNames": "Noms des éditeurs"
+      }
+    },
+    "factCheck": {
+      "notOffered": {
+        "ownNews": "Les vérifications de faits sont désactivées pendant l'utilisation de votre propre serveur d'actualités.",
+        "pod": "Les vérifications de faits sont désactivées pendant l'utilisation de votre propre serveur Mera News."
+      }
+    }
+  },
+  "hi": {
+    "ownServices": {
+      "groupTitle": "आपकी अपनी सेवाएँ",
+      "aiRow": "आपकी अपनी AI सेवा",
+      "newsRow": "आपका अपना न्यूज़ सर्वर",
+      "footer": "जो लोग अपना AI या न्यूज़ सर्वर चलाते हैं, उनके लिए। ज़्यादातर लोगों को इसकी ज़रूरत नहीं होती।",
+      "footerOnDevice": "इन्हें इस्तेमाल करने के लिए ‘इस फ़ोन पर’ मोड बंद करें।",
+      "usingAi": "आपकी अपनी AI सेवा इस्तेमाल हो रही है",
+      "usingNews": "आपका अपना न्यूज़ सर्वर इस्तेमाल हो रहा है",
+      "usingBoth": "आपकी अपनी सेवाएँ इस्तेमाल हो रही हैं",
+      "field": {
+        "address": "पता",
+        "key": "कुंजी (वैकल्पिक)",
+        "showKey": "कुंजी दिखाएँ",
+        "hideKey": "कुंजी छिपाएँ"
+      },
+      "address": {
+        "notHttps": "https:// से शुरू होने वाला पता इस्तेमाल करें",
+        "userinfo": "इस पते से नाम और पासवर्ड हटाएँ।",
+        "invalid": "यह वेब पता नहीं है।"
+      },
+      "check": "कनेक्शन जाँचें",
+      "checking": "जाँच हो रही है",
+      "checkAgain": "फिर से जाँचें",
+      "status": {
+        "connected": "जुड़ा हुआ है",
+        "unreachable": "इस पते तक पहुँच नहीं हो पा रही है।",
+        "redirect": "यह पता दूसरे पते पर भेजता है। अंतिम पता इस्तेमाल करें।"
+      },
+      "lastCheckFailed": "पिछली जाँच विफल रही। {{reason}}",
+      "offUntilChecked": "इस पते की जाँच करने तक यह बंद रहेगा।",
+      "gate": {
+        "line": "अपनी AI सेवा के लिए मेरा न्यूज़ प्लान चाहिए।",
+        "lineNews": "अपने न्यूज़ सर्वर के लिए मेरा न्यूज़ प्लान चाहिए।",
+        "button": "प्लान देखें"
+      },
+      "onDevice": {
+        "line": "पहले ‘इस फ़ोन पर’ मोड बंद करें।",
+        "button": "‘इस फ़ोन पर’ मोड पर जाएँ"
+      },
+      "ai": {
+        "title": "आपकी अपनी AI सेवा",
+        "intro": "OpenAI API के साथ काम करने वाली कोई भी सेवा इस्तेमाल करें।",
+        "model": "मॉडल",
+        "status": {
+          "refused": "इस सेवा ने यह कुंजी स्वीकार नहीं की।",
+          "notOpenai": "यह पता OpenAI API के साथ काम नहीं करता।",
+          "noModel": "यह मॉडल इस सेवा पर नहीं है।",
+          "busy": "यह सेवा अभी व्यस्त है। एक मिनट बाद फिर कोशिश करें।",
+          "failing": "इस सेवा में कोई समस्या आई। बाद में फिर कोशिश करें।"
+        },
+        "warning": "इस सेवा में कॉन्फ़िडेंशियल कंप्यूटिंग नहीं है। आपकी प्रोफ़ाइल, आपकी चैट और मेरा न्यूज़ आपके लिए जो लेख पढ़ता है, वे सब इसे चलाने वाले तक पहुँचते हैं।",
+        "switch": "यह सेवा इस्तेमाल करें",
+        "confirmTitle": "अपनी AI सेवा इस्तेमाल करें?",
+        "confirmYes": "इसे इस्तेमाल करें",
+        "whatChanges": "क्या बदलेगा",
+        "changes": {
+          "title": "क्या बदलेगा",
+          "uses": "रैंकिंग, कारण और चैट आपकी सेवा का इस्तेमाल करेंगे।",
+          "off": "वेब खोज और फैक्ट चेक्स बंद रहेंगे।",
+          "verify": "‘प्रमाणीकरण सत्यापित करें’ छिपा रहेगा। यह सिर्फ़ प्राइवेट क्लाउड की जाँच करता है।"
+        }
+      },
+      "news": {
+        "title": "आपका अपना न्यूज़ सर्वर",
+        "intro": "आपके द्वारा चलाए जाने वाले न्यूज़ सर्वर का इस्तेमाल करें।",
+        "status": {
+          "refused": "इस सर्वर ने यह कुंजी स्वीकार नहीं की।",
+          "noFeed": "यह सर्वर फ़ीड नहीं बना सकता।"
+        },
+        "switch": "यह सर्वर इस्तेमाल करें",
+        "topicsLine": "आपके विषय इस सर्वर तक जाते हैं। जब तक यह चालू है, मेरा न्यूज़ के सर्वरों को कोई न्यूज़ अनुरोध नहीं मिलते।",
+        "missingRow": "यहाँ उपलब्ध नहीं",
+        "missing": {
+          "title": "यहाँ उपलब्ध नहीं",
+          "intro": "आपका न्यूज़ सर्वर ये सुविधाएँ नहीं देता। ऐप इन पन्नों को खाली दिखाता है।",
+          "unknown": "आपके न्यूज़ सर्वर ने नहीं बताया कि वह क्या देता है। जो पन्ने वह नहीं दिखा सकता, वे खाली रहेंगे।"
+        }
+      },
+      "feature": {
+        "search": "खोज",
+        "worldHeadlines": "दुनिया की मुख्य खबरें",
+        "relatedArticles": "संबंधित लेख",
+        "storyUpdates": "कहानी के अपडेट",
+        "publicationPages": "प्रकाशन के पन्ने",
+        "placeSearch": "जगह खोजना",
+        "factChecks": "फैक्ट चेक्स",
+        "storyGrouping": "कहानियों को समूह में रखना",
+        "publicationNames": "प्रकाशनों के नाम"
+      }
+    },
+    "factCheck": {
+      "notOffered": {
+        "ownNews": "आपका अपना न्यूज़ सर्वर इस्तेमाल करते समय फैक्ट चेक्स बंद रहते हैं।",
+        "pod": "आपका अपना मेरा न्यूज़ सर्वर इस्तेमाल करते समय फैक्ट चेक्स बंद रहते हैं।"
+      }
+    }
+  },
+  "id": {
+    "ownServices": {
+      "groupTitle": "Layanan milik Anda",
+      "aiRow": "Layanan AI milik Anda",
+      "newsRow": "Server berita milik Anda",
+      "footer": "Untuk orang yang menjalankan layanan AI atau server berita sendiri. Kebanyakan orang tidak memerlukan ini.",
+      "footerOnDevice": "Matikan “Di ponsel ini” untuk memakai ini.",
+      "usingAi": "Memakai layanan AI milik Anda",
+      "usingNews": "Memakai server berita milik Anda",
+      "usingBoth": "Memakai layanan milik Anda",
+      "field": {
+        "address": "Alamat",
+        "key": "Kunci (opsional)",
+        "showKey": "Tampilkan kunci",
+        "hideKey": "Sembunyikan kunci"
+      },
+      "address": {
+        "notHttps": "Gunakan alamat yang diawali https://",
+        "userinfo": "Hapus nama dan kata sandi dari alamat ini.",
+        "invalid": "Ini bukan alamat web."
+      },
+      "check": "Periksa koneksi",
+      "checking": "Memeriksa",
+      "checkAgain": "Periksa lagi",
+      "status": {
+        "connected": "Terhubung",
+        "unreachable": "Alamat ini tidak dapat dijangkau.",
+        "redirect": "Alamat ini dialihkan. Gunakan alamat tujuan akhir."
+      },
+      "lastCheckFailed": "Pemeriksaan terakhir gagal. {{reason}}",
+      "offUntilChecked": "Mati sampai Anda memeriksa alamat ini.",
+      "gate": {
+        "line": "Layanan AI milik Anda memerlukan paket Mera News.",
+        "lineNews": "Server berita milik Anda memerlukan paket Mera News.",
+        "button": "Lihat paket"
+      },
+      "onDevice": {
+        "line": "Matikan “Di ponsel ini” terlebih dahulu.",
+        "button": "Buka “Di ponsel ini”"
+      },
+      "ai": {
+        "title": "Layanan AI milik Anda",
+        "intro": "Gunakan layanan apa pun yang bekerja dengan OpenAI API.",
+        "model": "Model",
+        "status": {
+          "refused": "Layanan ini menolak kunci ini.",
+          "notOpenai": "Alamat ini tidak bekerja dengan OpenAI API.",
+          "noModel": "Model ini tidak tersedia di layanan ini.",
+          "busy": "Layanan ini sedang sibuk. Coba lagi dalam semenit.",
+          "failing": "Layanan ini mengalami masalah. Coba lagi nanti."
+        },
+        "warning": "Layanan ini tidak memiliki komputasi rahasia. Profil Anda, obrolan Anda, dan artikel yang dibaca Mera News untuk Anda dikirim ke siapa pun yang menjalankannya.",
+        "switch": "Gunakan layanan ini",
+        "confirmTitle": "Gunakan layanan AI milik Anda?",
+        "confirmYes": "Gunakan",
+        "whatChanges": "Yang berubah",
+        "changes": {
+          "title": "Yang berubah",
+          "uses": "Pemeringkatan, alasan, dan obrolan memakai layanan Anda.",
+          "off": "Pencarian web dan pemeriksaan fakta dimatikan.",
+          "verify": "“Verifikasi atestasi” disembunyikan. Fitur ini hanya memeriksa cloud pribadi."
+        }
+      },
+      "news": {
+        "title": "Server berita milik Anda",
+        "intro": "Gunakan server berita yang Anda jalankan sendiri.",
+        "status": {
+          "refused": "Server ini menolak kunci ini.",
+          "noFeed": "Server ini tidak dapat membuat umpan."
+        },
+        "switch": "Gunakan server ini",
+        "topicsLine": "Topik Anda dikirim ke server ini. Server Mera News tidak menerima permintaan berita selama server ini aktif.",
+        "missingRow": "Tidak tersedia di sini",
+        "missing": {
+          "title": "Tidak tersedia di sini",
+          "intro": "Server berita Anda tidak menawarkan ini. Mera News menampilkannya dalam keadaan kosong.",
+          "unknown": "Server berita Anda tidak menyebutkan apa yang ditawarkannya. Halaman yang tidak dapat ditampilkan akan tetap kosong."
+        }
+      },
+      "feature": {
+        "search": "Pencarian",
+        "worldHeadlines": "Judul berita dunia",
+        "relatedArticles": "Artikel terkait",
+        "storyUpdates": "Pembaruan cerita",
+        "publicationPages": "Halaman penerbit",
+        "placeSearch": "Mencari lokasi",
+        "factChecks": "Pemeriksaan fakta",
+        "storyGrouping": "Pengelompokan cerita",
+        "publicationNames": "Nama penerbit"
+      }
+    },
+    "factCheck": {
+      "notOffered": {
+        "ownNews": "Pemeriksaan fakta dimatikan saat Anda memakai server berita milik Anda.",
+        "pod": "Pemeriksaan fakta dimatikan saat Anda memakai server Mera News milik Anda."
+      }
+    }
+  },
+  "it": {
+    "ownServices": {
+      "groupTitle": "I tuoi servizi",
+      "aiRow": "Il tuo servizio AI",
+      "newsRow": "Il tuo server di notizie",
+      "footer": "Per chi gestisce un proprio servizio AI o server di notizie. La maggior parte delle persone non ne ha bisogno.",
+      "footerOnDevice": "Disattiva «Su questo telefono» per usarli.",
+      "usingAi": "Utilizzo del tuo servizio AI",
+      "usingNews": "Utilizzo del tuo server di notizie",
+      "usingBoth": "Utilizzo dei tuoi servizi",
+      "field": {
+        "address": "Indirizzo",
+        "key": "Chiave (facoltativa)",
+        "showKey": "Mostra chiave",
+        "hideKey": "Nascondi chiave"
+      },
+      "address": {
+        "notHttps": "Usa un indirizzo che inizia con https://",
+        "userinfo": "Rimuovi nome utente e password da questo indirizzo.",
+        "invalid": "Questo non è un indirizzo web."
+      },
+      "check": "Verifica connessione",
+      "checking": "Verifica in corso",
+      "checkAgain": "Verifica di nuovo",
+      "status": {
+        "connected": "Connesso",
+        "unreachable": "Impossibile raggiungere questo indirizzo.",
+        "redirect": "Questo indirizzo reindirizza. Usa l'indirizzo finale."
+      },
+      "lastCheckFailed": "L'ultima verifica non è riuscita. {{reason}}",
+      "offUntilChecked": "Disattivato finché non verifichi questo indirizzo.",
+      "gate": {
+        "line": "Il tuo servizio AI richiede un piano Mera News.",
+        "lineNews": "Il tuo server di notizie richiede un piano Mera News.",
+        "button": "Vedi piani"
+      },
+      "onDevice": {
+        "line": "Disattiva prima «Su questo telefono».",
+        "button": "Vai a «Su questo telefono»"
+      },
+      "ai": {
+        "title": "Il tuo servizio AI",
+        "intro": "Usa qualsiasi servizio che funziona con l'OpenAI API.",
+        "model": "Modello",
+        "status": {
+          "refused": "Il servizio ha rifiutato questa chiave.",
+          "notOpenai": "Questo indirizzo non funziona con l'OpenAI API.",
+          "noModel": "Questo modello non è disponibile su questo servizio.",
+          "busy": "Questo servizio è occupato. Riprova tra un minuto.",
+          "failing": "Questo servizio ha avuto un problema. Riprova più tardi."
+        },
+        "warning": "Questo servizio non ha elaborazione riservata. Il tuo profilo, le tue chat e gli articoli che Mera News legge per te vanno a chi lo gestisce.",
+        "switch": "Usa questo servizio",
+        "confirmTitle": "Usare il tuo servizio AI?",
+        "confirmYes": "Usalo",
+        "whatChanges": "Cosa cambia",
+        "changes": {
+          "title": "Cosa cambia",
+          "uses": "La classifica, i motivi e la chat usano il tuo servizio.",
+          "off": "La ricerca sul web e le verifiche dei fatti sono disattivate.",
+          "verify": "«Verifica attestazione» è nascosto. Controlla solo il cloud privato."
+        }
+      },
+      "news": {
+        "title": "Il tuo server di notizie",
+        "intro": "Usa un server di notizie che gestisci tu.",
+        "status": {
+          "refused": "Il server ha rifiutato questa chiave.",
+          "noFeed": "Questo server non riesce a creare un feed."
+        },
+        "switch": "Usa questo server",
+        "topicsLine": "I tuoi argomenti vanno a questo server. I server di Mera News non ricevono richieste di notizie mentre è attivo.",
+        "missingRow": "Non disponibile qui",
+        "missing": {
+          "title": "Non disponibile qui",
+          "intro": "Il tuo server di notizie non offre queste funzioni. Mera News le mostra vuote.",
+          "unknown": "Il tuo server di notizie non ha detto quali funzioni offre. Le pagine che non può mostrare restano vuote."
+        }
+      },
+      "feature": {
+        "search": "Ricerca",
+        "worldHeadlines": "Titoli dal mondo",
+        "relatedArticles": "Articoli correlati",
+        "storyUpdates": "Aggiornamenti delle storie",
+        "publicationPages": "Pagine delle testate",
+        "placeSearch": "Trovare un luogo",
+        "factChecks": "Verifiche dei fatti",
+        "storyGrouping": "Raggruppamento delle storie",
+        "publicationNames": "Nomi delle testate"
+      }
+    },
+    "factCheck": {
+      "notOffered": {
+        "ownNews": "Le verifiche dei fatti sono disattivate mentre usi il tuo server di notizie.",
+        "pod": "Le verifiche dei fatti sono disattivate mentre usi il tuo server Mera News."
+      }
+    }
+  },
+  "ja": {
+    "ownServices": {
+      "groupTitle": "お使いのサービス",
+      "aiRow": "お使いのAIサービス",
+      "newsRow": "お使いのニュースサーバー",
+      "footer": "自分でAIサービスやニュースサーバーを運用している人向けです。ほとんどの人には必要ありません。",
+      "footerOnDevice": "これらを使うには、「この電話上」をオフにしてください。",
+      "usingAi": "お使いのAIサービスを使用中",
+      "usingNews": "お使いのニュースサーバーを使用中",
+      "usingBoth": "お使いのサービスを使用中",
+      "field": {
+        "address": "アドレス",
+        "key": "キー（任意）",
+        "showKey": "キーを表示",
+        "hideKey": "キーを隠す"
+      },
+      "address": {
+        "notHttps": "https:// で始まるアドレスを使用",
+        "userinfo": "このアドレスからユーザー名とパスワードを削除してください。",
+        "invalid": "ウェブアドレスではありません。"
+      },
+      "check": "接続を確認",
+      "checking": "確認中",
+      "checkAgain": "もう一度確認",
+      "status": {
+        "connected": "接続済み",
+        "unreachable": "このアドレスに接続できません。",
+        "redirect": "このアドレスは別のアドレスに転送されます。最終的なアドレスを使用してください。"
+      },
+      "lastCheckFailed": "前回の確認に失敗しました。{{reason}}",
+      "offUntilChecked": "このアドレスを確認するまでオフです。",
+      "gate": {
+        "line": "お使いのAIサービスには、メラニュースのプランが必要です。",
+        "lineNews": "お使いのニュースサーバーには、メラニュースのプランが必要です。",
+        "button": "プランを見る"
+      },
+      "onDevice": {
+        "line": "まず「この電話上」をオフにしてください。",
+        "button": "「この電話上」へ移動"
+      },
+      "ai": {
+        "title": "お使いのAIサービス",
+        "intro": "OpenAI API に対応しているサービスなら、どれでも使えます。",
+        "model": "モデル",
+        "status": {
+          "refused": "このサービスはこのキーを拒否しました。",
+          "notOpenai": "このアドレスは OpenAI API では動作しません。",
+          "noModel": "このモデルはこのサービスにありません。",
+          "busy": "このサービスは混雑しています。しばらくしてから、もう一度試してください。",
+          "failing": "このサービスで問題が起きました。あとでもう一度試してください。"
+        },
+        "warning": "このサービスには機密コンピューティングがありません。あなたのプロフィール、チャット、メラニュースがあなたのために読む記事は、すべてサービスを運営する人に渡ります。",
+        "switch": "このサービスを使用",
+        "confirmTitle": "お使いのAIサービスを使用しますか？",
+        "confirmYes": "使用する",
+        "whatChanges": "変更点",
+        "changes": {
+          "title": "変更点",
+          "uses": "ランキング、理由、チャットでは、お使いのサービスが使われます。",
+          "off": "ウェブ検索とファクトチェックはオフになります。",
+          "verify": "「認証を検証」は非表示になります。プライベートクラウドだけを確認する機能です。"
+        }
+      },
+      "news": {
+        "title": "お使いのニュースサーバー",
+        "intro": "自分で運用しているニュースサーバーを使います。",
+        "status": {
+          "refused": "このサーバーはこのキーを拒否しました。",
+          "noFeed": "このサーバーはフィードを作成できません。"
+        },
+        "switch": "このサーバーを使用",
+        "topicsLine": "お使いのトピックはこのサーバーに送られます。メラニュースのサーバーは、オンの間ニュースのリクエストを一切受け取りません。",
+        "missingRow": "こちらでは利用できません",
+        "missing": {
+          "title": "こちらでは利用できません",
+          "intro": "お使いのニュースサーバーはこれらを提供していません。メラニュースは、これらのページを空のまま表示します。",
+          "unknown": "お使いのニュースサーバーは、提供している機能を示しませんでした。表示できないページは空のままになります。"
+        }
+      },
+      "feature": {
+        "search": "検索",
+        "worldHeadlines": "世界の見出し",
+        "relatedArticles": "関連記事",
+        "storyUpdates": "ストーリーの更新",
+        "publicationPages": "公開元のページ",
+        "placeSearch": "場所の検索",
+        "factChecks": "ファクトチェック",
+        "storyGrouping": "ストーリーのグループ化",
+        "publicationNames": "公開元の名前"
+      }
+    },
+    "factCheck": {
+      "notOffered": {
+        "ownNews": "お使いのニュースサーバーを使用中は、ファクトチェックはオフになります。",
+        "pod": "お使いのメラニュースサーバーを使用中は、ファクトチェックはオフになります。"
+      }
+    }
+  },
+  "ko": {
+    "ownServices": {
+      "groupTitle": "내 서비스",
+      "aiRow": "내 AI 서비스",
+      "newsRow": "내 뉴스 서버",
+      "footer": "AI나 뉴스 서버를 직접 운영하는 분을 위한 기능입니다. 대부분은 필요하지 않습니다.",
+      "footerOnDevice": "이 기능을 사용하려면 ‘이 휴대폰에’ 모드를 꺼 주세요.",
+      "usingAi": "내 AI 서비스 사용 중",
+      "usingNews": "내 뉴스 서버 사용 중",
+      "usingBoth": "내 서비스 사용 중",
+      "field": {
+        "address": "주소",
+        "key": "키 (선택)",
+        "showKey": "키 보기",
+        "hideKey": "키 숨기기"
+      },
+      "address": {
+        "notHttps": "https://로 시작하는 주소를 사용해 주세요",
+        "userinfo": "이 주소에서 이름과 비밀번호를 지워 주세요.",
+        "invalid": "웹 주소가 아닙니다."
+      },
+      "check": "연결 확인",
+      "checking": "확인 중",
+      "checkAgain": "다시 확인",
+      "status": {
+        "connected": "연결됨",
+        "unreachable": "이 주소에 연결할 수 없습니다.",
+        "redirect": "이 주소는 다른 주소로 연결됩니다. 최종 주소를 사용해 주세요."
+      },
+      "lastCheckFailed": "마지막 확인에 실패했습니다. {{reason}}",
+      "offUntilChecked": "이 주소를 확인할 때까지 꺼져 있습니다.",
+      "gate": {
+        "line": "내 AI 서비스를 사용하려면 메라 뉴스 요금제가 필요합니다.",
+        "lineNews": "내 뉴스 서버를 사용하려면 메라 뉴스 요금제가 필요합니다.",
+        "button": "요금제 보기"
+      },
+      "onDevice": {
+        "line": "먼저 ‘이 휴대폰에’ 모드를 꺼 주세요.",
+        "button": "‘이 휴대폰에’로 이동"
+      },
+      "ai": {
+        "title": "내 AI 서비스",
+        "intro": "OpenAI API와 함께 작동하는 서비스라면 무엇이든 사용할 수 있습니다.",
+        "model": "모델",
+        "status": {
+          "refused": "서비스가 이 키를 거부했습니다.",
+          "notOpenai": "이 주소는 OpenAI API와 함께 작동하지 않습니다.",
+          "noModel": "이 모델은 이 서비스에 없습니다.",
+          "busy": "이 서비스가 바쁩니다. 잠시 후 다시 시도해 주세요.",
+          "failing": "이 서비스에 문제가 있었습니다. 나중에 다시 시도해 주세요."
+        },
+        "warning": "이 서비스에는 기밀 컴퓨팅이 없습니다. 회원님의 프로필, 회원님의 채팅, 메라 뉴스가 회원님을 위해 읽는 기사가 모두 이 서비스를 운영하는 사람에게 전달됩니다.",
+        "switch": "이 서비스 사용",
+        "confirmTitle": "내 AI 서비스를 사용할까요?",
+        "confirmYes": "사용",
+        "whatChanges": "달라지는 점",
+        "changes": {
+          "title": "달라지는 점",
+          "uses": "순위, 이유, 채팅에 회원님의 서비스를 사용합니다.",
+          "off": "웹 검색과 팩트 체크가 꺼집니다.",
+          "verify": "‘증명 확인’은 숨겨집니다. 프라이빗 클라우드만 확인하는 기능입니다."
+        }
+      },
+      "news": {
+        "title": "내 뉴스 서버",
+        "intro": "직접 운영하는 뉴스 서버를 사용할 수 있습니다.",
+        "status": {
+          "refused": "서버가 이 키를 거부했습니다.",
+          "noFeed": "이 서버는 피드를 만들 수 없습니다."
+        },
+        "switch": "이 서버 사용",
+        "topicsLine": "회원님의 관심 주제가 이 서버로 전달됩니다. 이 기능이 켜져 있는 동안 메라 뉴스 서버는 뉴스 요청을 받지 않습니다.",
+        "missingRow": "여기서는 사용할 수 없음",
+        "missing": {
+          "title": "여기서는 사용할 수 없음",
+          "intro": "회원님의 뉴스 서버는 이 기능을 제공하지 않습니다. 메라 뉴스는 해당 페이지를 빈 상태로 표시합니다.",
+          "unknown": "회원님의 뉴스 서버가 제공하는 기능을 알려 주지 않았습니다. 표시할 수 없는 페이지는 빈 상태로 남습니다."
+        }
+      },
+      "feature": {
+        "search": "검색",
+        "worldHeadlines": "세계 헤드라인",
+        "relatedArticles": "관련 기사",
+        "storyUpdates": "스토리 업데이트",
+        "publicationPages": "언론사 페이지",
+        "placeSearch": "장소 찾기",
+        "factChecks": "팩트 체크",
+        "storyGrouping": "스토리 묶기",
+        "publicationNames": "언론사 이름"
+      }
+    },
+    "factCheck": {
+      "notOffered": {
+        "ownNews": "회원님의 뉴스 서버를 사용하는 동안 팩트 체크는 꺼져 있습니다.",
+        "pod": "회원님의 메라 뉴스 서버를 사용하는 동안 팩트 체크는 꺼져 있습니다."
+      }
+    }
+  },
+  "nl": {
+    "ownServices": {
+      "groupTitle": "Je eigen services",
+      "aiRow": "Je eigen AI-service",
+      "newsRow": "Je eigen nieuwsserver",
+      "footer": "Voor mensen die hun eigen AI- of nieuwsserver draaien. De meeste mensen hebben dit niet nodig.",
+      "footerOnDevice": "Zet ‘Op deze telefoon’ uit om deze te gebruiken.",
+      "usingAi": "Je eigen AI-service gebruiken",
+      "usingNews": "Je eigen nieuwsserver gebruiken",
+      "usingBoth": "Je eigen services gebruiken",
+      "field": {
+        "address": "Adres",
+        "key": "Sleutel (optioneel)",
+        "showKey": "Sleutel tonen",
+        "hideKey": "Sleutel verbergen"
+      },
+      "address": {
+        "notHttps": "Gebruik een adres dat begint met https://",
+        "userinfo": "Haal de naam en het wachtwoord uit dit adres.",
+        "invalid": "Dit is geen webadres."
+      },
+      "check": "Verbinding controleren",
+      "checking": "Controleren",
+      "checkAgain": "Opnieuw controleren",
+      "status": {
+        "connected": "Verbonden",
+        "unreachable": "Dit adres is niet bereikbaar.",
+        "redirect": "Dit adres stuurt door. Gebruik het eindadres."
+      },
+      "lastCheckFailed": "Laatste controle mislukt. {{reason}}",
+      "offUntilChecked": "Uit tot je dit adres hebt gecontroleerd.",
+      "gate": {
+        "line": "Je eigen AI-service heeft een Mera News-abonnement nodig.",
+        "lineNews": "Je eigen nieuwsserver heeft een Mera News-abonnement nodig.",
+        "button": "Bekijk abonnementen"
+      },
+      "onDevice": {
+        "line": "Zet eerst ‘Op deze telefoon’ uit.",
+        "button": "Ga naar ‘Op deze telefoon’"
+      },
+      "ai": {
+        "title": "Je eigen AI-service",
+        "intro": "Gebruik elke service die met de OpenAI API werkt.",
+        "model": "Model",
+        "status": {
+          "refused": "De service heeft deze sleutel geweigerd.",
+          "notOpenai": "Dit adres werkt niet met de OpenAI API.",
+          "noModel": "Dit model staat niet op deze service.",
+          "busy": "Deze service is druk. Probeer het over een minuut opnieuw.",
+          "failing": "Deze service had een probleem. Probeer het later opnieuw."
+        },
+        "warning": "Deze service heeft geen confidential computing. Je profiel, je chats en de artikelen die Mera News voor je leest, gaan naar wie de service beheert.",
+        "switch": "Deze service gebruiken",
+        "confirmTitle": "Je eigen AI-service gebruiken?",
+        "confirmYes": "Gebruiken",
+        "whatChanges": "Wat verandert",
+        "changes": {
+          "title": "Wat verandert",
+          "uses": "Rangschikking, redenen en chat gebruiken je service.",
+          "off": "Webzoeken en feitchecks staan uit.",
+          "verify": "‘Attestatie verifiëren’ is verborgen. Het controleert alleen de privécloud."
+        }
+      },
+      "news": {
+        "title": "Je eigen nieuwsserver",
+        "intro": "Gebruik een nieuwsserver die je zelf draait.",
+        "status": {
+          "refused": "De server heeft deze sleutel geweigerd.",
+          "noFeed": "Deze server kan geen feed maken."
+        },
+        "switch": "Deze server gebruiken",
+        "topicsLine": "Je onderwerpen gaan naar deze server. Mera News-servers krijgen geen nieuwsverzoeken zolang hij aan staat.",
+        "missingRow": "Hier niet beschikbaar",
+        "missing": {
+          "title": "Hier niet beschikbaar",
+          "intro": "Je nieuwsserver biedt deze niet aan. Mera News toont ze als leeg.",
+          "unknown": "Je nieuwsserver heeft niet laten weten wat hij aanbiedt. Pagina's die hij niet kan tonen blijven leeg."
+        }
+      },
+      "feature": {
+        "search": "Zoeken",
+        "worldHeadlines": "Wereldnieuws",
+        "relatedArticles": "Gerelateerde artikelen",
+        "storyUpdates": "Updates over verhalen",
+        "publicationPages": "Pagina's van uitgevers",
+        "placeSearch": "Een plaats zoeken",
+        "factChecks": "Feitchecks",
+        "storyGrouping": "Verhalen groeperen",
+        "publicationNames": "Namen van uitgevers"
+      }
+    },
+    "factCheck": {
+      "notOffered": {
+        "ownNews": "Feitchecks staan uit terwijl je je eigen nieuwsserver gebruikt.",
+        "pod": "Feitchecks staan uit terwijl je je eigen Mera News-server gebruikt."
+      }
+    }
+  },
+  "pl": {
+    "ownServices": {
+      "groupTitle": "Własne usługi",
+      "aiRow": "Własna usługa AI",
+      "newsRow": "Własny serwer wiadomości",
+      "footer": "Dla osób, które same prowadzą własną usługę AI lub serwer wiadomości. Większość osób tego nie potrzebuje.",
+      "footerOnDevice": "Wyłącz „Na tym telefonie”, aby z nich korzystać.",
+      "usingAi": "Korzystanie z własnej usługi AI",
+      "usingNews": "Korzystanie z własnego serwera wiadomości",
+      "usingBoth": "Korzystanie z własnych usług",
+      "field": {
+        "address": "Adres",
+        "key": "Klucz (opcjonalnie)",
+        "showKey": "Pokaż klucz",
+        "hideKey": "Ukryj klucz"
+      },
+      "address": {
+        "notHttps": "Użyj adresu zaczynającego się od https://",
+        "userinfo": "Usuń nazwę i hasło z tego adresu.",
+        "invalid": "To nie jest adres internetowy."
+      },
+      "check": "Sprawdź połączenie",
+      "checking": "Sprawdzanie",
+      "checkAgain": "Sprawdź ponownie",
+      "status": {
+        "connected": "Połączono",
+        "unreachable": "Nie można połączyć się z tym adresem.",
+        "redirect": "Ten adres przekierowuje. Użyj adresu końcowego."
+      },
+      "lastCheckFailed": "Ostatnie sprawdzenie się nie udało. {{reason}}",
+      "offUntilChecked": "Wyłączone do czasu sprawdzenia tego adresu.",
+      "gate": {
+        "line": "Własna usługa AI wymaga planu Mera News.",
+        "lineNews": "Własny serwer wiadomości wymaga planu Mera News.",
+        "button": "Zobacz plany"
+      },
+      "onDevice": {
+        "line": "Najpierw wyłącz „Na tym telefonie”.",
+        "button": "Przejdź do „Na tym telefonie”"
+      },
+      "ai": {
+        "title": "Własna usługa AI",
+        "intro": "Użyj dowolnej usługi działającej z OpenAI API.",
+        "model": "Model",
+        "status": {
+          "refused": "Usługa odrzuciła ten klucz.",
+          "notOpenai": "Ten adres nie działa z OpenAI API.",
+          "noModel": "Tego modelu nie ma w tej usłudze.",
+          "busy": "Ta usługa jest zajęta. Spróbuj ponownie za minutę.",
+          "failing": "Ta usługa miała problem. Spróbuj ponownie później."
+        },
+        "warning": "Ta usługa nie ma obliczeń poufnych. Twój profil, Twoje czaty i artykuły, które Mera News czyta dla Ciebie, trafiają do każdego, kto ją prowadzi.",
+        "switch": "Użyj tej usługi",
+        "confirmTitle": "Użyć własnej usługi AI?",
+        "confirmYes": "Użyj jej",
+        "whatChanges": "Co się zmienia",
+        "changes": {
+          "title": "Co się zmienia",
+          "uses": "Ranking, powody i czat korzystają z tej usługi.",
+          "off": "Wyszukiwanie w sieci i weryfikacje faktów są wyłączone.",
+          "verify": "„Zweryfikuj poświadczenie” jest ukryte. Sprawdza tylko prywatną chmurę."
+        }
+      },
+      "news": {
+        "title": "Własny serwer wiadomości",
+        "intro": "Użyj serwera wiadomości, który prowadzisz.",
+        "status": {
+          "refused": "Serwer odrzucił ten klucz.",
+          "noFeed": "Ten serwer nie potrafi utworzyć strumienia."
+        },
+        "switch": "Użyj tego serwera",
+        "topicsLine": "Twoje tematy trafiają do tego serwera. Serwery Mera News nie dostają żadnych zapytań o wiadomości, dopóki jest włączony.",
+        "missingRow": "Niedostępne tutaj",
+        "missing": {
+          "title": "Niedostępne tutaj",
+          "intro": "Twój serwer wiadomości tego nie oferuje. Mera News wyświetla je jako puste.",
+          "unknown": "Twój serwer wiadomości nie podał, co oferuje. Strony, których nie może pokazać, pozostaną puste."
+        }
+      },
+      "feature": {
+        "search": "Wyszukiwanie",
+        "worldHeadlines": "Nagłówki ze świata",
+        "relatedArticles": "Powiązane artykuły",
+        "storyUpdates": "Aktualizacje wątków",
+        "publicationPages": "Strony wydawców",
+        "placeSearch": "Wyszukiwanie miejsc",
+        "factChecks": "Weryfikacje faktów",
+        "storyGrouping": "Grupowanie wątków",
+        "publicationNames": "Nazwy wydawców"
+      }
+    },
+    "factCheck": {
+      "notOffered": {
+        "ownNews": "Weryfikacje faktów są wyłączone, gdy korzystasz z własnego serwera wiadomości.",
+        "pod": "Weryfikacje faktów są wyłączone, gdy korzystasz z własnego serwera Mera News."
+      }
+    }
+  },
+  "pt-BR": {
+    "ownServices": {
+      "groupTitle": "Seus próprios serviços",
+      "aiRow": "Seu serviço de IA",
+      "newsRow": "Seu servidor de notícias",
+      "footer": "Para quem administra o próprio serviço de IA ou servidor de notícias. A maioria das pessoas não precisa disso.",
+      "footerOnDevice": "Para usar estes, desative “Neste celular”.",
+      "usingAi": "Usando seu serviço de IA",
+      "usingNews": "Usando seu servidor de notícias",
+      "usingBoth": "Usando seus serviços",
+      "field": {
+        "address": "Endereço",
+        "key": "Chave (opcional)",
+        "showKey": "Mostrar chave",
+        "hideKey": "Ocultar chave"
+      },
+      "address": {
+        "notHttps": "Use um endereço que comece com https://",
+        "userinfo": "Remova o nome e a senha deste endereço.",
+        "invalid": "Isso não é um endereço da web."
+      },
+      "check": "Verificar conexão",
+      "checking": "Verificando",
+      "checkAgain": "Verificar novamente",
+      "status": {
+        "connected": "Conectado",
+        "unreachable": "Não foi possível acessar este endereço.",
+        "redirect": "Este endereço redireciona. Use o endereço final."
+      },
+      "lastCheckFailed": "A última verificação falhou. {{reason}}",
+      "offUntilChecked": "Desligado até você verificar este endereço.",
+      "gate": {
+        "line": "Seu serviço de IA precisa de um plano Mera News.",
+        "lineNews": "Seu servidor de notícias precisa de um plano Mera News.",
+        "button": "Ver planos"
+      },
+      "onDevice": {
+        "line": "Primeiro, desative “Neste celular”.",
+        "button": "Ir para “Neste celular”"
+      },
+      "ai": {
+        "title": "Seu serviço de IA",
+        "intro": "Use qualquer serviço que funcione com a OpenAI API.",
+        "model": "Modelo",
+        "status": {
+          "refused": "O serviço recusou esta chave.",
+          "notOpenai": "Este endereço não funciona com a OpenAI API.",
+          "noModel": "Este modelo não está disponível neste serviço.",
+          "busy": "Este serviço está ocupado. Tente de novo em um minuto.",
+          "failing": "Este serviço teve um problema. Tente de novo mais tarde."
+        },
+        "warning": "Este serviço não tem computação confidencial. Seu perfil, suas conversas e os artigos que a Mera News lê para você vão para quem administra o serviço.",
+        "switch": "Usar este serviço",
+        "confirmTitle": "Usar seu serviço de IA?",
+        "confirmYes": "Usar",
+        "whatChanges": "O que muda",
+        "changes": {
+          "title": "O que muda",
+          "uses": "A ordenação, os motivos e o chat usam seu serviço.",
+          "off": "A pesquisa na web e as verificações de fatos ficam desativadas.",
+          "verify": "“Verificar atestação” fica oculto. Ele verifica apenas a nuvem privada."
+        }
+      },
+      "news": {
+        "title": "Seu servidor de notícias",
+        "intro": "Use um servidor de notícias que você mesmo administra.",
+        "status": {
+          "refused": "O servidor recusou esta chave.",
+          "noFeed": "Este servidor não consegue criar um feed."
+        },
+        "switch": "Usar este servidor",
+        "topicsLine": "Seus tópicos vão para este servidor. Os servidores da Mera News não recebem pedidos de notícias enquanto ele estiver ligado.",
+        "missingRow": "Não disponível aqui",
+        "missing": {
+          "title": "Não disponível aqui",
+          "intro": "Seu servidor de notícias não oferece esses recursos. A Mera News mostra essas páginas vazias.",
+          "unknown": "Seu servidor de notícias não informou o que oferece. Páginas que ele não consegue mostrar ficam vazias."
+        }
+      },
+      "feature": {
+        "search": "Pesquisa",
+        "worldHeadlines": "Manchetes mundiais",
+        "relatedArticles": "Artigos relacionados",
+        "storyUpdates": "Atualizações de notícias",
+        "publicationPages": "Páginas de publicações",
+        "placeSearch": "Busca de lugares",
+        "factChecks": "Verificações de fatos",
+        "storyGrouping": "Agrupamento de notícias",
+        "publicationNames": "Nomes de publicações"
+      }
+    },
+    "factCheck": {
+      "notOffered": {
+        "ownNews": "As verificações de fatos ficam desativadas enquanto você usa seu servidor de notícias.",
+        "pod": "As verificações de fatos ficam desativadas enquanto você usa seu próprio servidor Mera News."
+      }
+    }
+  },
+  "ru": {
+    "ownServices": {
+      "groupTitle": "Ваши собственные сервисы",
+      "aiRow": "Ваш собственный сервис ИИ",
+      "newsRow": "Ваш собственный сервер новостей",
+      "footer": "Для тех, кто запускает собственный сервис ИИ или сервер новостей. Большинству это не нужно.",
+      "footerOnDevice": "Чтобы использовать их, выключите «На этом телефоне».",
+      "usingAi": "Используется ваш собственный сервис ИИ",
+      "usingNews": "Используется ваш собственный сервер новостей",
+      "usingBoth": "Используются ваши собственные сервисы",
+      "field": {
+        "address": "Адрес",
+        "key": "Ключ (необязательно)",
+        "showKey": "Показать ключ",
+        "hideKey": "Скрыть ключ"
+      },
+      "address": {
+        "notHttps": "Используйте адрес, который начинается с https://",
+        "userinfo": "Удалите из этого адреса имя и пароль.",
+        "invalid": "Это не веб-адрес."
+      },
+      "check": "Проверить соединение",
+      "checking": "Проверка",
+      "checkAgain": "Проверить снова",
+      "status": {
+        "connected": "Подключено",
+        "unreachable": "Не удаётся подключиться к этому адресу.",
+        "redirect": "Этот адрес перенаправляет. Используйте конечный адрес."
+      },
+      "lastCheckFailed": "Последняя проверка не удалась. {{reason}}",
+      "offUntilChecked": "Выключено, пока вы не проверите этот адрес.",
+      "gate": {
+        "line": "Для вашего собственного сервиса ИИ нужен тариф Мера Ньюс.",
+        "lineNews": "Для вашего собственного сервера новостей нужен тариф Мера Ньюс.",
+        "button": "Смотреть тарифы"
+      },
+      "onDevice": {
+        "line": "Сначала выключите «На этом телефоне».",
+        "button": "Перейти в «На этом телефоне»"
+      },
+      "ai": {
+        "title": "Ваш собственный сервис ИИ",
+        "intro": "Используйте любой сервис, который работает с OpenAI API.",
+        "model": "Модель",
+        "status": {
+          "refused": "Сервис отклонил этот ключ.",
+          "notOpenai": "Этот адрес не работает с OpenAI API.",
+          "noModel": "Этой модели нет на этом сервисе.",
+          "busy": "Сервис занят. Попробуйте через минуту.",
+          "failing": "На сервисе возникла проблема. Попробуйте позже."
+        },
+        "warning": "У этого сервиса нет конфиденциальных вычислений. Ваш профиль, ваши чаты и статьи, которые Мера Ньюс читает для вас, попадают к тому, кто запускает сервис.",
+        "switch": "Использовать этот сервис",
+        "confirmTitle": "Использовать собственный сервис ИИ?",
+        "confirmYes": "Использовать",
+        "whatChanges": "Что изменится",
+        "changes": {
+          "title": "Что изменится",
+          "uses": "Ранжирование, пояснения и чат работают через ваш сервис.",
+          "off": "Поиск в интернете и проверка фактов отключены.",
+          "verify": "«Проверить аттестацию» скрыто. Эта проверка работает только с частным облаком."
+        }
+      },
+      "news": {
+        "title": "Ваш собственный сервер новостей",
+        "intro": "Используйте сервер новостей, который вы запускаете.",
+        "status": {
+          "refused": "Сервер отклонил этот ключ.",
+          "noFeed": "Этот сервер не может сформировать ленту."
+        },
+        "switch": "Использовать этот сервер",
+        "topicsLine": "Ваши темы передаются на этот сервер. Серверы Мера Ньюс не получают запросов новостей, пока он включён.",
+        "missingRow": "Недоступно здесь",
+        "missing": {
+          "title": "Недоступно здесь",
+          "intro": "Ваш сервер новостей этого не предоставляет. Мера Ньюс показывает такие страницы пустыми.",
+          "unknown": "Ваш сервер новостей не сообщил, что он предоставляет. Страницы, которые он не может показать, остаются пустыми."
+        }
+      },
+      "feature": {
+        "search": "Поиск",
+        "worldHeadlines": "Главные новости мира",
+        "relatedArticles": "Похожие статьи",
+        "storyUpdates": "Обновления историй",
+        "publicationPages": "Страницы изданий",
+        "placeSearch": "Поиск места",
+        "factChecks": "Проверка фактов",
+        "storyGrouping": "Группировка историй",
+        "publicationNames": "Названия изданий"
+      }
+    },
+    "factCheck": {
+      "notOffered": {
+        "ownNews": "Проверка фактов отключена, пока вы используете собственный сервер новостей.",
+        "pod": "Проверка фактов отключена, пока вы используете собственный сервер Мера Ньюс."
+      }
+    }
+  },
+  "th": {
+    "ownServices": {
+      "groupTitle": "บริการของคุณเอง",
+      "aiRow": "บริการ AI ของคุณเอง",
+      "newsRow": "เซิร์ฟเวอร์ข่าวของคุณเอง",
+      "footer": "สำหรับคนที่รันบริการ AI หรือเซิร์ฟเวอร์ข่าวของตัวเอง คนส่วนใหญ่ไม่จำเป็นต้องใช้ฟีเจอร์นี้",
+      "footerOnDevice": "ปิดโหมดบนโทรศัพท์เครื่องนี้ก่อนเพื่อใช้บริการเหล่านี้",
+      "usingAi": "กำลังใช้บริการ AI ของคุณเอง",
+      "usingNews": "กำลังใช้เซิร์ฟเวอร์ข่าวของคุณเอง",
+      "usingBoth": "กำลังใช้บริการของคุณเอง",
+      "field": {
+        "address": "ที่อยู่",
+        "key": "คีย์ (ไม่บังคับ)",
+        "showKey": "แสดงคีย์",
+        "hideKey": "ซ่อนคีย์"
+      },
+      "address": {
+        "notHttps": "ใช้ที่อยู่ที่ขึ้นต้นด้วย https://",
+        "userinfo": "นำชื่อและรหัสผ่านออกจากที่อยู่นี้",
+        "invalid": "นี่ไม่ใช่ที่อยู่เว็บ"
+      },
+      "check": "ตรวจสอบการเชื่อมต่อ",
+      "checking": "กำลังตรวจสอบ",
+      "checkAgain": "ตรวจสอบอีกครั้ง",
+      "status": {
+        "connected": "เชื่อมต่อแล้ว",
+        "unreachable": "เข้าถึงที่อยู่นี้ไม่ได้",
+        "redirect": "ที่อยู่นี้เปลี่ยนเส้นทาง ใช้ที่อยู่สุดท้ายแทน"
+      },
+      "lastCheckFailed": "การตรวจสอบล่าสุดล้มเหลว {{reason}}",
+      "offUntilChecked": "ปิดอยู่จนกว่าคุณจะตรวจสอบที่อยู่นี้",
+      "gate": {
+        "line": "บริการ AI ของคุณเองต้องใช้แผนของเมร่า นิวส์",
+        "lineNews": "เซิร์ฟเวอร์ข่าวของคุณเองต้องใช้แผนของเมร่า นิวส์",
+        "button": "ดูแผน"
+      },
+      "onDevice": {
+        "line": "ปิดโหมดบนโทรศัพท์เครื่องนี้ก่อน",
+        "button": "ไปที่โหมดบนโทรศัพท์เครื่องนี้"
+      },
+      "ai": {
+        "title": "บริการ AI ของคุณเอง",
+        "intro": "ใช้บริการใดก็ได้ที่ใช้ได้กับ OpenAI API",
+        "model": "โมเดล",
+        "status": {
+          "refused": "บริการนี้ปฏิเสธคีย์นี้",
+          "notOpenai": "ที่อยู่นี้ใช้กับ OpenAI API ไม่ได้",
+          "noModel": "โมเดลนี้ไม่มีในบริการนี้",
+          "busy": "บริการนี้กำลังยุ่ง ลองอีกครั้งในอีกหนึ่งนาที",
+          "failing": "บริการนี้มีปัญหา ลองอีกครั้งในภายหลัง"
+        },
+        "warning": "บริการนี้ไม่มีการประมวลผลแบบเก็บเป็นความลับ โปรไฟล์ของคุณ แชทของคุณ และบทความที่เมร่า นิวส์อ่านให้คุณ จะถูกส่งไปยังผู้ที่ดูแลบริการนี้ทั้งหมด",
+        "switch": "ใช้บริการนี้",
+        "confirmTitle": "ใช้บริการ AI ของคุณเองใช่ไหม?",
+        "confirmYes": "ใช้เลย",
+        "whatChanges": "สิ่งที่เปลี่ยนไป",
+        "changes": {
+          "title": "สิ่งที่เปลี่ยนไป",
+          "uses": "การจัดอันดับ เหตุผล และแชทใช้บริการของคุณ",
+          "off": "การค้นหาเว็บและการตรวจสอบข้อเท็จจริงจะปิดอยู่",
+          "verify": "ซ่อน ยืนยันการรับรอง อยู่ การยืนยันนี้ตรวจสอบเฉพาะคลาวด์ส่วนตัวเท่านั้น"
+        }
+      },
+      "news": {
+        "title": "เซิร์ฟเวอร์ข่าวของคุณเอง",
+        "intro": "ใช้เซิร์ฟเวอร์ข่าวที่คุณดูแลเอง",
+        "status": {
+          "refused": "เซิร์ฟเวอร์นี้ปฏิเสธคีย์นี้",
+          "noFeed": "เซิร์ฟเวอร์นี้สร้างฟีดไม่ได้"
+        },
+        "switch": "ใช้เซิร์ฟเวอร์นี้",
+        "topicsLine": "หัวข้อของคุณจะถูกส่งไปยังเซิร์ฟเวอร์นี้ เซิร์ฟเวอร์ของเมร่า นิวส์จะไม่รับคำขอข่าวใด ๆ ขณะที่เซิร์ฟเวอร์นี้เปิดอยู่",
+        "missingRow": "ไม่มีให้ใช้ที่นี่",
+        "missing": {
+          "title": "ไม่มีให้ใช้ที่นี่",
+          "intro": "เซิร์ฟเวอร์ข่าวของคุณไม่มีสิ่งเหล่านี้ แอปแสดงหน้าเหล่านี้ว่างเปล่า",
+          "unknown": "เซิร์ฟเวอร์ข่าวของคุณไม่ได้บอกว่ามีอะไรให้บ้าง หน้าที่แสดงไม่ได้จะยังว่างเปล่า"
+        }
+      },
+      "feature": {
+        "search": "ค้นหา",
+        "worldHeadlines": "พาดหัวข่าวโลก",
+        "relatedArticles": "บทความที่เกี่ยวข้อง",
+        "storyUpdates": "ความเคลื่อนไหวของเรื่องข่าว",
+        "publicationPages": "หน้าสำนักข่าว",
+        "placeSearch": "การค้นหาสถานที่",
+        "factChecks": "การตรวจสอบข้อเท็จจริง",
+        "storyGrouping": "การจัดกลุ่มเรื่องข่าว",
+        "publicationNames": "ชื่อสำนักข่าว"
+      }
+    },
+    "factCheck": {
+      "notOffered": {
+        "ownNews": "การตรวจสอบข้อเท็จจริงจะปิดอยู่ขณะที่คุณใช้เซิร์ฟเวอร์ข่าวของคุณเอง",
+        "pod": "การตรวจสอบข้อเท็จจริงจะปิดอยู่ขณะที่คุณใช้เซิร์ฟเวอร์เมร่า นิวส์ของคุณเอง"
+      }
+    }
+  },
+  "tr": {
+    "ownServices": {
+      "groupTitle": "Kendi hizmetlerin",
+      "aiRow": "Kendi yapay zekâ hizmetin",
+      "newsRow": "Kendi haber sunucun",
+      "footer": "Kendi yapay zekâ ya da haber sunucusunu işletenler için. Çoğu kişinin buna ihtiyacı yok.",
+      "footerOnDevice": "Bunları kullanmak için “Bu telefonda” modunu kapat.",
+      "usingAi": "Kendi yapay zekâ hizmetin kullanılıyor",
+      "usingNews": "Kendi haber sunucun kullanılıyor",
+      "usingBoth": "Kendi hizmetlerin kullanılıyor",
+      "field": {
+        "address": "Adres",
+        "key": "Anahtar (isteğe bağlı)",
+        "showKey": "Anahtarı göster",
+        "hideKey": "Anahtarı gizle"
+      },
+      "address": {
+        "notHttps": "https:// ile başlayan bir adres kullan",
+        "userinfo": "Bu adresteki adı ve parolayı kaldır.",
+        "invalid": "Bu bir web adresi değil."
+      },
+      "check": "Bağlantıyı denetle",
+      "checking": "Denetleniyor",
+      "checkAgain": "Yeniden denetle",
+      "status": {
+        "connected": "Bağlandı",
+        "unreachable": "Bu adrese ulaşılamıyor.",
+        "redirect": "Bu adres yönlendiriyor. Son adresi kullan."
+      },
+      "lastCheckFailed": "Son denetim başarısız oldu. {{reason}}",
+      "offUntilChecked": "Bu adresi denetleyene kadar kapalı.",
+      "gate": {
+        "line": "Kendi yapay zekâ hizmetin için bir Mera News planı gerekir.",
+        "lineNews": "Kendi haber sunucun için bir Mera News planı gerekir.",
+        "button": "Planlara bak"
+      },
+      "onDevice": {
+        "line": "Önce “Bu telefonda” modunu kapat.",
+        "button": "“Bu telefonda” moduna git"
+      },
+      "ai": {
+        "title": "Kendi yapay zekâ hizmetin",
+        "intro": "OpenAI API ile çalışan herhangi bir hizmeti kullan.",
+        "model": "Model",
+        "status": {
+          "refused": "Hizmet bu anahtarı reddetti.",
+          "notOpenai": "Bu adres OpenAI API ile çalışmıyor.",
+          "noModel": "Bu model bu hizmette yok.",
+          "busy": "Bu hizmet meşgul. Bir dakika sonra yeniden dene.",
+          "failing": "Bu hizmette bir sorun oluştu. Daha sonra yeniden dene."
+        },
+        "warning": "Bu hizmette gizli bilgi işlem yok. Profilin, sohbetlerin ve Mera News'in senin için okuduğu makaleler, hizmeti çalıştıran kişiye gider.",
+        "switch": "Bu hizmeti kullan",
+        "confirmTitle": "Kendi yapay zekâ hizmetin kullanılsın mı?",
+        "confirmYes": "Kullan",
+        "whatChanges": "Neler değişir",
+        "changes": {
+          "title": "Neler değişir",
+          "uses": "Sıralama, nedenler ve sohbet senin hizmetini kullanır.",
+          "off": "Web araması ve doğruluk kontrolleri kapalı olur.",
+          "verify": "“Tasdiki doğrula” gizlenir. Yalnızca özel bulutu denetler."
+        }
+      },
+      "news": {
+        "title": "Kendi haber sunucun",
+        "intro": "Kendi çalıştırdığın bir haber sunucusunu kullan.",
+        "status": {
+          "refused": "Bu sunucu bu anahtarı reddetti.",
+          "noFeed": "Bu sunucu akış oluşturamıyor."
+        },
+        "switch": "Bu sunucuyu kullan",
+        "topicsLine": "Konuların bu sunucuya gider. Bu açıkken Mera News sunucuları hiçbir haber isteği almaz.",
+        "missingRow": "Burada kullanılamaz",
+        "missing": {
+          "title": "Burada kullanılamaz",
+          "intro": "Haber sunucun bunları sunmuyor. Mera News bu sayfaları boş gösterir.",
+          "unknown": "Haber sunucun neler sunduğunu bildirmedi. Gösteremediği sayfalar boş kalır."
+        }
+      },
+      "feature": {
+        "search": "Arama",
+        "worldHeadlines": "Dünya başlıkları",
+        "relatedArticles": "İlgili haberler",
+        "storyUpdates": "Haber güncellemeleri",
+        "publicationPages": "Yayın sayfaları",
+        "placeSearch": "Yer arama",
+        "factChecks": "Doğruluk kontrolleri",
+        "storyGrouping": "Haberleri gruplama",
+        "publicationNames": "Yayın adları"
+      }
+    },
+    "factCheck": {
+      "notOffered": {
+        "ownNews": "Kendi haber sunucunu kullanırken doğruluk kontrolleri kapalıdır.",
+        "pod": "Kendi Mera News sunucunu kullanırken doğruluk kontrolleri kapalıdır."
+      }
+    }
+  },
+  "uk": {
+    "ownServices": {
+      "groupTitle": "Ваші власні сервіси",
+      "aiRow": "Ваш власний сервіс ШІ",
+      "newsRow": "Ваш власний новинний сервер",
+      "footer": "Для тих, хто запускає власний сервіс ШІ або новинний сервер. Більшості людей це не потрібно.",
+      "footerOnDevice": "Вимкніть «На цьому телефоні», щоб використовувати їх.",
+      "usingAi": "Використовується ваш власний сервіс ШІ",
+      "usingNews": "Використовується ваш власний новинний сервер",
+      "usingBoth": "Використовуються ваші власні сервіси",
+      "field": {
+        "address": "Адреса",
+        "key": "Ключ (необов'язково)",
+        "showKey": "Показати ключ",
+        "hideKey": "Сховати ключ"
+      },
+      "address": {
+        "notHttps": "Використовуйте адресу, що починається з https://",
+        "userinfo": "Видаліть ім'я та пароль із цієї адреси.",
+        "invalid": "Це не веб-адреса."
+      },
+      "check": "Перевірити з'єднання",
+      "checking": "Перевірка",
+      "checkAgain": "Перевірити ще раз",
+      "status": {
+        "connected": "Підключено",
+        "unreachable": "Не вдається з'єднатися з цією адресою.",
+        "redirect": "Ця адреса перенаправляє. Використовуйте кінцеву адресу."
+      },
+      "lastCheckFailed": "Остання перевірка не вдалася. {{reason}}",
+      "offUntilChecked": "Вимкнено, доки ви не перевірите цю адресу.",
+      "gate": {
+        "line": "Для власного сервісу ШІ потрібен план Мера Ньюз.",
+        "lineNews": "Для власного новинного сервера потрібен план Мера Ньюз.",
+        "button": "Переглянути плани"
+      },
+      "onDevice": {
+        "line": "Спершу вимкніть «На цьому телефоні».",
+        "button": "Перейти до «На цьому телефоні»"
+      },
+      "ai": {
+        "title": "Ваш власний сервіс ШІ",
+        "intro": "Використовуйте будь-який сервіс, який працює з OpenAI API.",
+        "model": "Модель",
+        "status": {
+          "refused": "Сервіс відхилив цей ключ.",
+          "notOpenai": "Ця адреса не працює з OpenAI API.",
+          "noModel": "Цієї моделі немає на цьому сервісі.",
+          "busy": "Сервіс зараз зайнятий. Спробуйте ще раз за хвилину.",
+          "failing": "У сервісі сталася помилка. Спробуйте пізніше."
+        },
+        "warning": "Цей сервіс не має конфіденційних обчислень. Ваш профіль, ваші чати та статті, які Мера Ньюз читає для вас, передаються тому, хто керує сервісом.",
+        "switch": "Використовувати цей сервіс",
+        "confirmTitle": "Використовувати власний сервіс ШІ?",
+        "confirmYes": "Використовувати",
+        "whatChanges": "Що зміниться",
+        "changes": {
+          "title": "Що зміниться",
+          "uses": "Ранжування, пояснення та чат використовуватимуть ваш сервіс.",
+          "off": "Пошук у мережі та перевірки фактів вимкнено.",
+          "verify": "«Перевірити засвідчення» приховано. Ця перевірка стосується лише приватної хмари."
+        }
+      },
+      "news": {
+        "title": "Ваш власний новинний сервер",
+        "intro": "Використовуйте новинний сервер, яким ви керуєте.",
+        "status": {
+          "refused": "Сервер відхилив цей ключ.",
+          "noFeed": "Цей сервер не може створити стрічку."
+        },
+        "switch": "Використовувати цей сервер",
+        "topicsLine": "Ваші теми надсилаються на цей сервер. Сервери Мера Ньюз не отримують новинних запитів, поки цей сервер увімкнено.",
+        "missingRow": "Недоступно тут",
+        "missing": {
+          "title": "Недоступно тут",
+          "intro": "Ваш новинний сервер не пропонує цього. Мера Ньюз показує ці сторінки порожніми.",
+          "unknown": "Ваш новинний сервер не повідомив, що він пропонує. Сторінки, які він не може показати, лишаються порожніми."
+        }
+      },
+      "feature": {
+        "search": "Пошук",
+        "worldHeadlines": "Заголовки світу",
+        "relatedArticles": "Пов'язані статті",
+        "storyUpdates": "Оновлення історій",
+        "publicationPages": "Сторінки видань",
+        "placeSearch": "Пошук місця",
+        "factChecks": "Перевірки фактів",
+        "storyGrouping": "Групування історій",
+        "publicationNames": "Назви видань"
+      }
+    },
+    "factCheck": {
+      "notOffered": {
+        "ownNews": "Перевірки фактів вимкнено, поки ви використовуєте власний новинний сервер.",
+        "pod": "Перевірки фактів вимкнено, поки ви використовуєте власний сервер Мера Ньюз."
+      }
+    }
+  },
+  "vi": {
+    "ownServices": {
+      "groupTitle": "Dịch vụ riêng của bạn",
+      "aiRow": "Dịch vụ AI riêng của bạn",
+      "newsRow": "Máy chủ tin tức riêng của bạn",
+      "footer": "Dành cho người tự vận hành dịch vụ AI hoặc máy chủ tin tức riêng. Hầu hết mọi người không cần đến tính năng này.",
+      "footerOnDevice": "Tắt chế độ Trên điện thoại này để dùng các dịch vụ này.",
+      "usingAi": "Đang dùng dịch vụ AI riêng của bạn",
+      "usingNews": "Đang dùng máy chủ tin tức riêng của bạn",
+      "usingBoth": "Đang dùng dịch vụ riêng của bạn",
+      "field": {
+        "address": "Địa chỉ",
+        "key": "Khóa (không bắt buộc)",
+        "showKey": "Hiện khóa",
+        "hideKey": "Ẩn khóa"
+      },
+      "address": {
+        "notHttps": "Dùng địa chỉ bắt đầu bằng https://",
+        "userinfo": "Xóa tên và mật khẩu khỏi địa chỉ này.",
+        "invalid": "Đây không phải địa chỉ web."
+      },
+      "check": "Kiểm tra kết nối",
+      "checking": "Đang kiểm tra",
+      "checkAgain": "Kiểm tra lại",
+      "status": {
+        "connected": "Đã kết nối",
+        "unreachable": "Không thể kết nối tới địa chỉ này.",
+        "redirect": "Địa chỉ này được chuyển hướng. Hãy dùng địa chỉ cuối cùng."
+      },
+      "lastCheckFailed": "Lần kiểm tra gần nhất thất bại. {{reason}}",
+      "offUntilChecked": "Tắt cho tới khi bạn kiểm tra địa chỉ này.",
+      "gate": {
+        "line": "Dịch vụ AI riêng của bạn cần gói Mera News.",
+        "lineNews": "Máy chủ tin tức riêng của bạn cần gói Mera News.",
+        "button": "Xem các gói"
+      },
+      "onDevice": {
+        "line": "Hãy tắt chế độ Trên điện thoại này trước.",
+        "button": "Đi tới chế độ Trên điện thoại này"
+      },
+      "ai": {
+        "title": "Dịch vụ AI riêng của bạn",
+        "intro": "Dùng bất kỳ dịch vụ nào hoạt động với OpenAI API.",
+        "model": "Mô hình",
+        "status": {
+          "refused": "Dịch vụ này đã từ chối khóa này.",
+          "notOpenai": "Địa chỉ này không hoạt động với OpenAI API.",
+          "noModel": "Mô hình này không có trên dịch vụ này.",
+          "busy": "Dịch vụ này đang bận. Hãy thử lại sau một phút.",
+          "failing": "Dịch vụ này gặp sự cố. Hãy thử lại sau."
+        },
+        "warning": "Dịch vụ này không hỗ trợ điện toán bảo mật. Hồ sơ của bạn, cuộc trò chuyện và các bài báo Mera News đọc cho bạn đều được gửi tới người vận hành dịch vụ.",
+        "switch": "Dùng dịch vụ này",
+        "confirmTitle": "Dùng dịch vụ AI riêng của bạn?",
+        "confirmYes": "Dùng",
+        "whatChanges": "Điều gì thay đổi",
+        "changes": {
+          "title": "Điều gì thay đổi",
+          "uses": "Xếp hạng, lý do và trò chuyện sẽ dùng dịch vụ của bạn.",
+          "off": "Tìm kiếm trên web và kiểm chứng sự kiện sẽ tắt.",
+          "verify": "Xác minh chứng thực bị ẩn. Tính năng này chỉ kiểm tra đám mây riêng."
+        }
+      },
+      "news": {
+        "title": "Máy chủ tin tức riêng của bạn",
+        "intro": "Dùng máy chủ tin tức do bạn vận hành.",
+        "status": {
+          "refused": "Máy chủ này đã từ chối khóa này.",
+          "noFeed": "Máy chủ này không thể tạo bảng tin."
+        },
+        "switch": "Dùng máy chủ này",
+        "topicsLine": "Chủ đề của bạn được gửi tới máy chủ này. Máy chủ Mera News không nhận yêu cầu tin tức nào khi máy chủ này đang bật.",
+        "missingRow": "Không có sẵn ở đây",
+        "missing": {
+          "title": "Không có sẵn ở đây",
+          "intro": "Máy chủ tin tức của bạn không cung cấp các mục này. Mera News hiển thị các trang này để trống.",
+          "unknown": "Máy chủ tin tức của bạn không cho biết nó cung cấp những gì. Các trang nó không thể hiển thị sẽ để trống."
+        }
+      },
+      "feature": {
+        "search": "Tìm kiếm",
+        "worldHeadlines": "Tiêu đề tin thế giới",
+        "relatedArticles": "Bài báo liên quan",
+        "storyUpdates": "Cập nhật tin",
+        "publicationPages": "Trang nguồn tin",
+        "placeSearch": "Tìm địa điểm",
+        "factChecks": "Kiểm chứng sự kiện",
+        "storyGrouping": "Gom nhóm tin",
+        "publicationNames": "Tên nguồn tin"
+      }
+    },
+    "factCheck": {
+      "notOffered": {
+        "ownNews": "Kiểm chứng sự kiện đang tắt khi bạn dùng máy chủ tin tức riêng.",
+        "pod": "Kiểm chứng sự kiện đang tắt khi bạn dùng máy chủ Mera News riêng."
+      }
+    }
+  },
+  "zh-CN": {
+    "ownServices": {
+      "groupTitle": "你的自有服务",
+      "aiRow": "你自己的 AI 服务",
+      "newsRow": "你自己的新闻服务器",
+      "footer": "面向自行运行 AI 或新闻服务器的人。大多数人用不到这个。",
+      "footerOnDevice": "请先关闭「在这部手机上」，才能使用这些服务。",
+      "usingAi": "正在使用你自己的 AI 服务",
+      "usingNews": "正在使用你自己的新闻服务器",
+      "usingBoth": "正在使用你自己的服务",
+      "field": {
+        "address": "地址",
+        "key": "密钥（可选）",
+        "showKey": "显示密钥",
+        "hideKey": "隐藏密钥"
+      },
+      "address": {
+        "notHttps": "请使用以 https:// 开头的地址",
+        "userinfo": "请从这个地址中删除用户名和密码。",
+        "invalid": "这不是有效的网页地址。"
+      },
+      "check": "检查连接",
+      "checking": "检查中",
+      "checkAgain": "再次检查",
+      "status": {
+        "connected": "已连接",
+        "unreachable": "无法连接到此地址。",
+        "redirect": "此地址会跳转。请使用最终地址。"
+      },
+      "lastCheckFailed": "上次检查失败。{{reason}}",
+      "offUntilChecked": "检查此地址前处于关闭状态。",
+      "gate": {
+        "line": "你自己的 AI 服务需要梅拉新闻套餐。",
+        "lineNews": "你自己的新闻服务器需要梅拉新闻套餐。",
+        "button": "查看套餐"
+      },
+      "onDevice": {
+        "line": "请先关闭「在这部手机上」。",
+        "button": "前往「在这部手机上」"
+      },
+      "ai": {
+        "title": "你自己的 AI 服务",
+        "intro": "可使用任何兼容 OpenAI API 的服务。",
+        "model": "模型",
+        "status": {
+          "refused": "该服务拒绝了此密钥。",
+          "notOpenai": "此地址不兼容 OpenAI API。",
+          "noModel": "此服务上没有这个模型。",
+          "busy": "此服务繁忙。请一分钟后再试。",
+          "failing": "此服务出现问题。请稍后再试。"
+        },
+        "warning": "此服务没有机密计算。你的个人资料、你的聊天记录，以及梅拉新闻为你阅读的文章，都会交给运行该服务的人。",
+        "switch": "使用此服务",
+        "confirmTitle": "要使用你自己的 AI 服务吗？",
+        "confirmYes": "使用",
+        "whatChanges": "会有哪些变化",
+        "changes": {
+          "title": "会有哪些变化",
+          "uses": "排序、理由和聊天会使用你的服务。",
+          "off": "网页搜索和事实核查将关闭。",
+          "verify": "「验证证明」已隐藏。它只检查私有云。"
+        }
+      },
+      "news": {
+        "title": "你自己的新闻服务器",
+        "intro": "使用你自行运行的新闻服务器。",
+        "status": {
+          "refused": "该服务器拒绝了此密钥。",
+          "noFeed": "此服务器无法生成信息流。"
+        },
+        "switch": "使用此服务器",
+        "topicsLine": "你的主题会发送到此服务器。此服务器开启时，梅拉新闻的服务器不会收到任何新闻请求。",
+        "missingRow": "此处不可用",
+        "missing": {
+          "title": "此处不可用",
+          "intro": "你的新闻服务器不提供这些内容。梅拉新闻会将这些页面显示为空。",
+          "unknown": "你的新闻服务器没有说明它提供哪些内容。它无法显示的页面会保持为空。"
+        }
+      },
+      "feature": {
+        "search": "搜索",
+        "worldHeadlines": "全球头条",
+        "relatedArticles": "相关文章",
+        "storyUpdates": "报道更新",
+        "publicationPages": "媒体页面",
+        "placeSearch": "查找地点",
+        "factChecks": "事实核查",
+        "storyGrouping": "报道分组",
+        "publicationNames": "媒体名称"
+      }
+    },
+    "factCheck": {
+      "notOffered": {
+        "ownNews": "使用你自己的新闻服务器时，事实核查功能关闭。",
+        "pod": "使用你自己的梅拉新闻服务器时，事实核查功能关闭。"
+      }
+    }
+  },
+  "zh-TW": {
+    "ownServices": {
+      "groupTitle": "你自己的服務",
+      "aiRow": "你自己的 AI 服務",
+      "newsRow": "你自己的新聞伺服器",
+      "footer": "給自己架設 AI 或新聞伺服器的人使用。多數人不需要這個。",
+      "footerOnDevice": "關閉「在這支手機上」即可使用這些。",
+      "usingAi": "正在使用你自己的 AI 服務",
+      "usingNews": "正在使用你自己的新聞伺服器",
+      "usingBoth": "正在使用你自己的服務",
+      "field": {
+        "address": "網址",
+        "key": "金鑰（選填）",
+        "showKey": "顯示金鑰",
+        "hideKey": "隱藏金鑰"
+      },
+      "address": {
+        "notHttps": "請使用以 https:// 開頭的網址",
+        "userinfo": "請移除這個網址中的名稱和密碼。",
+        "invalid": "這不是有效的網址。"
+      },
+      "check": "檢查連線",
+      "checking": "檢查中",
+      "checkAgain": "再次檢查",
+      "status": {
+        "connected": "已連線",
+        "unreachable": "無法連線至此網址。",
+        "redirect": "這個網址會重新導向。請使用最終的網址。"
+      },
+      "lastCheckFailed": "上次檢查失敗。{{reason}}",
+      "offUntilChecked": "檢查這個網址前會保持關閉。",
+      "gate": {
+        "line": "你自己的 AI 服務需要梅拉新聞方案。",
+        "lineNews": "你自己的新聞伺服器需要梅拉新聞方案。",
+        "button": "查看方案"
+      },
+      "onDevice": {
+        "line": "請先關閉「在這支手機上」。",
+        "button": "前往「在這支手機上」"
+      },
+      "ai": {
+        "title": "你自己的 AI 服務",
+        "intro": "可使用任何支援 OpenAI API 的服務。",
+        "model": "模型",
+        "status": {
+          "refused": "這個服務拒絕了此金鑰。",
+          "notOpenai": "此網址不支援 OpenAI API。",
+          "noModel": "此服務沒有這個模型。",
+          "busy": "這個服務目前忙碌。請一分鐘後再試。",
+          "failing": "這個服務發生問題。請稍後再試。"
+        },
+        "warning": "這個服務沒有機密運算。你的個人資料、對話內容，以及梅拉新聞為你閱讀的文章，都會傳送給營運這個服務的人。",
+        "switch": "使用這個服務",
+        "confirmTitle": "要使用你自己的 AI 服務嗎？",
+        "confirmYes": "使用",
+        "whatChanges": "會有哪些變化",
+        "changes": {
+          "title": "會有哪些變化",
+          "uses": "排序、理由和聊天會使用你的服務。",
+          "off": "網路搜尋和事實查證會關閉。",
+          "verify": "「驗證認證」已隱藏。它只會檢查私有雲。"
+        }
+      },
+      "news": {
+        "title": "你自己的新聞伺服器",
+        "intro": "使用你自行架設的新聞伺服器。",
+        "status": {
+          "refused": "這個伺服器拒絕了此金鑰。",
+          "noFeed": "這個伺服器無法產生資訊流。"
+        },
+        "switch": "使用這個伺服器",
+        "topicsLine": "你的主題會傳送到這個伺服器。這個伺服器運作時，梅拉新聞的伺服器不會收到任何新聞請求。",
+        "missingRow": "此處無法使用",
+        "missing": {
+          "title": "此處無法使用",
+          "intro": "你的新聞伺服器不提供這些功能。梅拉新聞會將這些頁面顯示為空白。",
+          "unknown": "你的新聞伺服器沒有說明它提供哪些功能。它無法顯示的頁面會保持空白。"
+        }
+      },
+      "feature": {
+        "search": "搜尋",
+        "worldHeadlines": "全球頭條",
+        "relatedArticles": "相關文章",
+        "storyUpdates": "報導更新",
+        "publicationPages": "媒體頁面",
+        "placeSearch": "尋找地點",
+        "factChecks": "事實查證",
+        "storyGrouping": "報導分組",
+        "publicationNames": "媒體名稱"
+      }
+    },
+    "factCheck": {
+      "notOffered": {
+        "ownNews": "使用你自己的新聞伺服器時，事實查證會關閉。",
+        "pod": "使用你自己的梅拉新聞伺服器時，事實查證會關閉。"
+      }
+    }
+  }
+}

@@ -3334,7 +3334,7 @@
         "title": "What changes",
         "uses": "Ranking, reasons and chat use your service.",
         "off": "Web search and fact checks are off.",
-        "verify": "Verify is hidden. It checks the private cloud only."
+        "verify": "Verify attestation is hidden. It checks the private cloud only."
       }
     },
     "news": {

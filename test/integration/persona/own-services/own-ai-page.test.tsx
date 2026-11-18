@@ -204,7 +204,7 @@ describe('own AI service page', () => {
         await render(<WhatChangesScreen />);
         expect(screen.getByText('Ranking, reasons and chat use your service.')).toBeTruthy();
         expect(screen.getByText('Web search and fact checks are off.')).toBeTruthy();
-        expect(screen.getByText('Verify is hidden. It checks the private cloud only.')).toBeTruthy();
+        expect(screen.getByText('Verify attestation is hidden. It checks the private cloud only.')).toBeTruthy();
         expect(screen.queryByText(/daily limit/i)).toBeNull();
     });
 });

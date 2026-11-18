@@ -1769,8 +1769,8 @@
       "footer": "{{date}} को जाँचा गया। {{downloadUrl}} के ज़रिए साझा किया गया"
     },
     "notOffered": {
-      "ownNews": "Fact checks are off while you use your own news server.",
-      "pod": "Fact checks are off while you use your own मेरा न्यूज़ server."
+      "ownNews": "आपका अपना न्यूज़ सर्वर इस्तेमाल करते समय फैक्ट चेक्स बंद रहते हैं।",
+      "pod": "आपका अपना मेरा न्यूज़ सर्वर इस्तेमाल करते समय फैक्ट चेक्स बंद रहते हैं।"
     }
   },
   "consent": {
@@ -3277,93 +3277,93 @@
     "storiesLabel": "उदाहरण खबरें"
   },
   "ownServices": {
-    "groupTitle": "Your own services",
-    "aiRow": "Your own AI service",
-    "newsRow": "Your own news server",
-    "footer": "For people who run their own AI or news server. Most people don't need this.",
-    "footerOnDevice": "Turn off On this phone to use these.",
-    "usingAi": "Using your own AI service",
-    "usingNews": "Using your own news server",
-    "usingBoth": "Using your own services",
+    "groupTitle": "आपकी अपनी सेवाएँ",
+    "aiRow": "आपकी अपनी AI सेवा",
+    "newsRow": "आपका अपना न्यूज़ सर्वर",
+    "footer": "जो लोग अपना AI या न्यूज़ सर्वर चलाते हैं, उनके लिए। ज़्यादातर लोगों को इसकी ज़रूरत नहीं होती।",
+    "footerOnDevice": "इन्हें इस्तेमाल करने के लिए ‘इस फ़ोन पर’ मोड बंद करें।",
+    "usingAi": "आपकी अपनी AI सेवा इस्तेमाल हो रही है",
+    "usingNews": "आपका अपना न्यूज़ सर्वर इस्तेमाल हो रहा है",
+    "usingBoth": "आपकी अपनी सेवाएँ इस्तेमाल हो रही हैं",
     "field": {
-      "address": "Address",
-      "key": "Key (optional)",
-      "showKey": "Show key",
-      "hideKey": "Hide key"
+      "address": "पता",
+      "key": "कुंजी (वैकल्पिक)",
+      "showKey": "कुंजी दिखाएँ",
+      "hideKey": "कुंजी छिपाएँ"
     },
     "address": {
-      "notHttps": "Use an address that starts with https://",
-      "userinfo": "Remove the name and password from this address.",
-      "invalid": "This isn't a web address."
+      "notHttps": "https:// से शुरू होने वाला पता इस्तेमाल करें",
+      "userinfo": "इस पते से नाम और पासवर्ड हटाएँ।",
+      "invalid": "यह वेब पता नहीं है।"
     },
-    "check": "Check connection",
-    "checking": "Checking",
-    "checkAgain": "Check again",
+    "check": "कनेक्शन जाँचें",
+    "checking": "जाँच हो रही है",
+    "checkAgain": "फिर से जाँचें",
     "status": {
-      "connected": "Connected",
-      "unreachable": "Can't reach this address.",
-      "redirect": "This address redirects. Use the final address."
+      "connected": "जुड़ा हुआ है",
+      "unreachable": "इस पते तक पहुँच नहीं हो पा रही है।",
+      "redirect": "यह पता दूसरे पते पर भेजता है। अंतिम पता इस्तेमाल करें।"
     },
-    "lastCheckFailed": "Last check failed. {{reason}}",
-    "offUntilChecked": "Off until you check this address.",
+    "lastCheckFailed": "पिछली जाँच विफल रही। {{reason}}",
+    "offUntilChecked": "इस पते की जाँच करने तक यह बंद रहेगा।",
     "gate": {
-      "line": "Your own AI service needs a मेरा न्यूज़ plan.",
-      "lineNews": "Your own news server needs a मेरा न्यूज़ plan.",
-      "button": "See plans"
+      "line": "अपनी AI सेवा के लिए मेरा न्यूज़ प्लान चाहिए।",
+      "lineNews": "अपने न्यूज़ सर्वर के लिए मेरा न्यूज़ प्लान चाहिए।",
+      "button": "प्लान देखें"
     },
     "onDevice": {
-      "line": "Turn off On this phone first.",
-      "button": "Go to On this phone"
+      "line": "पहले ‘इस फ़ोन पर’ मोड बंद करें।",
+      "button": "‘इस फ़ोन पर’ मोड पर जाएँ"
     },
     "ai": {
-      "title": "Your own AI service",
-      "intro": "Use any service that works with the OpenAI API.",
-      "model": "Model",
+      "title": "आपकी अपनी AI सेवा",
+      "intro": "OpenAI API के साथ काम करने वाली कोई भी सेवा इस्तेमाल करें।",
+      "model": "मॉडल",
       "status": {
-        "refused": "The service refused this key.",
-        "notOpenai": "This address doesn't work with the OpenAI API.",
-        "noModel": "This model isn't on this service.",
-        "busy": "This service is busy. Try again in a minute.",
-        "failing": "This service had a problem. Try again later."
+        "refused": "इस सेवा ने यह कुंजी स्वीकार नहीं की।",
+        "notOpenai": "यह पता OpenAI API के साथ काम नहीं करता।",
+        "noModel": "यह मॉडल इस सेवा पर नहीं है।",
+        "busy": "यह सेवा अभी व्यस्त है। एक मिनट बाद फिर कोशिश करें।",
+        "failing": "इस सेवा में कोई समस्या आई। बाद में फिर कोशिश करें।"
       },
-      "warning": "This service has no confidential computing. Your profile, your chats and the articles मेरा न्यूज़ reads for you go to whoever runs it.",
-      "switch": "Use this service",
-      "confirmTitle": "Use your own AI service?",
-      "confirmYes": "Use it",
-      "whatChanges": "What changes",
+      "warning": "इस सेवा में कॉन्फ़िडेंशियल कंप्यूटिंग नहीं है। आपकी प्रोफ़ाइल, आपकी चैट और मेरा न्यूज़ आपके लिए जो लेख पढ़ता है, वे सब इसे चलाने वाले तक पहुँचते हैं।",
+      "switch": "यह सेवा इस्तेमाल करें",
+      "confirmTitle": "अपनी AI सेवा इस्तेमाल करें?",
+      "confirmYes": "इसे इस्तेमाल करें",
+      "whatChanges": "क्या बदलेगा",
       "changes": {
-        "title": "What changes",
-        "uses": "Ranking, reasons and chat use your service.",
-        "off": "Web search and fact checks are off.",
-        "verify": "Verify is hidden. It checks the private cloud only."
+        "title": "क्या बदलेगा",
+        "uses": "रैंकिंग, कारण और चैट आपकी सेवा का इस्तेमाल करेंगे।",
+        "off": "वेब खोज और फैक्ट चेक्स बंद रहेंगे।",
+        "verify": "‘प्रमाणीकरण सत्यापित करें’ छिपा रहेगा। यह सिर्फ़ प्राइवेट क्लाउड की जाँच करता है।"
       }
     },
     "news": {
-      "title": "Your own news server",
-      "intro": "Use a news server you run.",
+      "title": "आपका अपना न्यूज़ सर्वर",
+      "intro": "आपके द्वारा चलाए जाने वाले न्यूज़ सर्वर का इस्तेमाल करें।",
       "status": {
-        "refused": "The server refused this key.",
-        "noFeed": "This server can't make a feed."
+        "refused": "इस सर्वर ने यह कुंजी स्वीकार नहीं की।",
+        "noFeed": "यह सर्वर फ़ीड नहीं बना सकता।"
       },
-      "switch": "Use this server",
-      "topicsLine": "Your topics go to this server. मेरा न्यूज़ servers get no news requests while it's on.",
-      "missingRow": "Not available here",
+      "switch": "यह सर्वर इस्तेमाल करें",
+      "topicsLine": "आपके विषय इस सर्वर तक जाते हैं। जब तक यह चालू है, मेरा न्यूज़ के सर्वरों को कोई न्यूज़ अनुरोध नहीं मिलते।",
+      "missingRow": "यहाँ उपलब्ध नहीं",
       "missing": {
-        "title": "Not available here",
-        "intro": "Your news server doesn't offer these. मेरा न्यूज़ shows them as empty.",
-        "unknown": "Your news server didn't say what it offers. Pages it can't show stay empty."
+        "title": "यहाँ उपलब्ध नहीं",
+        "intro": "आपका न्यूज़ सर्वर ये सुविधाएँ नहीं देता। ऐप इन पन्नों को खाली दिखाता है।",
+        "unknown": "आपके न्यूज़ सर्वर ने नहीं बताया कि वह क्या देता है। जो पन्ने वह नहीं दिखा सकता, वे खाली रहेंगे।"
       }
     },
     "feature": {
-      "search": "Search",
-      "worldHeadlines": "World headlines",
-      "relatedArticles": "Related articles",
-      "storyUpdates": "Story updates",
-      "publicationPages": "Publication pages",
-      "placeSearch": "Finding a place",
-      "factChecks": "Fact checks",
-      "storyGrouping": "Grouping stories",
-      "publicationNames": "Publication names"
+      "search": "खोज",
+      "worldHeadlines": "दुनिया की मुख्य खबरें",
+      "relatedArticles": "संबंधित लेख",
+      "storyUpdates": "कहानी के अपडेट",
+      "publicationPages": "प्रकाशन के पन्ने",
+      "placeSearch": "जगह खोजना",
+      "factChecks": "फैक्ट चेक्स",
+      "storyGrouping": "कहानियों को समूह में रखना",
+      "publicationNames": "प्रकाशनों के नाम"
     }
   }
 }

@@ -1767,8 +1767,8 @@
       "footer": "Gecheckt op {{date}}. Gedeeld via {{downloadUrl}}"
     },
     "notOffered": {
-      "ownNews": "Fact checks are off while you use your own news server.",
-      "pod": "Fact checks are off while you use your own Mera News server."
+      "ownNews": "Feitchecks staan uit terwijl je je eigen nieuwsserver gebruikt.",
+      "pod": "Feitchecks staan uit terwijl je je eigen Mera News-server gebruikt."
     }
   },
   "consent": {
@@ -3275,93 +3275,93 @@
     "storiesLabel": "Voorbeeldverhalen"
   },
   "ownServices": {
-    "groupTitle": "Your own services",
-    "aiRow": "Your own AI service",
-    "newsRow": "Your own news server",
-    "footer": "For people who run their own AI or news server. Most people don't need this.",
-    "footerOnDevice": "Turn off On this phone to use these.",
-    "usingAi": "Using your own AI service",
-    "usingNews": "Using your own news server",
-    "usingBoth": "Using your own services",
+    "groupTitle": "Je eigen services",
+    "aiRow": "Je eigen AI-service",
+    "newsRow": "Je eigen nieuwsserver",
+    "footer": "Voor mensen die hun eigen AI- of nieuwsserver draaien. De meeste mensen hebben dit niet nodig.",
+    "footerOnDevice": "Zet ‘Op deze telefoon’ uit om deze te gebruiken.",
+    "usingAi": "Je eigen AI-service gebruiken",
+    "usingNews": "Je eigen nieuwsserver gebruiken",
+    "usingBoth": "Je eigen services gebruiken",
     "field": {
-      "address": "Address",
-      "key": "Key (optional)",
-      "showKey": "Show key",
-      "hideKey": "Hide key"
+      "address": "Adres",
+      "key": "Sleutel (optioneel)",
+      "showKey": "Sleutel tonen",
+      "hideKey": "Sleutel verbergen"
     },
     "address": {
-      "notHttps": "Use an address that starts with https://",
-      "userinfo": "Remove the name and password from this address.",
-      "invalid": "This isn't a web address."
+      "notHttps": "Gebruik een adres dat begint met https://",
+      "userinfo": "Haal de naam en het wachtwoord uit dit adres.",
+      "invalid": "Dit is geen webadres."
     },
-    "check": "Check connection",
-    "checking": "Checking",
-    "checkAgain": "Check again",
+    "check": "Verbinding controleren",
+    "checking": "Controleren",
+    "checkAgain": "Opnieuw controleren",
     "status": {
-      "connected": "Connected",
-      "unreachable": "Can't reach this address.",
-      "redirect": "This address redirects. Use the final address."
+      "connected": "Verbonden",
+      "unreachable": "Dit adres is niet bereikbaar.",
+      "redirect": "Dit adres stuurt door. Gebruik het eindadres."
     },
-    "lastCheckFailed": "Last check failed. {{reason}}",
-    "offUntilChecked": "Off until you check this address.",
+    "lastCheckFailed": "Laatste controle mislukt. {{reason}}",
+    "offUntilChecked": "Uit tot je dit adres hebt gecontroleerd.",
     "gate": {
-      "line": "Your own AI service needs a Mera News plan.",
-      "lineNews": "Your own news server needs a Mera News plan.",
-      "button": "See plans"
+      "line": "Je eigen AI-service heeft een Mera News-abonnement nodig.",
+      "lineNews": "Je eigen nieuwsserver heeft een Mera News-abonnement nodig.",
+      "button": "Bekijk abonnementen"
     },
     "onDevice": {
-      "line": "Turn off On this phone first.",
-      "button": "Go to On this phone"
+      "line": "Zet eerst ‘Op deze telefoon’ uit.",
+      "button": "Ga naar ‘Op deze telefoon’"
     },
     "ai": {
-      "title": "Your own AI service",
-      "intro": "Use any service that works with the OpenAI API.",
+      "title": "Je eigen AI-service",
+      "intro": "Gebruik elke service die met de OpenAI API werkt.",
       "model": "Model",
       "status": {
-        "refused": "The service refused this key.",
-        "notOpenai": "This address doesn't work with the OpenAI API.",
-        "noModel": "This model isn't on this service.",
-        "busy": "This service is busy. Try again in a minute.",
-        "failing": "This service had a problem. Try again later."
+        "refused": "De service heeft deze sleutel geweigerd.",
+        "notOpenai": "Dit adres werkt niet met de OpenAI API.",
+        "noModel": "Dit model staat niet op deze service.",
+        "busy": "Deze service is druk. Probeer het over een minuut opnieuw.",
+        "failing": "Deze service had een probleem. Probeer het later opnieuw."
       },
-      "warning": "This service has no confidential computing. Your profile, your chats and the articles Mera News reads for you go to whoever runs it.",
-      "switch": "Use this service",
-      "confirmTitle": "Use your own AI service?",
-      "confirmYes": "Use it",
-      "whatChanges": "What changes",
+      "warning": "Deze service heeft geen confidential computing. Je profiel, je chats en de artikelen die Mera News voor je leest, gaan naar wie de service beheert.",
+      "switch": "Deze service gebruiken",
+      "confirmTitle": "Je eigen AI-service gebruiken?",
+      "confirmYes": "Gebruiken",
+      "whatChanges": "Wat verandert",
       "changes": {
-        "title": "What changes",
-        "uses": "Ranking, reasons and chat use your service.",
-        "off": "Web search and fact checks are off.",
-        "verify": "Verify is hidden. It checks the private cloud only."
+        "title": "Wat verandert",
+        "uses": "Rangschikking, redenen en chat gebruiken je service.",
+        "off": "Webzoeken en feitchecks staan uit.",
+        "verify": "‘Attestatie verifiëren’ is verborgen. Het controleert alleen de privécloud."
       }
     },
     "news": {
-      "title": "Your own news server",
-      "intro": "Use a news server you run.",
+      "title": "Je eigen nieuwsserver",
+      "intro": "Gebruik een nieuwsserver die je zelf draait.",
       "status": {
-        "refused": "The server refused this key.",
-        "noFeed": "This server can't make a feed."
+        "refused": "De server heeft deze sleutel geweigerd.",
+        "noFeed": "Deze server kan geen feed maken."
       },
-      "switch": "Use this server",
-      "topicsLine": "Your topics go to this server. Mera News servers get no news requests while it's on.",
-      "missingRow": "Not available here",
+      "switch": "Deze server gebruiken",
+      "topicsLine": "Je onderwerpen gaan naar deze server. Mera News-servers krijgen geen nieuwsverzoeken zolang hij aan staat.",
+      "missingRow": "Hier niet beschikbaar",
       "missing": {
-        "title": "Not available here",
-        "intro": "Your news server doesn't offer these. Mera News shows them as empty.",
-        "unknown": "Your news server didn't say what it offers. Pages it can't show stay empty."
+        "title": "Hier niet beschikbaar",
+        "intro": "Je nieuwsserver biedt deze niet aan. Mera News toont ze als leeg.",
+        "unknown": "Je nieuwsserver heeft niet laten weten wat hij aanbiedt. Pagina's die hij niet kan tonen blijven leeg."
       }
     },
     "feature": {
-      "search": "Search",
-      "worldHeadlines": "World headlines",
-      "relatedArticles": "Related articles",
-      "storyUpdates": "Story updates",
-      "publicationPages": "Publication pages",
-      "placeSearch": "Finding a place",
-      "factChecks": "Fact checks",
-      "storyGrouping": "Grouping stories",
-      "publicationNames": "Publication names"
+      "search": "Zoeken",
+      "worldHeadlines": "Wereldnieuws",
+      "relatedArticles": "Gerelateerde artikelen",
+      "storyUpdates": "Updates over verhalen",
+      "publicationPages": "Pagina's van uitgevers",
+      "placeSearch": "Een plaats zoeken",
+      "factChecks": "Feitchecks",
+      "storyGrouping": "Verhalen groeperen",
+      "publicationNames": "Namen van uitgevers"
     }
   }
 }

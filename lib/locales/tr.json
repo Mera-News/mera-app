@@ -1769,8 +1769,8 @@
       "footer": "{{date}} tarihinde kontrol edildi. {{downloadUrl}} üzerinden paylaşıldı"
     },
     "notOffered": {
-      "ownNews": "Fact checks are off while you use your own news server.",
-      "pod": "Fact checks are off while you use your own Mera News server."
+      "ownNews": "Kendi haber sunucunu kullanırken doğruluk kontrolleri kapalıdır.",
+      "pod": "Kendi Mera News sunucunu kullanırken doğruluk kontrolleri kapalıdır."
     }
   },
   "consent": {
@@ -3277,93 +3277,93 @@
     "storiesLabel": "Örnek haberler"
   },
   "ownServices": {
-    "groupTitle": "Your own services",
-    "aiRow": "Your own AI service",
-    "newsRow": "Your own news server",
-    "footer": "For people who run their own AI or news server. Most people don't need this.",
-    "footerOnDevice": "Turn off On this phone to use these.",
-    "usingAi": "Using your own AI service",
-    "usingNews": "Using your own news server",
-    "usingBoth": "Using your own services",
+    "groupTitle": "Kendi hizmetlerin",
+    "aiRow": "Kendi yapay zekâ hizmetin",
+    "newsRow": "Kendi haber sunucun",
+    "footer": "Kendi yapay zekâ ya da haber sunucusunu işletenler için. Çoğu kişinin buna ihtiyacı yok.",
+    "footerOnDevice": "Bunları kullanmak için “Bu telefonda” modunu kapat.",
+    "usingAi": "Kendi yapay zekâ hizmetin kullanılıyor",
+    "usingNews": "Kendi haber sunucun kullanılıyor",
+    "usingBoth": "Kendi hizmetlerin kullanılıyor",
     "field": {
-      "address": "Address",
-      "key": "Key (optional)",
-      "showKey": "Show key",
-      "hideKey": "Hide key"
+      "address": "Adres",
+      "key": "Anahtar (isteğe bağlı)",
+      "showKey": "Anahtarı göster",
+      "hideKey": "Anahtarı gizle"
     },
     "address": {
-      "notHttps": "Use an address that starts with https://",
-      "userinfo": "Remove the name and password from this address.",
-      "invalid": "This isn't a web address."
+      "notHttps": "https:// ile başlayan bir adres kullan",
+      "userinfo": "Bu adresteki adı ve parolayı kaldır.",
+      "invalid": "Bu bir web adresi değil."
     },
-    "check": "Check connection",
-    "checking": "Checking",
-    "checkAgain": "Check again",
+    "check": "Bağlantıyı denetle",
+    "checking": "Denetleniyor",
+    "checkAgain": "Yeniden denetle",
     "status": {
-      "connected": "Connected",
-      "unreachable": "Can't reach this address.",
-      "redirect": "This address redirects. Use the final address."
+      "connected": "Bağlandı",
+      "unreachable": "Bu adrese ulaşılamıyor.",
+      "redirect": "Bu adres yönlendiriyor. Son adresi kullan."
     },
-    "lastCheckFailed": "Last check failed. {{reason}}",
-    "offUntilChecked": "Off until you check this address.",
+    "lastCheckFailed": "Son denetim başarısız oldu. {{reason}}",
+    "offUntilChecked": "Bu adresi denetleyene kadar kapalı.",
     "gate": {
-      "line": "Your own AI service needs a Mera News plan.",
-      "lineNews": "Your own news server needs a Mera News plan.",
-      "button": "See plans"
+      "line": "Kendi yapay zekâ hizmetin için bir Mera News planı gerekir.",
+      "lineNews": "Kendi haber sunucun için bir Mera News planı gerekir.",
+      "button": "Planlara bak"
     },
     "onDevice": {
-      "line": "Turn off On this phone first.",
-      "button": "Go to On this phone"
+      "line": "Önce “Bu telefonda” modunu kapat.",
+      "button": "“Bu telefonda” moduna git"
     },
     "ai": {
-      "title": "Your own AI service",
-      "intro": "Use any service that works with the OpenAI API.",
+      "title": "Kendi yapay zekâ hizmetin",
+      "intro": "OpenAI API ile çalışan herhangi bir hizmeti kullan.",
       "model": "Model",
       "status": {
-        "refused": "The service refused this key.",
-        "notOpenai": "This address doesn't work with the OpenAI API.",
-        "noModel": "This model isn't on this service.",
-        "busy": "This service is busy. Try again in a minute.",
-        "failing": "This service had a problem. Try again later."
+        "refused": "Hizmet bu anahtarı reddetti.",
+        "notOpenai": "Bu adres OpenAI API ile çalışmıyor.",
+        "noModel": "Bu model bu hizmette yok.",
+        "busy": "Bu hizmet meşgul. Bir dakika sonra yeniden dene.",
+        "failing": "Bu hizmette bir sorun oluştu. Daha sonra yeniden dene."
       },
-      "warning": "This service has no confidential computing. Your profile, your chats and the articles Mera News reads for you go to whoever runs it.",
-      "switch": "Use this service",
-      "confirmTitle": "Use your own AI service?",
-      "confirmYes": "Use it",
-      "whatChanges": "What changes",
+      "warning": "Bu hizmette gizli bilgi işlem yok. Profilin, sohbetlerin ve Mera News'in senin için okuduğu makaleler, hizmeti çalıştıran kişiye gider.",
+      "switch": "Bu hizmeti kullan",
+      "confirmTitle": "Kendi yapay zekâ hizmetin kullanılsın mı?",
+      "confirmYes": "Kullan",
+      "whatChanges": "Neler değişir",
       "changes": {
-        "title": "What changes",
-        "uses": "Ranking, reasons and chat use your service.",
-        "off": "Web search and fact checks are off.",
-        "verify": "Verify is hidden. It checks the private cloud only."
+        "title": "Neler değişir",
+        "uses": "Sıralama, nedenler ve sohbet senin hizmetini kullanır.",
+        "off": "Web araması ve doğruluk kontrolleri kapalı olur.",
+        "verify": "“Tasdiki doğrula” gizlenir. Yalnızca özel bulutu denetler."
       }
     },
     "news": {
-      "title": "Your own news server",
-      "intro": "Use a news server you run.",
+      "title": "Kendi haber sunucun",
+      "intro": "Kendi çalıştırdığın bir haber sunucusunu kullan.",
       "status": {
-        "refused": "The server refused this key.",
-        "noFeed": "This server can't make a feed."
+        "refused": "Bu sunucu bu anahtarı reddetti.",
+        "noFeed": "Bu sunucu akış oluşturamıyor."
       },
-      "switch": "Use this server",
-      "topicsLine": "Your topics go to this server. Mera News servers get no news requests while it's on.",
-      "missingRow": "Not available here",
+      "switch": "Bu sunucuyu kullan",
+      "topicsLine": "Konuların bu sunucuya gider. Bu açıkken Mera News sunucuları hiçbir haber isteği almaz.",
+      "missingRow": "Burada kullanılamaz",
       "missing": {
-        "title": "Not available here",
-        "intro": "Your news server doesn't offer these. Mera News shows them as empty.",
-        "unknown": "Your news server didn't say what it offers. Pages it can't show stay empty."
+        "title": "Burada kullanılamaz",
+        "intro": "Haber sunucun bunları sunmuyor. Mera News bu sayfaları boş gösterir.",
+        "unknown": "Haber sunucun neler sunduğunu bildirmedi. Gösteremediği sayfalar boş kalır."
       }
     },
     "feature": {
-      "search": "Search",
-      "worldHeadlines": "World headlines",
-      "relatedArticles": "Related articles",
-      "storyUpdates": "Story updates",
-      "publicationPages": "Publication pages",
-      "placeSearch": "Finding a place",
-      "factChecks": "Fact checks",
-      "storyGrouping": "Grouping stories",
-      "publicationNames": "Publication names"
+      "search": "Arama",
+      "worldHeadlines": "Dünya başlıkları",
+      "relatedArticles": "İlgili haberler",
+      "storyUpdates": "Haber güncellemeleri",
+      "publicationPages": "Yayın sayfaları",
+      "placeSearch": "Yer arama",
+      "factChecks": "Doğruluk kontrolleri",
+      "storyGrouping": "Haberleri gruplama",
+      "publicationNames": "Yayın adları"
     }
   }
 }

@@ -1747,8 +1747,8 @@
       "footer": "Diperiksa {{date}}. Dibagikan melalui {{downloadUrl}}"
     },
     "notOffered": {
-      "ownNews": "Fact checks are off while you use your own news server.",
-      "pod": "Fact checks are off while you use your own Mera News server."
+      "ownNews": "Pemeriksaan fakta dimatikan saat Anda memakai server berita milik Anda.",
+      "pod": "Pemeriksaan fakta dimatikan saat Anda memakai server Mera News milik Anda."
     }
   },
   "consent": {
@@ -3254,93 +3254,93 @@
     "storiesLabel": "Contoh berita"
   },
   "ownServices": {
-    "groupTitle": "Your own services",
-    "aiRow": "Your own AI service",
-    "newsRow": "Your own news server",
-    "footer": "For people who run their own AI or news server. Most people don't need this.",
-    "footerOnDevice": "Turn off On this phone to use these.",
-    "usingAi": "Using your own AI service",
-    "usingNews": "Using your own news server",
-    "usingBoth": "Using your own services",
+    "groupTitle": "Layanan milik Anda",
+    "aiRow": "Layanan AI milik Anda",
+    "newsRow": "Server berita milik Anda",
+    "footer": "Untuk orang yang menjalankan layanan AI atau server berita sendiri. Kebanyakan orang tidak memerlukan ini.",
+    "footerOnDevice": "Matikan “Di ponsel ini” untuk memakai ini.",
+    "usingAi": "Memakai layanan AI milik Anda",
+    "usingNews": "Memakai server berita milik Anda",
+    "usingBoth": "Memakai layanan milik Anda",
     "field": {
-      "address": "Address",
-      "key": "Key (optional)",
-      "showKey": "Show key",
-      "hideKey": "Hide key"
+      "address": "Alamat",
+      "key": "Kunci (opsional)",
+      "showKey": "Tampilkan kunci",
+      "hideKey": "Sembunyikan kunci"
     },
     "address": {
-      "notHttps": "Use an address that starts with https://",
-      "userinfo": "Remove the name and password from this address.",
-      "invalid": "This isn't a web address."
+      "notHttps": "Gunakan alamat yang diawali https://",
+      "userinfo": "Hapus nama dan kata sandi dari alamat ini.",
+      "invalid": "Ini bukan alamat web."
     },
-    "check": "Check connection",
-    "checking": "Checking",
-    "checkAgain": "Check again",
+    "check": "Periksa koneksi",
+    "checking": "Memeriksa",
+    "checkAgain": "Periksa lagi",
     "status": {
-      "connected": "Connected",
-      "unreachable": "Can't reach this address.",
-      "redirect": "This address redirects. Use the final address."
+      "connected": "Terhubung",
+      "unreachable": "Alamat ini tidak dapat dijangkau.",
+      "redirect": "Alamat ini dialihkan. Gunakan alamat tujuan akhir."
     },
-    "lastCheckFailed": "Last check failed. {{reason}}",
-    "offUntilChecked": "Off until you check this address.",
+    "lastCheckFailed": "Pemeriksaan terakhir gagal. {{reason}}",
+    "offUntilChecked": "Mati sampai Anda memeriksa alamat ini.",
     "gate": {
-      "line": "Your own AI service needs a Mera News plan.",
-      "lineNews": "Your own news server needs a Mera News plan.",
-      "button": "See plans"
+      "line": "Layanan AI milik Anda memerlukan paket Mera News.",
+      "lineNews": "Server berita milik Anda memerlukan paket Mera News.",
+      "button": "Lihat paket"
     },
     "onDevice": {
-      "line": "Turn off On this phone first.",
-      "button": "Go to On this phone"
+      "line": "Matikan “Di ponsel ini” terlebih dahulu.",
+      "button": "Buka “Di ponsel ini”"
     },
     "ai": {
-      "title": "Your own AI service",
-      "intro": "Use any service that works with the OpenAI API.",
+      "title": "Layanan AI milik Anda",
+      "intro": "Gunakan layanan apa pun yang bekerja dengan OpenAI API.",
       "model": "Model",
       "status": {
-        "refused": "The service refused this key.",
-        "notOpenai": "This address doesn't work with the OpenAI API.",
-        "noModel": "This model isn't on this service.",
-        "busy": "This service is busy. Try again in a minute.",
-        "failing": "This service had a problem. Try again later."
+        "refused": "Layanan ini menolak kunci ini.",
+        "notOpenai": "Alamat ini tidak bekerja dengan OpenAI API.",
+        "noModel": "Model ini tidak tersedia di layanan ini.",
+        "busy": "Layanan ini sedang sibuk. Coba lagi dalam semenit.",
+        "failing": "Layanan ini mengalami masalah. Coba lagi nanti."
       },
-      "warning": "This service has no confidential computing. Your profile, your chats and the articles Mera News reads for you go to whoever runs it.",
-      "switch": "Use this service",
-      "confirmTitle": "Use your own AI service?",
-      "confirmYes": "Use it",
-      "whatChanges": "What changes",
+      "warning": "Layanan ini tidak memiliki komputasi rahasia. Profil Anda, obrolan Anda, dan artikel yang dibaca Mera News untuk Anda dikirim ke siapa pun yang menjalankannya.",
+      "switch": "Gunakan layanan ini",
+      "confirmTitle": "Gunakan layanan AI milik Anda?",
+      "confirmYes": "Gunakan",
+      "whatChanges": "Yang berubah",
       "changes": {
-        "title": "What changes",
-        "uses": "Ranking, reasons and chat use your service.",
-        "off": "Web search and fact checks are off.",
-        "verify": "Verify is hidden. It checks the private cloud only."
+        "title": "Yang berubah",
+        "uses": "Pemeringkatan, alasan, dan obrolan memakai layanan Anda.",
+        "off": "Pencarian web dan pemeriksaan fakta dimatikan.",
+        "verify": "“Verifikasi atestasi” disembunyikan. Fitur ini hanya memeriksa cloud pribadi."
       }
     },
     "news": {
-      "title": "Your own news server",
-      "intro": "Use a news server you run.",
+      "title": "Server berita milik Anda",
+      "intro": "Gunakan server berita yang Anda jalankan sendiri.",
       "status": {
-        "refused": "The server refused this key.",
-        "noFeed": "This server can't make a feed."
+        "refused": "Server ini menolak kunci ini.",
+        "noFeed": "Server ini tidak dapat membuat umpan."
       },
-      "switch": "Use this server",
-      "topicsLine": "Your topics go to this server. Mera News servers get no news requests while it's on.",
-      "missingRow": "Not available here",
+      "switch": "Gunakan server ini",
+      "topicsLine": "Topik Anda dikirim ke server ini. Server Mera News tidak menerima permintaan berita selama server ini aktif.",
+      "missingRow": "Tidak tersedia di sini",
       "missing": {
-        "title": "Not available here",
-        "intro": "Your news server doesn't offer these. Mera News shows them as empty.",
-        "unknown": "Your news server didn't say what it offers. Pages it can't show stay empty."
+        "title": "Tidak tersedia di sini",
+        "intro": "Server berita Anda tidak menawarkan ini. Mera News menampilkannya dalam keadaan kosong.",
+        "unknown": "Server berita Anda tidak menyebutkan apa yang ditawarkannya. Halaman yang tidak dapat ditampilkan akan tetap kosong."
       }
     },
     "feature": {
-      "search": "Search",
-      "worldHeadlines": "World headlines",
-      "relatedArticles": "Related articles",
-      "storyUpdates": "Story updates",
-      "publicationPages": "Publication pages",
-      "placeSearch": "Finding a place",
-      "factChecks": "Fact checks",
-      "storyGrouping": "Grouping stories",
-      "publicationNames": "Publication names"
+      "search": "Pencarian",
+      "worldHeadlines": "Judul berita dunia",
+      "relatedArticles": "Artikel terkait",
+      "storyUpdates": "Pembaruan cerita",
+      "publicationPages": "Halaman penerbit",
+      "placeSearch": "Mencari lokasi",
+      "factChecks": "Pemeriksaan fakta",
+      "storyGrouping": "Pengelompokan cerita",
+      "publicationNames": "Nama penerbit"
     }
   }
 }

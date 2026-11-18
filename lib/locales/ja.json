@@ -1747,8 +1747,8 @@
       "footer": "{{date}}に確認。{{downloadUrl}}経由で共有"
     },
     "notOffered": {
-      "ownNews": "Fact checks are off while you use your own news server.",
-      "pod": "Fact checks are off while you use your own メラニュース server."
+      "ownNews": "お使いのニュースサーバーを使用中は、ファクトチェックはオフになります。",
+      "pod": "お使いのメラニュースサーバーを使用中は、ファクトチェックはオフになります。"
     }
   },
   "consent": {
@@ -3254,93 +3254,93 @@
     "storiesLabel": "ニュースの例"
   },
   "ownServices": {
-    "groupTitle": "Your own services",
-    "aiRow": "Your own AI service",
-    "newsRow": "Your own news server",
-    "footer": "For people who run their own AI or news server. Most people don't need this.",
-    "footerOnDevice": "Turn off On this phone to use these.",
-    "usingAi": "Using your own AI service",
-    "usingNews": "Using your own news server",
-    "usingBoth": "Using your own services",
+    "groupTitle": "お使いのサービス",
+    "aiRow": "お使いのAIサービス",
+    "newsRow": "お使いのニュースサーバー",
+    "footer": "自分でAIサービスやニュースサーバーを運用している人向けです。ほとんどの人には必要ありません。",
+    "footerOnDevice": "これらを使うには、「この電話上」をオフにしてください。",
+    "usingAi": "お使いのAIサービスを使用中",
+    "usingNews": "お使いのニュースサーバーを使用中",
+    "usingBoth": "お使いのサービスを使用中",
     "field": {
-      "address": "Address",
-      "key": "Key (optional)",
-      "showKey": "Show key",
-      "hideKey": "Hide key"
+      "address": "アドレス",
+      "key": "キー（任意）",
+      "showKey": "キーを表示",
+      "hideKey": "キーを隠す"
     },
     "address": {
-      "notHttps": "Use an address that starts with https://",
-      "userinfo": "Remove the name and password from this address.",
-      "invalid": "This isn't a web address."
+      "notHttps": "https:// で始まるアドレスを使用",
+      "userinfo": "このアドレスからユーザー名とパスワードを削除してください。",
+      "invalid": "ウェブアドレスではありません。"
     },
-    "check": "Check connection",
-    "checking": "Checking",
-    "checkAgain": "Check again",
+    "check": "接続を確認",
+    "checking": "確認中",
+    "checkAgain": "もう一度確認",
     "status": {
-      "connected": "Connected",
-      "unreachable": "Can't reach this address.",
-      "redirect": "This address redirects. Use the final address."
+      "connected": "接続済み",
+      "unreachable": "このアドレスに接続できません。",
+      "redirect": "このアドレスは別のアドレスに転送されます。最終的なアドレスを使用してください。"
     },
-    "lastCheckFailed": "Last check failed. {{reason}}",
-    "offUntilChecked": "Off until you check this address.",
+    "lastCheckFailed": "前回の確認に失敗しました。{{reason}}",
+    "offUntilChecked": "このアドレスを確認するまでオフです。",
     "gate": {
-      "line": "Your own AI service needs a メラニュース plan.",
-      "lineNews": "Your own news server needs a メラニュース plan.",
-      "button": "See plans"
+      "line": "お使いのAIサービスには、メラニュースのプランが必要です。",
+      "lineNews": "お使いのニュースサーバーには、メラニュースのプランが必要です。",
+      "button": "プランを見る"
     },
     "onDevice": {
-      "line": "Turn off On this phone first.",
-      "button": "Go to On this phone"
+      "line": "まず「この電話上」をオフにしてください。",
+      "button": "「この電話上」へ移動"
     },
     "ai": {
-      "title": "Your own AI service",
-      "intro": "Use any service that works with the OpenAI API.",
-      "model": "Model",
+      "title": "お使いのAIサービス",
+      "intro": "OpenAI API に対応しているサービスなら、どれでも使えます。",
+      "model": "モデル",
       "status": {
-        "refused": "The service refused this key.",
-        "notOpenai": "This address doesn't work with the OpenAI API.",
-        "noModel": "This model isn't on this service.",
-        "busy": "This service is busy. Try again in a minute.",
-        "failing": "This service had a problem. Try again later."
+        "refused": "このサービスはこのキーを拒否しました。",
+        "notOpenai": "このアドレスは OpenAI API では動作しません。",
+        "noModel": "このモデルはこのサービスにありません。",
+        "busy": "このサービスは混雑しています。しばらくしてから、もう一度試してください。",
+        "failing": "このサービスで問題が起きました。あとでもう一度試してください。"
       },
-      "warning": "This service has no confidential computing. Your profile, your chats and the articles メラニュース reads for you go to whoever runs it.",
-      "switch": "Use this service",
-      "confirmTitle": "Use your own AI service?",
-      "confirmYes": "Use it",
-      "whatChanges": "What changes",
+      "warning": "このサービスには機密コンピューティングがありません。あなたのプロフィール、チャット、メラニュースがあなたのために読む記事は、すべてサービスを運営する人に渡ります。",
+      "switch": "このサービスを使用",
+      "confirmTitle": "お使いのAIサービスを使用しますか？",
+      "confirmYes": "使用する",
+      "whatChanges": "変更点",
       "changes": {
-        "title": "What changes",
-        "uses": "Ranking, reasons and chat use your service.",
-        "off": "Web search and fact checks are off.",
-        "verify": "Verify is hidden. It checks the private cloud only."
+        "title": "変更点",
+        "uses": "ランキング、理由、チャットでは、お使いのサービスが使われます。",
+        "off": "ウェブ検索とファクトチェックはオフになります。",
+        "verify": "「認証を検証」は非表示になります。プライベートクラウドだけを確認する機能です。"
       }
     },
     "news": {
-      "title": "Your own news server",
-      "intro": "Use a news server you run.",
+      "title": "お使いのニュースサーバー",
+      "intro": "自分で運用しているニュースサーバーを使います。",
       "status": {
-        "refused": "The server refused this key.",
-        "noFeed": "This server can't make a feed."
+        "refused": "このサーバーはこのキーを拒否しました。",
+        "noFeed": "このサーバーはフィードを作成できません。"
       },
-      "switch": "Use this server",
-      "topicsLine": "Your topics go to this server. メラニュース servers get no news requests while it's on.",
-      "missingRow": "Not available here",
+      "switch": "このサーバーを使用",
+      "topicsLine": "お使いのトピックはこのサーバーに送られます。メラニュースのサーバーは、オンの間ニュースのリクエストを一切受け取りません。",
+      "missingRow": "こちらでは利用できません",
       "missing": {
-        "title": "Not available here",
-        "intro": "Your news server doesn't offer these. メラニュース shows them as empty.",
-        "unknown": "Your news server didn't say what it offers. Pages it can't show stay empty."
+        "title": "こちらでは利用できません",
+        "intro": "お使いのニュースサーバーはこれらを提供していません。メラニュースは、これらのページを空のまま表示します。",
+        "unknown": "お使いのニュースサーバーは、提供している機能を示しませんでした。表示できないページは空のままになります。"
       }
     },
     "feature": {
-      "search": "Search",
-      "worldHeadlines": "World headlines",
-      "relatedArticles": "Related articles",
-      "storyUpdates": "Story updates",
-      "publicationPages": "Publication pages",
-      "placeSearch": "Finding a place",
-      "factChecks": "Fact checks",
-      "storyGrouping": "Grouping stories",
-      "publicationNames": "Publication names"
+      "search": "検索",
+      "worldHeadlines": "世界の見出し",
+      "relatedArticles": "関連記事",
+      "storyUpdates": "ストーリーの更新",
+      "publicationPages": "公開元のページ",
+      "placeSearch": "場所の検索",
+      "factChecks": "ファクトチェック",
+      "storyGrouping": "ストーリーのグループ化",
+      "publicationNames": "公開元の名前"
     }
   }
 }

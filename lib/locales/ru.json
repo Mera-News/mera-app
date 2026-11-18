@@ -1855,8 +1855,8 @@
       "footer": "Проверено {{date}}. Отправлено через {{downloadUrl}}"
     },
     "notOffered": {
-      "ownNews": "Fact checks are off while you use your own news server.",
-      "pod": "Fact checks are off while you use your own Мера Ньюс server."
+      "ownNews": "Проверка фактов отключена, пока вы используете собственный сервер новостей.",
+      "pod": "Проверка фактов отключена, пока вы используете собственный сервер Мера Ньюс."
     }
   },
   "consent": {
@@ -3419,93 +3419,93 @@
     "storiesLabel": "Примеры сюжетов"
   },
   "ownServices": {
-    "groupTitle": "Your own services",
-    "aiRow": "Your own AI service",
-    "newsRow": "Your own news server",
-    "footer": "For people who run their own AI or news server. Most people don't need this.",
-    "footerOnDevice": "Turn off On this phone to use these.",
-    "usingAi": "Using your own AI service",
-    "usingNews": "Using your own news server",
-    "usingBoth": "Using your own services",
+    "groupTitle": "Ваши собственные сервисы",
+    "aiRow": "Ваш собственный сервис ИИ",
+    "newsRow": "Ваш собственный сервер новостей",
+    "footer": "Для тех, кто запускает собственный сервис ИИ или сервер новостей. Большинству это не нужно.",
+    "footerOnDevice": "Чтобы использовать их, выключите «На этом телефоне».",
+    "usingAi": "Используется ваш собственный сервис ИИ",
+    "usingNews": "Используется ваш собственный сервер новостей",
+    "usingBoth": "Используются ваши собственные сервисы",
     "field": {
-      "address": "Address",
-      "key": "Key (optional)",
-      "showKey": "Show key",
-      "hideKey": "Hide key"
+      "address": "Адрес",
+      "key": "Ключ (необязательно)",
+      "showKey": "Показать ключ",
+      "hideKey": "Скрыть ключ"
     },
     "address": {
-      "notHttps": "Use an address that starts with https://",
-      "userinfo": "Remove the name and password from this address.",
-      "invalid": "This isn't a web address."
+      "notHttps": "Используйте адрес, который начинается с https://",
+      "userinfo": "Удалите из этого адреса имя и пароль.",
+      "invalid": "Это не веб-адрес."
     },
-    "check": "Check connection",
-    "checking": "Checking",
-    "checkAgain": "Check again",
+    "check": "Проверить соединение",
+    "checking": "Проверка",
+    "checkAgain": "Проверить снова",
     "status": {
-      "connected": "Connected",
-      "unreachable": "Can't reach this address.",
-      "redirect": "This address redirects. Use the final address."
+      "connected": "Подключено",
+      "unreachable": "Не удаётся подключиться к этому адресу.",
+      "redirect": "Этот адрес перенаправляет. Используйте конечный адрес."
     },
-    "lastCheckFailed": "Last check failed. {{reason}}",
-    "offUntilChecked": "Off until you check this address.",
+    "lastCheckFailed": "Последняя проверка не удалась. {{reason}}",
+    "offUntilChecked": "Выключено, пока вы не проверите этот адрес.",
     "gate": {
-      "line": "Your own AI service needs a Мера Ньюс plan.",
-      "lineNews": "Your own news server needs a Мера Ньюс plan.",
-      "button": "See plans"
+      "line": "Для вашего собственного сервиса ИИ нужен тариф Мера Ньюс.",
+      "lineNews": "Для вашего собственного сервера новостей нужен тариф Мера Ньюс.",
+      "button": "Смотреть тарифы"
     },
     "onDevice": {
-      "line": "Turn off On this phone first.",
-      "button": "Go to On this phone"
+      "line": "Сначала выключите «На этом телефоне».",
+      "button": "Перейти в «На этом телефоне»"
     },
     "ai": {
-      "title": "Your own AI service",
-      "intro": "Use any service that works with the OpenAI API.",
-      "model": "Model",
+      "title": "Ваш собственный сервис ИИ",
+      "intro": "Используйте любой сервис, который работает с OpenAI API.",
+      "model": "Модель",
       "status": {
-        "refused": "The service refused this key.",
-        "notOpenai": "This address doesn't work with the OpenAI API.",
-        "noModel": "This model isn't on this service.",
-        "busy": "This service is busy. Try again in a minute.",
-        "failing": "This service had a problem. Try again later."
+        "refused": "Сервис отклонил этот ключ.",
+        "notOpenai": "Этот адрес не работает с OpenAI API.",
+        "noModel": "Этой модели нет на этом сервисе.",
+        "busy": "Сервис занят. Попробуйте через минуту.",
+        "failing": "На сервисе возникла проблема. Попробуйте позже."
       },
-      "warning": "This service has no confidential computing. Your profile, your chats and the articles Мера Ньюс reads for you go to whoever runs it.",
-      "switch": "Use this service",
-      "confirmTitle": "Use your own AI service?",
-      "confirmYes": "Use it",
-      "whatChanges": "What changes",
+      "warning": "У этого сервиса нет конфиденциальных вычислений. Ваш профиль, ваши чаты и статьи, которые Мера Ньюс читает для вас, попадают к тому, кто запускает сервис.",
+      "switch": "Использовать этот сервис",
+      "confirmTitle": "Использовать собственный сервис ИИ?",
+      "confirmYes": "Использовать",
+      "whatChanges": "Что изменится",
       "changes": {
-        "title": "What changes",
-        "uses": "Ranking, reasons and chat use your service.",
-        "off": "Web search and fact checks are off.",
-        "verify": "Verify is hidden. It checks the private cloud only."
+        "title": "Что изменится",
+        "uses": "Ранжирование, пояснения и чат работают через ваш сервис.",
+        "off": "Поиск в интернете и проверка фактов отключены.",
+        "verify": "«Проверить аттестацию» скрыто. Эта проверка работает только с частным облаком."
       }
     },
     "news": {
-      "title": "Your own news server",
-      "intro": "Use a news server you run.",
+      "title": "Ваш собственный сервер новостей",
+      "intro": "Используйте сервер новостей, который вы запускаете.",
       "status": {
-        "refused": "The server refused this key.",
-        "noFeed": "This server can't make a feed."
+        "refused": "Сервер отклонил этот ключ.",
+        "noFeed": "Этот сервер не может сформировать ленту."
       },
-      "switch": "Use this server",
-      "topicsLine": "Your topics go to this server. Мера Ньюс servers get no news requests while it's on.",
-      "missingRow": "Not available here",
+      "switch": "Использовать этот сервер",
+      "topicsLine": "Ваши темы передаются на этот сервер. Серверы Мера Ньюс не получают запросов новостей, пока он включён.",
+      "missingRow": "Недоступно здесь",
       "missing": {
-        "title": "Not available here",
-        "intro": "Your news server doesn't offer these. Мера Ньюс shows them as empty.",
-        "unknown": "Your news server didn't say what it offers. Pages it can't show stay empty."
+        "title": "Недоступно здесь",
+        "intro": "Ваш сервер новостей этого не предоставляет. Мера Ньюс показывает такие страницы пустыми.",
+        "unknown": "Ваш сервер новостей не сообщил, что он предоставляет. Страницы, которые он не может показать, остаются пустыми."
       }
     },
     "feature": {
-      "search": "Search",
-      "worldHeadlines": "World headlines",
-      "relatedArticles": "Related articles",
-      "storyUpdates": "Story updates",
-      "publicationPages": "Publication pages",
-      "placeSearch": "Finding a place",
-      "factChecks": "Fact checks",
-      "storyGrouping": "Grouping stories",
-      "publicationNames": "Publication names"
+      "search": "Поиск",
+      "worldHeadlines": "Главные новости мира",
+      "relatedArticles": "Похожие статьи",
+      "storyUpdates": "Обновления историй",
+      "publicationPages": "Страницы изданий",
+      "placeSearch": "Поиск места",
+      "factChecks": "Проверка фактов",
+      "storyGrouping": "Группировка историй",
+      "publicationNames": "Названия изданий"
     }
   }
 }

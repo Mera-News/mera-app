@@ -1748,8 +1748,8 @@
       "footer": "ตรวจสอบเมื่อ {{date}} แชร์ผ่าน {{downloadUrl}}"
     },
     "notOffered": {
-      "ownNews": "Fact checks are off while you use your own news server.",
-      "pod": "Fact checks are off while you use your own เมร่า นิวส์ server."
+      "ownNews": "การตรวจสอบข้อเท็จจริงจะปิดอยู่ขณะที่คุณใช้เซิร์ฟเวอร์ข่าวของคุณเอง",
+      "pod": "การตรวจสอบข้อเท็จจริงจะปิดอยู่ขณะที่คุณใช้เซิร์ฟเวอร์เมร่า นิวส์ของคุณเอง"
     }
   },
   "consent": {
@@ -3255,93 +3255,93 @@
     "storiesLabel": "ตัวอย่างข่าว"
   },
   "ownServices": {
-    "groupTitle": "Your own services",
-    "aiRow": "Your own AI service",
-    "newsRow": "Your own news server",
-    "footer": "For people who run their own AI or news server. Most people don't need this.",
-    "footerOnDevice": "Turn off On this phone to use these.",
-    "usingAi": "Using your own AI service",
-    "usingNews": "Using your own news server",
-    "usingBoth": "Using your own services",
+    "groupTitle": "บริการของคุณเอง",
+    "aiRow": "บริการ AI ของคุณเอง",
+    "newsRow": "เซิร์ฟเวอร์ข่าวของคุณเอง",
+    "footer": "สำหรับคนที่รันบริการ AI หรือเซิร์ฟเวอร์ข่าวของตัวเอง คนส่วนใหญ่ไม่จำเป็นต้องใช้ฟีเจอร์นี้",
+    "footerOnDevice": "ปิดโหมดบนโทรศัพท์เครื่องนี้ก่อนเพื่อใช้บริการเหล่านี้",
+    "usingAi": "กำลังใช้บริการ AI ของคุณเอง",
+    "usingNews": "กำลังใช้เซิร์ฟเวอร์ข่าวของคุณเอง",
+    "usingBoth": "กำลังใช้บริการของคุณเอง",
     "field": {
-      "address": "Address",
-      "key": "Key (optional)",
-      "showKey": "Show key",
-      "hideKey": "Hide key"
+      "address": "ที่อยู่",
+      "key": "คีย์ (ไม่บังคับ)",
+      "showKey": "แสดงคีย์",
+      "hideKey": "ซ่อนคีย์"
     },
     "address": {
-      "notHttps": "Use an address that starts with https://",
-      "userinfo": "Remove the name and password from this address.",
-      "invalid": "This isn't a web address."
+      "notHttps": "ใช้ที่อยู่ที่ขึ้นต้นด้วย https://",
+      "userinfo": "นำชื่อและรหัสผ่านออกจากที่อยู่นี้",
+      "invalid": "นี่ไม่ใช่ที่อยู่เว็บ"
     },
-    "check": "Check connection",
-    "checking": "Checking",
-    "checkAgain": "Check again",
+    "check": "ตรวจสอบการเชื่อมต่อ",
+    "checking": "กำลังตรวจสอบ",
+    "checkAgain": "ตรวจสอบอีกครั้ง",
     "status": {
-      "connected": "Connected",
-      "unreachable": "Can't reach this address.",
-      "redirect": "This address redirects. Use the final address."
+      "connected": "เชื่อมต่อแล้ว",
+      "unreachable": "เข้าถึงที่อยู่นี้ไม่ได้",
+      "redirect": "ที่อยู่นี้เปลี่ยนเส้นทาง ใช้ที่อยู่สุดท้ายแทน"
     },
-    "lastCheckFailed": "Last check failed. {{reason}}",
-    "offUntilChecked": "Off until you check this address.",
+    "lastCheckFailed": "การตรวจสอบล่าสุดล้มเหลว {{reason}}",
+    "offUntilChecked": "ปิดอยู่จนกว่าคุณจะตรวจสอบที่อยู่นี้",
     "gate": {
-      "line": "Your own AI service needs a เมร่า นิวส์ plan.",
-      "lineNews": "Your own news server needs a เมร่า นิวส์ plan.",
-      "button": "See plans"
+      "line": "บริการ AI ของคุณเองต้องใช้แผนของเมร่า นิวส์",
+      "lineNews": "เซิร์ฟเวอร์ข่าวของคุณเองต้องใช้แผนของเมร่า นิวส์",
+      "button": "ดูแผน"
     },
     "onDevice": {
-      "line": "Turn off On this phone first.",
-      "button": "Go to On this phone"
+      "line": "ปิดโหมดบนโทรศัพท์เครื่องนี้ก่อน",
+      "button": "ไปที่โหมดบนโทรศัพท์เครื่องนี้"
     },
     "ai": {
-      "title": "Your own AI service",
-      "intro": "Use any service that works with the OpenAI API.",
-      "model": "Model",
+      "title": "บริการ AI ของคุณเอง",
+      "intro": "ใช้บริการใดก็ได้ที่ใช้ได้กับ OpenAI API",
+      "model": "โมเดล",
       "status": {
-        "refused": "The service refused this key.",
-        "notOpenai": "This address doesn't work with the OpenAI API.",
-        "noModel": "This model isn't on this service.",
-        "busy": "This service is busy. Try again in a minute.",
-        "failing": "This service had a problem. Try again later."
+        "refused": "บริการนี้ปฏิเสธคีย์นี้",
+        "notOpenai": "ที่อยู่นี้ใช้กับ OpenAI API ไม่ได้",
+        "noModel": "โมเดลนี้ไม่มีในบริการนี้",
+        "busy": "บริการนี้กำลังยุ่ง ลองอีกครั้งในอีกหนึ่งนาที",
+        "failing": "บริการนี้มีปัญหา ลองอีกครั้งในภายหลัง"
       },
-      "warning": "This service has no confidential computing. Your profile, your chats and the articles เมร่า นิวส์ reads for you go to whoever runs it.",
-      "switch": "Use this service",
-      "confirmTitle": "Use your own AI service?",
-      "confirmYes": "Use it",
-      "whatChanges": "What changes",
+      "warning": "บริการนี้ไม่มีการประมวลผลแบบเก็บเป็นความลับ โปรไฟล์ของคุณ แชทของคุณ และบทความที่เมร่า นิวส์อ่านให้คุณ จะถูกส่งไปยังผู้ที่ดูแลบริการนี้ทั้งหมด",
+      "switch": "ใช้บริการนี้",
+      "confirmTitle": "ใช้บริการ AI ของคุณเองใช่ไหม?",
+      "confirmYes": "ใช้เลย",
+      "whatChanges": "สิ่งที่เปลี่ยนไป",
       "changes": {
-        "title": "What changes",
-        "uses": "Ranking, reasons and chat use your service.",
-        "off": "Web search and fact checks are off.",
-        "verify": "Verify is hidden. It checks the private cloud only."
+        "title": "สิ่งที่เปลี่ยนไป",
+        "uses": "การจัดอันดับ เหตุผล และแชทใช้บริการของคุณ",
+        "off": "การค้นหาเว็บและการตรวจสอบข้อเท็จจริงจะปิดอยู่",
+        "verify": "ซ่อน ยืนยันการรับรอง อยู่ การยืนยันนี้ตรวจสอบเฉพาะคลาวด์ส่วนตัวเท่านั้น"
       }
     },
     "news": {
-      "title": "Your own news server",
-      "intro": "Use a news server you run.",
+      "title": "เซิร์ฟเวอร์ข่าวของคุณเอง",
+      "intro": "ใช้เซิร์ฟเวอร์ข่าวที่คุณดูแลเอง",
       "status": {
-        "refused": "The server refused this key.",
-        "noFeed": "This server can't make a feed."
+        "refused": "เซิร์ฟเวอร์นี้ปฏิเสธคีย์นี้",
+        "noFeed": "เซิร์ฟเวอร์นี้สร้างฟีดไม่ได้"
       },
-      "switch": "Use this server",
-      "topicsLine": "Your topics go to this server. เมร่า นิวส์ servers get no news requests while it's on.",
-      "missingRow": "Not available here",
+      "switch": "ใช้เซิร์ฟเวอร์นี้",
+      "topicsLine": "หัวข้อของคุณจะถูกส่งไปยังเซิร์ฟเวอร์นี้ เซิร์ฟเวอร์ของเมร่า นิวส์จะไม่รับคำขอข่าวใด ๆ ขณะที่เซิร์ฟเวอร์นี้เปิดอยู่",
+      "missingRow": "ไม่มีให้ใช้ที่นี่",
       "missing": {
-        "title": "Not available here",
-        "intro": "Your news server doesn't offer these. เมร่า นิวส์ shows them as empty.",
-        "unknown": "Your news server didn't say what it offers. Pages it can't show stay empty."
+        "title": "ไม่มีให้ใช้ที่นี่",
+        "intro": "เซิร์ฟเวอร์ข่าวของคุณไม่มีสิ่งเหล่านี้ แอปแสดงหน้าเหล่านี้ว่างเปล่า",
+        "unknown": "เซิร์ฟเวอร์ข่าวของคุณไม่ได้บอกว่ามีอะไรให้บ้าง หน้าที่แสดงไม่ได้จะยังว่างเปล่า"
       }
     },
     "feature": {
-      "search": "Search",
-      "worldHeadlines": "World headlines",
-      "relatedArticles": "Related articles",
-      "storyUpdates": "Story updates",
-      "publicationPages": "Publication pages",
-      "placeSearch": "Finding a place",
-      "factChecks": "Fact checks",
-      "storyGrouping": "Grouping stories",
-      "publicationNames": "Publication names"
+      "search": "ค้นหา",
+      "worldHeadlines": "พาดหัวข่าวโลก",
+      "relatedArticles": "บทความที่เกี่ยวข้อง",
+      "storyUpdates": "ความเคลื่อนไหวของเรื่องข่าว",
+      "publicationPages": "หน้าสำนักข่าว",
+      "placeSearch": "การค้นหาสถานที่",
+      "factChecks": "การตรวจสอบข้อเท็จจริง",
+      "storyGrouping": "การจัดกลุ่มเรื่องข่าว",
+      "publicationNames": "ชื่อสำนักข่าว"
     }
   }
 }

@@ -1747,8 +1747,8 @@
       "footer": "{{date}} 확인. {{downloadUrl}}를 통해 공유됨"
     },
     "notOffered": {
-      "ownNews": "Fact checks are off while you use your own news server.",
-      "pod": "Fact checks are off while you use your own 메라 뉴스 server."
+      "ownNews": "회원님의 뉴스 서버를 사용하는 동안 팩트 체크는 꺼져 있습니다.",
+      "pod": "회원님의 메라 뉴스 서버를 사용하는 동안 팩트 체크는 꺼져 있습니다."
     }
   },
   "consent": {
@@ -3254,93 +3254,93 @@
     "storiesLabel": "뉴스 예시"
   },
   "ownServices": {
-    "groupTitle": "Your own services",
-    "aiRow": "Your own AI service",
-    "newsRow": "Your own news server",
-    "footer": "For people who run their own AI or news server. Most people don't need this.",
-    "footerOnDevice": "Turn off On this phone to use these.",
-    "usingAi": "Using your own AI service",
-    "usingNews": "Using your own news server",
-    "usingBoth": "Using your own services",
+    "groupTitle": "내 서비스",
+    "aiRow": "내 AI 서비스",
+    "newsRow": "내 뉴스 서버",
+    "footer": "AI나 뉴스 서버를 직접 운영하는 분을 위한 기능입니다. 대부분은 필요하지 않습니다.",
+    "footerOnDevice": "이 기능을 사용하려면 ‘이 휴대폰에’ 모드를 꺼 주세요.",
+    "usingAi": "내 AI 서비스 사용 중",
+    "usingNews": "내 뉴스 서버 사용 중",
+    "usingBoth": "내 서비스 사용 중",
     "field": {
-      "address": "Address",
-      "key": "Key (optional)",
-      "showKey": "Show key",
-      "hideKey": "Hide key"
+      "address": "주소",
+      "key": "키 (선택)",
+      "showKey": "키 보기",
+      "hideKey": "키 숨기기"
     },
     "address": {
-      "notHttps": "Use an address that starts with https://",
-      "userinfo": "Remove the name and password from this address.",
-      "invalid": "This isn't a web address."
+      "notHttps": "https://로 시작하는 주소를 사용해 주세요",
+      "userinfo": "이 주소에서 이름과 비밀번호를 지워 주세요.",
+      "invalid": "웹 주소가 아닙니다."
     },
-    "check": "Check connection",
-    "checking": "Checking",
-    "checkAgain": "Check again",
+    "check": "연결 확인",
+    "checking": "확인 중",
+    "checkAgain": "다시 확인",
     "status": {
-      "connected": "Connected",
-      "unreachable": "Can't reach this address.",
-      "redirect": "This address redirects. Use the final address."
+      "connected": "연결됨",
+      "unreachable": "이 주소에 연결할 수 없습니다.",
+      "redirect": "이 주소는 다른 주소로 연결됩니다. 최종 주소를 사용해 주세요."
     },
-    "lastCheckFailed": "Last check failed. {{reason}}",
-    "offUntilChecked": "Off until you check this address.",
+    "lastCheckFailed": "마지막 확인에 실패했습니다. {{reason}}",
+    "offUntilChecked": "이 주소를 확인할 때까지 꺼져 있습니다.",
     "gate": {
-      "line": "Your own AI service needs a 메라 뉴스 plan.",
-      "lineNews": "Your own news server needs a 메라 뉴스 plan.",
-      "button": "See plans"
+      "line": "내 AI 서비스를 사용하려면 메라 뉴스 요금제가 필요합니다.",
+      "lineNews": "내 뉴스 서버를 사용하려면 메라 뉴스 요금제가 필요합니다.",
+      "button": "요금제 보기"
     },
     "onDevice": {
-      "line": "Turn off On this phone first.",
-      "button": "Go to On this phone"
+      "line": "먼저 ‘이 휴대폰에’ 모드를 꺼 주세요.",
+      "button": "‘이 휴대폰에’로 이동"
     },
     "ai": {
-      "title": "Your own AI service",
-      "intro": "Use any service that works with the OpenAI API.",
-      "model": "Model",
+      "title": "내 AI 서비스",
+      "intro": "OpenAI API와 함께 작동하는 서비스라면 무엇이든 사용할 수 있습니다.",
+      "model": "모델",
       "status": {
-        "refused": "The service refused this key.",
-        "notOpenai": "This address doesn't work with the OpenAI API.",
-        "noModel": "This model isn't on this service.",
-        "busy": "This service is busy. Try again in a minute.",
-        "failing": "This service had a problem. Try again later."
+        "refused": "서비스가 이 키를 거부했습니다.",
+        "notOpenai": "이 주소는 OpenAI API와 함께 작동하지 않습니다.",
+        "noModel": "이 모델은 이 서비스에 없습니다.",
+        "busy": "이 서비스가 바쁩니다. 잠시 후 다시 시도해 주세요.",
+        "failing": "이 서비스에 문제가 있었습니다. 나중에 다시 시도해 주세요."
       },
-      "warning": "This service has no confidential computing. Your profile, your chats and the articles 메라 뉴스 reads for you go to whoever runs it.",
-      "switch": "Use this service",
-      "confirmTitle": "Use your own AI service?",
-      "confirmYes": "Use it",
-      "whatChanges": "What changes",
+      "warning": "이 서비스에는 기밀 컴퓨팅이 없습니다. 회원님의 프로필, 회원님의 채팅, 메라 뉴스가 회원님을 위해 읽는 기사가 모두 이 서비스를 운영하는 사람에게 전달됩니다.",
+      "switch": "이 서비스 사용",
+      "confirmTitle": "내 AI 서비스를 사용할까요?",
+      "confirmYes": "사용",
+      "whatChanges": "달라지는 점",
       "changes": {
-        "title": "What changes",
-        "uses": "Ranking, reasons and chat use your service.",
-        "off": "Web search and fact checks are off.",
-        "verify": "Verify is hidden. It checks the private cloud only."
+        "title": "달라지는 점",
+        "uses": "순위, 이유, 채팅에 회원님의 서비스를 사용합니다.",
+        "off": "웹 검색과 팩트 체크가 꺼집니다.",
+        "verify": "‘증명 확인’은 숨겨집니다. 프라이빗 클라우드만 확인하는 기능입니다."
       }
     },
     "news": {
-      "title": "Your own news server",
-      "intro": "Use a news server you run.",
+      "title": "내 뉴스 서버",
+      "intro": "직접 운영하는 뉴스 서버를 사용할 수 있습니다.",
       "status": {
-        "refused": "The server refused this key.",
-        "noFeed": "This server can't make a feed."
+        "refused": "서버가 이 키를 거부했습니다.",
+        "noFeed": "이 서버는 피드를 만들 수 없습니다."
       },
-      "switch": "Use this server",
-      "topicsLine": "Your topics go to this server. 메라 뉴스 servers get no news requests while it's on.",
-      "missingRow": "Not available here",
+      "switch": "이 서버 사용",
+      "topicsLine": "회원님의 관심 주제가 이 서버로 전달됩니다. 이 기능이 켜져 있는 동안 메라 뉴스 서버는 뉴스 요청을 받지 않습니다.",
+      "missingRow": "여기서는 사용할 수 없음",
       "missing": {
-        "title": "Not available here",
-        "intro": "Your news server doesn't offer these. 메라 뉴스 shows them as empty.",
-        "unknown": "Your news server didn't say what it offers. Pages it can't show stay empty."
+        "title": "여기서는 사용할 수 없음",
+        "intro": "회원님의 뉴스 서버는 이 기능을 제공하지 않습니다. 메라 뉴스는 해당 페이지를 빈 상태로 표시합니다.",
+        "unknown": "회원님의 뉴스 서버가 제공하는 기능을 알려 주지 않았습니다. 표시할 수 없는 페이지는 빈 상태로 남습니다."
       }
     },
     "feature": {
-      "search": "Search",
-      "worldHeadlines": "World headlines",
-      "relatedArticles": "Related articles",
-      "storyUpdates": "Story updates",
-      "publicationPages": "Publication pages",
-      "placeSearch": "Finding a place",
-      "factChecks": "Fact checks",
-      "storyGrouping": "Grouping stories",
-      "publicationNames": "Publication names"
+      "search": "검색",
+      "worldHeadlines": "세계 헤드라인",
+      "relatedArticles": "관련 기사",
+      "storyUpdates": "스토리 업데이트",
+      "publicationPages": "언론사 페이지",
+      "placeSearch": "장소 찾기",
+      "factChecks": "팩트 체크",
+      "storyGrouping": "스토리 묶기",
+      "publicationNames": "언론사 이름"
     }
   }
 }

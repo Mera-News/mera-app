@@ -1747,8 +1747,8 @@
       "footer": "于 {{date}} 核查。分享自 {{downloadUrl}}"
     },
     "notOffered": {
-      "ownNews": "Fact checks are off while you use your own news server.",
-      "pod": "Fact checks are off while you use your own 梅拉新闻 server."
+      "ownNews": "使用你自己的新闻服务器时，事实核查功能关闭。",
+      "pod": "使用你自己的梅拉新闻服务器时，事实核查功能关闭。"
     }
   },
   "consent": {
@@ -3254,93 +3254,93 @@
     "storiesLabel": "示例新闻"
   },
   "ownServices": {
-    "groupTitle": "Your own services",
-    "aiRow": "Your own AI service",
-    "newsRow": "Your own news server",
-    "footer": "For people who run their own AI or news server. Most people don't need this.",
-    "footerOnDevice": "Turn off On this phone to use these.",
-    "usingAi": "Using your own AI service",
-    "usingNews": "Using your own news server",
-    "usingBoth": "Using your own services",
+    "groupTitle": "你的自有服务",
+    "aiRow": "你自己的 AI 服务",
+    "newsRow": "你自己的新闻服务器",
+    "footer": "面向自行运行 AI 或新闻服务器的人。大多数人用不到这个。",
+    "footerOnDevice": "请先关闭「在这部手机上」，才能使用这些服务。",
+    "usingAi": "正在使用你自己的 AI 服务",
+    "usingNews": "正在使用你自己的新闻服务器",
+    "usingBoth": "正在使用你自己的服务",
     "field": {
-      "address": "Address",
-      "key": "Key (optional)",
-      "showKey": "Show key",
-      "hideKey": "Hide key"
+      "address": "地址",
+      "key": "密钥（可选）",
+      "showKey": "显示密钥",
+      "hideKey": "隐藏密钥"
     },
     "address": {
-      "notHttps": "Use an address that starts with https://",
-      "userinfo": "Remove the name and password from this address.",
-      "invalid": "This isn't a web address."
+      "notHttps": "请使用以 https:// 开头的地址",
+      "userinfo": "请从这个地址中删除用户名和密码。",
+      "invalid": "这不是有效的网页地址。"
     },
-    "check": "Check connection",
-    "checking": "Checking",
-    "checkAgain": "Check again",
+    "check": "检查连接",
+    "checking": "检查中",
+    "checkAgain": "再次检查",
     "status": {
-      "connected": "Connected",
-      "unreachable": "Can't reach this address.",
-      "redirect": "This address redirects. Use the final address."
+      "connected": "已连接",
+      "unreachable": "无法连接到此地址。",
+      "redirect": "此地址会跳转。请使用最终地址。"
     },
-    "lastCheckFailed": "Last check failed. {{reason}}",
-    "offUntilChecked": "Off until you check this address.",
+    "lastCheckFailed": "上次检查失败。{{reason}}",
+    "offUntilChecked": "检查此地址前处于关闭状态。",
     "gate": {
-      "line": "Your own AI service needs a 梅拉新闻 plan.",
-      "lineNews": "Your own news server needs a 梅拉新闻 plan.",
-      "button": "See plans"
+      "line": "你自己的 AI 服务需要梅拉新闻套餐。",
+      "lineNews": "你自己的新闻服务器需要梅拉新闻套餐。",
+      "button": "查看套餐"
     },
     "onDevice": {
-      "line": "Turn off On this phone first.",
-      "button": "Go to On this phone"
+      "line": "请先关闭「在这部手机上」。",
+      "button": "前往「在这部手机上」"
     },
     "ai": {
-      "title": "Your own AI service",
-      "intro": "Use any service that works with the OpenAI API.",
-      "model": "Model",
+      "title": "你自己的 AI 服务",
+      "intro": "可使用任何兼容 OpenAI API 的服务。",
+      "model": "模型",
       "status": {
-        "refused": "The service refused this key.",
-        "notOpenai": "This address doesn't work with the OpenAI API.",
-        "noModel": "This model isn't on this service.",
-        "busy": "This service is busy. Try again in a minute.",
-        "failing": "This service had a problem. Try again later."
+        "refused": "该服务拒绝了此密钥。",
+        "notOpenai": "此地址不兼容 OpenAI API。",
+        "noModel": "此服务上没有这个模型。",
+        "busy": "此服务繁忙。请一分钟后再试。",
+        "failing": "此服务出现问题。请稍后再试。"
       },
-      "warning": "This service has no confidential computing. Your profile, your chats and the articles 梅拉新闻 reads for you go to whoever runs it.",
-      "switch": "Use this service",
-      "confirmTitle": "Use your own AI service?",
-      "confirmYes": "Use it",
-      "whatChanges": "What changes",
+      "warning": "此服务没有机密计算。你的个人资料、你的聊天记录，以及梅拉新闻为你阅读的文章，都会交给运行该服务的人。",
+      "switch": "使用此服务",
+      "confirmTitle": "要使用你自己的 AI 服务吗？",
+      "confirmYes": "使用",
+      "whatChanges": "会有哪些变化",
       "changes": {
-        "title": "What changes",
-        "uses": "Ranking, reasons and chat use your service.",
-        "off": "Web search and fact checks are off.",
-        "verify": "Verify is hidden. It checks the private cloud only."
+        "title": "会有哪些变化",
+        "uses": "排序、理由和聊天会使用你的服务。",
+        "off": "网页搜索和事实核查将关闭。",
+        "verify": "「验证证明」已隐藏。它只检查私有云。"
       }
     },
     "news": {
-      "title": "Your own news server",
-      "intro": "Use a news server you run.",
+      "title": "你自己的新闻服务器",
+      "intro": "使用你自行运行的新闻服务器。",
       "status": {
-        "refused": "The server refused this key.",
-        "noFeed": "This server can't make a feed."
+        "refused": "该服务器拒绝了此密钥。",
+        "noFeed": "此服务器无法生成信息流。"
       },
-      "switch": "Use this server",
-      "topicsLine": "Your topics go to this server. 梅拉新闻 servers get no news requests while it's on.",
-      "missingRow": "Not available here",
+      "switch": "使用此服务器",
+      "topicsLine": "你的主题会发送到此服务器。此服务器开启时，梅拉新闻的服务器不会收到任何新闻请求。",
+      "missingRow": "此处不可用",
       "missing": {
-        "title": "Not available here",
-        "intro": "Your news server doesn't offer these. 梅拉新闻 shows them as empty.",
-        "unknown": "Your news server didn't say what it offers. Pages it can't show stay empty."
+        "title": "此处不可用",
+        "intro": "你的新闻服务器不提供这些内容。梅拉新闻会将这些页面显示为空。",
+        "unknown": "你的新闻服务器没有说明它提供哪些内容。它无法显示的页面会保持为空。"
       }
     },
     "feature": {
-      "search": "Search",
-      "worldHeadlines": "World headlines",
-      "relatedArticles": "Related articles",
-      "storyUpdates": "Story updates",
-      "publicationPages": "Publication pages",
-      "placeSearch": "Finding a place",
-      "factChecks": "Fact checks",
-      "storyGrouping": "Grouping stories",
-      "publicationNames": "Publication names"
+      "search": "搜索",
+      "worldHeadlines": "全球头条",
+      "relatedArticles": "相关文章",
+      "storyUpdates": "报道更新",
+      "publicationPages": "媒体页面",
+      "placeSearch": "查找地点",
+      "factChecks": "事实核查",
+      "storyGrouping": "报道分组",
+      "publicationNames": "媒体名称"
     }
   }
 }
