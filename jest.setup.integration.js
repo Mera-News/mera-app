@@ -327,6 +327,13 @@ afterAll(() => server.close());
 // waiting, it fires in a later file against a torn-down module registry. Required inside the hook so
 // the test file's own mocks apply; a file that made the module unloadable cannot have muted anything.
 afterEach(() => {
+  // A toast's 5 s dismiss timer holds the worker open the same way. Cleared first: closing a card runs
+  // its onClosed, which may hold a purge the lines below then cancel.
+  try {
+    require('@/lib/toast/toast-queue').resetToastQueue?.();
+  } catch {
+    // Mocked away or unloadable in this file.
+  }
   let actions;
   try {
     actions = require('@/lib/database/services/publication-pref-ui-actions');

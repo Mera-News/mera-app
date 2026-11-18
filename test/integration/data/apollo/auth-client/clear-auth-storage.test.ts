@@ -33,6 +33,18 @@ it('sends the server sign-out, with the session cookie', async () => {
     expect(signOuts[0].cookie).toContain('better-auth.session_token=');
 });
 
+// A bound left running holds the process (and a jest worker) open for 5 s after every logout.
+it('cancels its 5s bound once the server answers', async () => {
+    const set = jest.spyOn(globalThis, 'setTimeout');
+    const cleared = jest.spyOn(globalThis, 'clearTimeout');
+    await clearAuthStorage();
+    const bounds = set.mock.results.filter((_, i) => set.mock.calls[i][1] === 5_000).map((r) => r.value);
+    const clearedHandles = cleared.mock.calls.map((c) => c[0]);
+    set.mockRestore();
+    cleared.mockRestore();
+    expect(bounds.map((b) => clearedHandles.includes(b))).toEqual([true]);
+});
+
 it('deletes the cookie and session-data keys from the secure store', async () => {
     const before = authKeys(secureStoreDump());
     expect(before.cookie).toBeDefined();

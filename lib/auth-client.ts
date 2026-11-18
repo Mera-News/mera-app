@@ -7,7 +7,6 @@ import { AUTH_ENDPOINT } from "@/lib/config/endpoints";
 import { logoutRevenueCat } from "./revenuecat";
 import { logoutIntercom } from "./intercom";
 import logger from "@/lib/logger";
-import { sleep } from "@/lib/utils/sleep";
 import {
     clearJwtSubscriptionLock,
     isJwtSubscriptionLocked,
@@ -189,13 +188,19 @@ export const clearAuthStorage = async () => {
     // On timeout the request stays in flight harmlessly; the cookie deletion
     // below is what actually signs this device out, and the server session
     // ages out on its own.
+    // The bound is cleared once the race settles: left running it holds the process open for 5 s.
+    let bound: ReturnType<typeof setTimeout> | undefined;
     try {
         await Promise.race([
             authClient.signOut(),
-            sleep(SIGN_OUT_TIMEOUT_MS),
+            new Promise((resolve) => {
+                bound = setTimeout(resolve, SIGN_OUT_TIMEOUT_MS);
+            }),
         ]);
     } catch {
         // Ignore — we still want to wipe local state below.
+    } finally {
+        clearTimeout(bound);
     }
     for (const key of SESSION_KEYS) {
         try {
