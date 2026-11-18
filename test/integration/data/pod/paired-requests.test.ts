@@ -79,12 +79,19 @@ const ALLOWED_MERA_OPERATIONS: Record<string, string> = {
   GetPlanPromo: 'the plan check: an offer the server holds for this account',
   ActiveFeedbackRequests: 'questions Mera Labs asks this account (feedback-request-sync), an account feature',
   UpdateExpoPushToken: 'the push address for the account notifications Mera still sends (push-token-check)',
+  SubmitFeedbackResponse: 'the person answers a question Mera Labs asked: the answer is the person\'s own text, sent on purpose',
+  UpdateNotificationWindow: 'the person changes when account notifications may arrive',
+  UpdateNotificationsEnabled: 'the person turns account notifications on or off',
+  GetIntercomIdentity: 'the person opens support chat: the identity for the support service',
 };
 
 /** Account routes on Mera other than GraphQL, and why. */
 const ALLOWED_MERA_PATHS: Record<string, string> = {
   '/api/auth/get-session': 'the sign-in check the account tasks run before they ask Mera anything',
   '/api/auth/token': 'the same sign-in check',
+  '/api/auth/accept-legal': 'the person accepts a new terms or privacy version',
+  '/api/auth/request-account-deletion': 'the person asks to delete the account',
+  '/api/auth/sign-out': 'the person logs out',
 };
 
 /** The routes of the paired server a phone may call, and why. */
@@ -102,6 +109,8 @@ interface Seen {
   name: string;
   /** Every header value, joined: checked for the pod's token and address on Mera's requests. */
   headers: string;
+  /** The request body as text, read for content that must never reach Mera. */
+  body: string;
 }
 const label = (s: Seen) => `${s.klass} ${s.method} ${s.name}`;
 
@@ -121,8 +130,17 @@ function record() {
             : 'mera';
     const headers: string[] = [];
     request.headers.forEach((v, k) => headers.push(`${k}: ${v}`));
-    const entry: Seen = { klass, method: request.method, name: url.pathname, headers: headers.join('\n') };
+    const entry: Seen = { klass, method: request.method, name: url.pathname, headers: headers.join('\n'), body: '' };
     seen.push(entry);
+    pending.push(
+      request
+        .clone()
+        .text()
+        .then((t) => {
+          entry.body = t;
+        })
+        .catch(() => undefined),
+    );
     if (url.pathname.endsWith('/graphql')) {
       pending.push(
         request
@@ -159,6 +177,8 @@ function isAllowed(s: Seen): boolean {
 
 let pod: ReturnType<typeof fakePod>;
 const table: Record<string, string[]> = {};
+/** The pod's token and address, a fact the pod served, a chat line and an article the person opened. */
+const CONTENT_NEVER_TO_MERA = [TOKEN, POD_HOST, 'Lives in Utrecht', 'CHAT-LINE-NEVER-TO-MERA', 'opened-article-1'];
 
 /** Checks one situation: only allowed requests, nothing for the gateway or a Mera news query, and the pod's rules. */
 async function census(situation: string, rec: ReturnType<typeof record>, expected: string[]) {
@@ -167,8 +187,10 @@ async function census(situation: string, rec: ReturnType<typeof record>, expecte
   expect(seen.filter((s) => s.klass === 'gateway').map(label)).toEqual([]);
   const meraNews = seen.filter((s) => s.klass === 'mera' && isGraphql(s) && (NEWS_OPERATIONS.has(operationOf(s)) || MERA_ONLY_OPERATIONS.has(operationOf(s))));
   expect(meraNews.map(label)).toEqual([]);
-  // The reverse: nothing of the pod rides on a request to Mera.
-  const leaks = seen.filter((s) => s.klass !== 'pod' && (s.headers.includes(TOKEN) || s.headers.includes(POD_HOST))).map(label);
+  // The reverse: nothing of the pod, and no profile, chat or reading content, rides on a request to Mera.
+  const leaks = seen
+    .filter((s) => s.klass !== 'pod' && CONTENT_NEVER_TO_MERA.some((c) => s.headers.includes(c) || s.body.includes(c)))
+    .map(label);
   expect(leaks).toEqual([]);
   for (const r of pod.requests) {
     expect(r.headers.authorization).toBe(`Bearer ${TOKEN}`);
@@ -412,5 +434,97 @@ describe('an OS wake while paired', () => {
     await advanceUntilDone(runBackgroundRefresh());
 
     await census('wake', rec, ['pod POST /snapshot']);
+  });
+});
+
+// Last in the file: logging out signs the session out, and nothing may run after it.
+describe('when the person does something while paired', () => {
+  beforeEach(async () => {
+    await initI18nEn();
+    resetScheduler();
+    resetBreaker();
+    resetPodHealth();
+    podState.resetMemory();
+    setAppState('active');
+    pod = fakePod({ token: TOKEN });
+    pod.snapshot = await podSnapshotFrom(() => podFact('pod-fact-1'));
+    await signInFixtureAccount();
+    seedLocalUser();
+    await savePairing(podPairing({ token: TOKEN }));
+    await enterPodMode();
+    await syncPod();
+    // Content that lives on the phone: a chat line and an opened article.
+    await watermelonRowSink.createRows('messages', [{ id: 'm1', conversation_id: 'c1', role: 'user', content: 'CHAT-LINE-NEVER-TO-MERA', created_at: 1 }]);
+    await recordOpen({ articleId: 'opened-article-1', surface: 'feed' });
+    jest.spyOn(console, 'info').mockImplementation(() => {});
+  });
+  afterEach(async () => {
+    await leavePodMode();
+    await forgetPairing();
+    AppScheduler.dispose();
+    jest.restoreAllMocks();
+  });
+
+  it('accepts a new terms and privacy version', async () => {
+    const rec = record();
+    const { acceptLegal } = await import('@/components/custom/auth/legal-consent');
+    expect((await acceptLegal({ termsVersion: 't2', privacyVersion: 'p2' })).ok).toBe(true);
+    await census('person: accepts the terms', rec, ['mera POST /api/auth/accept-legal']);
+  });
+
+  it('answers a feedback question', async () => {
+    const rec = record();
+    const { submitFeedbackResponse } = await import('@/lib/feedback-requests/feedback-request-service');
+    await submitFeedbackResponse('fr-1', 'The feed is good');
+    await census('person: answers a question', rec, ['mera POST graphql SubmitFeedbackResponse']);
+  });
+
+  it('opens the plan page', async () => {
+    const rec = record();
+    const { fetchReadingPlans } = await import('@/lib/subscription/reading-plans');
+    const { syncPlanPromo } = await import('@/lib/subscription/plan-promo');
+    await fetchReadingPlans();
+    await syncPlanPromo();
+    await census('person: opens the plan page', rec, ['mera POST graphql GetPlanPromo', 'mera POST graphql GetReadingPlans']);
+  });
+
+  it('changes notification settings', async () => {
+    const rec = record();
+    const { AccountService } = await import('@/lib/account-service');
+    await AccountService.updateNotificationPreferences('user-1', [8, 20]).catch(() => undefined);
+    await AccountService.updateNotificationsEnabled('user-1', true).catch(() => undefined);
+    await census('person: notification settings', rec, ['mera POST graphql UpdateNotificationWindow', 'mera POST graphql UpdateNotificationsEnabled']);
+  });
+
+  it('asks to delete the account (the same call the delete dialog makes)', async () => {
+    const rec = record();
+    const { authClient } = await import('@/lib/auth-client');
+    await authClient.$fetch('/request-account-deletion', { method: 'POST' }).catch(() => undefined);
+    await census('person: deletes the account', rec, ['mera POST /api/auth/request-account-deletion']);
+  });
+
+  const logOut = async () => {
+    const rec = record();
+    const { signOutAndWipe } = await import('@/lib/security/local-wipe');
+    await signOutAndWipe();
+    await new Promise<void>((r) => setImmediate(r));
+    return rec.stop();
+  };
+
+  it('logs out: Mera gets the sign-out and nothing of the pod or of the person\'s content', async () => {
+    const seen = await logOut();
+    const mera = [...new Set(seen.filter((s) => s.klass !== 'pod').map(label))].sort();
+    table['person: logs out'] = [...new Set(seen.map(label))].sort();
+    expect(mera).toEqual(['mera GET /api/auth/get-session', 'mera POST /api/auth/sign-out']);
+    for (const s of seen.filter((x) => x.klass !== 'pod')) for (const c of CONTENT_NEVER_TO_MERA) expect(s.headers + s.body).not.toContain(c);
+    expect(pod.requests.some((r) => r.path === '/devices/revoke')).toBe(true);
+  });
+
+  // Known, reported: logging out resets the Mera Protocol store while the sink is still set, and its
+  // deleteSetting('mera_skip_notes') goes to the server as a command, after the revoke. It flips to a
+  // pass once logout leaves pod mode before the stores reset.
+  it.failing('logs out: the server gets the revoke and nothing else', async () => {
+    await logOut();
+    expect(pod.requests.filter((r) => r.path !== '/devices/revoke' && r.path !== '/snapshot')).toEqual([]);
   });
 });
