@@ -115,15 +115,17 @@ async function describeFailure(e: unknown): Promise<PodError | null> {
   return error;
 }
 
-const toastKey = (e: unknown): string | null => {
+type ToastKey = 'ownServices.pod.toast.failed' | 'ownServices.pod.toast.unreachable' | 'ownServices.pod.status.refused';
+
+const toastKey = (e: unknown): ToastKey | null => {
   if (e instanceof CommandError) return e.code === 'earlier_change_failed' ? null : 'ownServices.pod.toast.failed';
   if (e instanceof PodError && e.code === 'unreachable') return 'ownServices.pod.toast.unreachable';
   if (e instanceof PodError && e.code === 'refused') return 'ownServices.pod.status.refused';
   return 'ownServices.pod.toast.failed';
 };
 
-function toast(key: string): void {
-  const title = (i18next.t as unknown as (k: string) => string)(key);
+function toast(key: ToastKey): void {
+  const title = i18next.t(key);
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const MeraToast = require('@/components/custom/toast/MeraToast').default;
   show({ render: () => createElement(MeraToast, { tone: 'error', title }) });
