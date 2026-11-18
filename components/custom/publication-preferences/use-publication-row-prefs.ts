@@ -6,8 +6,9 @@ import {
 } from '@/lib/algorithms/publication-pref-level';
 import { revertSourcePrefChange, setSourcePrefFromUi } from '@/lib/database/services/publication-pref-ui-actions';
 import { observeActive } from '@/lib/database/services/publication-preference-service';
-import { fetchPublicationPrefNames, knownSourceNamesForPublisher } from '@/lib/database/services/publisher-source-names';
+import { knownSourceNamesForPublisher } from '@/lib/database/services/publisher-source-names';
 import { observeActive as observeSubscriptions } from '@/lib/database/services/user-publication-subscription-service';
+import { publicationPrefNamesForWrite } from '@/lib/own-services/pref-names';
 import logger from '@/lib/logger';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { toastManager } from '@/lib/toast-manager';
@@ -89,7 +90,7 @@ export function usePublicationRowPrefs() {
         // part of the publication's news. A throw refuses the write.
         const allNames = async () => {
             try {
-                return await fetchPublicationPrefNames({
+                return await publicationPrefNamesForWrite({
                     publisherId: p.publisherId,
                     publisherName: p.rawName,
                     sourceNames: p.sourceNames,

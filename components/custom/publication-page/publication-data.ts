@@ -7,10 +7,10 @@ import { observeActive as observeActivePublicationPreferences } from '@/lib/data
 import { isStarInherited, resolvePrefLevel, type PrefRowLike } from '@/lib/algorithms/publication-pref-level';
 import { setSourcePrefFromUi } from '@/lib/database/services/publication-pref-ui-actions';
 import {
-    fetchPublicationPrefNames,
     resolvePublicationPrefNames,
     type PublicationNameHints,
 } from '@/lib/database/services/publisher-source-names';
+import { publicationPrefNamesForWrite } from '@/lib/own-services/pref-names';
 import {
     getAllVisitedArticles,
     type VisitedArticle,
@@ -98,7 +98,7 @@ export function usePublicationPref(hints: PublicationNameHints, countryAlpha3?: 
                 // A tap can land before the profile answers, when `names` is only
                 // the name that opened the page.
                 const all = hints.publisherId
-                    ? await fetchPublicationPrefNames({ ...hints, publisherId: hints.publisherId }).catch(() => null)
+                    ? await publicationPrefNamesForWrite({ ...hints, publisherId: hints.publisherId }).catch(() => null)
                     : names;
                 if (!all) return false;
                 return next === 'muted'

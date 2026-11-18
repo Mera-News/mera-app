@@ -37,6 +37,9 @@ import {
 import { clientHeaderValue } from './observability/client-header';
 import { toastManager } from './toast-manager';
 import { GRAPHQL_SERVER_ENDPOINT } from '@/lib/config/endpoints';
+import { clearLatch, latchUnsupported, useOwnNewsHealth } from '@/lib/own-services/news-latch';
+import { MERA_ONLY_OPERATIONS, NEWS_OPERATIONS } from '@/lib/own-services/news-operations';
+import { ownNewsRoute, ownNewsState } from '@/lib/own-services/own-news-state';
 
 // Cache TTL in milliseconds (10 minutes)
 const CACHE_TTL_MS = 10 * 60 * 1000;
@@ -572,11 +575,158 @@ const cacheEvictionLink = new ApolloLink((operation, forward) => {
     return forward(operation);
 });
 
-// Initialize Apollo Client with error, retry, auth, and http links
+// Mera's chain, unchanged: errorLink → authSuccessLink → retryLink → cacheEvictionLink → authLink → httpLink
+const meraChain = errorLink.concat(authSuccessLink.concat(retryLink.concat(cacheEvictionLink.concat(authLink.concat(httpLink)))));
+
+type OwnRoute = NonNullable<ReturnType<typeof ownNewsRoute>>;
+
+const OWN_REQUEST_TIMEOUT_MS = 30_000;
+
+// A plain fetch with its own deadline: a slow or failing own server must move no signal about Mera
+// (not the slow band, reachability, the breaker or an ownership fault), so instrumentedFetch is not used.
+const ownFetch: typeof fetch = async (input, init) => {
+    const controller = new AbortController();
+    const caller = init?.signal;
+    let timedOut = false;
+    const onCallerAbort = () => controller.abort();
+    if (caller?.aborted) controller.abort();
+    else caller?.addEventListener('abort', onCallerAbort);
+    const timer = setTimeout(() => {
+        timedOut = true;
+        controller.abort();
+    }, OWN_REQUEST_TIMEOUT_MS);
+    try {
+        // A redirect would carry the key to a host the person never named: refuse it, and never retry it.
+        const res = await fetch(input, { ...init, redirect: 'manual', signal: controller.signal });
+        if (res.type === 'opaqueredirect' || (res.status >= 300 && res.status < 400)) {
+            throw Object.assign(new Error('own news server redirected'), { code: 'OWN_REDIRECT' });
+        }
+        return res;
+    } catch (err) {
+        if (timedOut) throw Object.assign(new Error('own news server timed out'), { code: 'OWN_TIMEOUT' });
+        if (caller?.aborted) throw Object.assign(new Error('aborted'), { name: 'AbortError' });
+        throw err;
+    } finally {
+        clearTimeout(timer);
+        caller?.removeEventListener('abort', onCallerAbort);
+    }
+};
+
+// Retries read nothing of Mera's state: only the own server's own answer decides.
+const ownRetryLink = new RetryLink({
+    attempts: {
+        max: 3,
+        retryIf: (error) => {
+            const e = error as { name?: string; code?: string; statusCode?: number } | undefined;
+            if (e?.name === 'AbortError' || e?.code === 'OWN_REDIRECT') return false;
+            const status = e?.statusCode;
+            return status === undefined || status === 429 || status >= 500;
+        },
+    },
+    delay: { initial: 300, max: 3000, jitter: true },
+});
+
+// The person's own server: its own transport, so nothing of Mera's (cookie, session, client header) can ride along.
+const ownHttpLink = new HttpLink({
+    uri: (operation) => (operation.getContext().ownRoute as OwnRoute).graphqlUrl,
+    credentials: 'omit',
+    fetch: ownFetch,
+});
+
+// Replaces every header another link or caller set: only content-type and the person's own key go out.
+const ownHeadersLink = new SetContextLink(async (prev) => {
+    const key = (prev.ownRoute as OwnRoute).key;
+    return { headers: { 'content-type': 'application/json', ...(key ? { 'x-api-key': key } : {}) } };
+});
+
+const isValidationResponse = (status: number | undefined, contentType: string | null | undefined) =>
+    status === 400 && (contentType ?? '').includes('application/graphql-response+json');
+
+// Never touches the auth breaker, reachability, the feed's sync status or Sentry: a refusal here says nothing about Mera.
+const ownErrorLink = new ApolloLink((operation, forward) =>
+    new Observable<ApolloLink.Result>((observer) => {
+        const name = operation.operationName ?? 'unknown';
+        const crumb = (code: string | number) => logger.addBreadcrumb(`own news: ${name}: ${code}`, 'own-news', {}, 'info');
+        const subscription = forward(operation).subscribe({
+            next: (result) => {
+                const response = operation.getContext().response as Response | undefined;
+                const status = response?.status;
+                let out = result;
+                if (result.errors?.length) {
+                    const codes = result.errors.map((e) => e.extensions?.code);
+                    if (codes.includes('GRAPHQL_VALIDATION_FAILED') || isValidationResponse(status, response?.headers?.get('content-type'))) {
+                        latchUnsupported(name);
+                    }
+                    crumb(String(codes.find((c) => typeof c === 'string') ?? status ?? 'error'));
+                    // New objects: errors from a response can be frozen.
+                    out = {
+                        ...result,
+                        errors: result.errors.map((e) => ({ ...e, message: e.message, extensions: { ...e.extensions, ownServer: true } })),
+                    };
+                }
+                if (typeof status === 'number' && status >= 200 && status < 300) useOwnNewsHealth.setState({ health: 'ok' });
+                observer.next(out);
+            },
+            error: (err) => {
+                const e = err as { statusCode?: number; response?: Response; name?: string } | undefined;
+                const status = e?.statusCode ?? e?.response?.status;
+                if (isValidationResponse(status, e?.response?.headers?.get('content-type'))) latchUnsupported(name);
+                // A cancelled request proves nothing about the server; ownFetch names a timeout separately.
+                const cancelled = e?.name === 'AbortError';
+                if (!cancelled) {
+                    if (status === 401 || status === 403) useOwnNewsHealth.setState({ health: 'refused' });
+                    else if (status === undefined || status >= 500) useOwnNewsHealth.setState({ health: 'unreachable' });
+                }
+                crumb(status ?? 'network');
+                if (err && typeof err === 'object') (err as { ownServer?: boolean }).ownServer = true;
+                observer.error(err);
+            },
+            complete: () => observer.complete(),
+        });
+        return () => subscription.unsubscribe();
+    }),
+);
+
+const ownChain = ownErrorLink.concat(ownRetryLink.concat(cacheEvictionLink.concat(ownHeadersLink.concat(ownHttpLink))));
+
+// News operations wait for the mode to be known (a news query never goes to Mera while it is unknown),
+// then take the own chain when it is on. Everything else goes straight to Mera.
+const ownNewsSplit = new ApolloLink((operation, forward) => {
+    const name = operation.operationName ?? '';
+    const meraOnly = MERA_ONLY_OPERATIONS.has(name);
+    if (!meraOnly && !NEWS_OPERATIONS.has(name)) return meraChain.request(operation, forward);
+    return new Observable<ApolloLink.Result>((observer) => {
+        let inner: { unsubscribe(): void } | undefined;
+        let closed = false;
+        ownNewsState.hydrate().then(
+            () => {
+                if (closed) return;
+                const route = ownNewsRoute();
+                if (meraOnly && route) {
+                    // Mera's server may not have these articles and the own server cannot answer: send nothing anywhere.
+                    latchUnsupported(name);
+                    observer.next({ errors: [{ message: 'not offered', extensions: { code: 'NOT_OFFERED', ownServer: true } }] });
+                    observer.complete();
+                    return;
+                }
+                if (route) operation.setContext({ ownRoute: route });
+                inner = (route ? ownChain : meraChain).request(operation, forward).subscribe(observer);
+            },
+            (error) => {
+                if (!closed) observer.error(error);
+            },
+        );
+        return () => {
+            closed = true;
+            inner?.unsubscribe();
+        };
+    });
+});
+
+// Initialize Apollo Client with the split link over Mera's chain and the own-news chain
 // NOTE: Caching is ENABLED with 10-minute TTL
-// Link chain: errorLink → authSuccessLink → retryLink → cacheEvictionLink → authLink → httpLink
 const client = new ApolloClient({
-    link: errorLink.concat(authSuccessLink.concat(retryLink.concat(cacheEvictionLink.concat(authLink.concat(httpLink))))),
+    link: ownNewsSplit,
     cache,
     // errorPolicy stays Apollo's default 'none'; Apollo 4.3 types reject naming
     // a default errorPolicy without a DeclareDefaultOptions augmentation.
@@ -588,6 +738,22 @@ const client = new ApolloClient({
             fetchPolicy: 'cache-first',
         },
     },
+});
+
+// A result from the other server must never be served: any change of mode, address or key empties the cache.
+let ownNewsSignature: string | null = null;
+ownNewsState.useStore.subscribe((s) => {
+    // Memory forgotten: the next hydrate is a first read, not a change, and must not cancel queries in flight.
+    if (!s.hydrated) {
+        ownNewsSignature = null;
+        return;
+    }
+    const signature = JSON.stringify([s.value?.on === true, s.value?.baseUrl ?? null, s.value?.key ?? null]);
+    const previous = ownNewsSignature;
+    ownNewsSignature = signature;
+    if (previous === null || previous === signature) return;
+    clearLatch();
+    client.clearStore().catch(() => {});
 });
 
 /**
