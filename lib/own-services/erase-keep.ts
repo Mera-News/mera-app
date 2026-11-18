@@ -17,6 +17,8 @@ export const APP_KEEP_SETTING_KEYS: readonly string[] = [
   // The model and where chat runs: chats stay on this phone, so do their choices.
   'mera_selected_model_id',
   'mera_chat_in_cloud',
+  // Written after the erase; a second pairing must not clear it before a backup or restore does.
+  'backup_held_after_pairing',
 ];
 
 /** Keys the erase removes on purpose. Anything the app writes must be kept, served, or named here. */

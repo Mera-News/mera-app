@@ -31,6 +31,7 @@ import {
   type DriveConnectResult,
 } from '@/lib/backup/providers/google-drive';
 import { icloudProvider, isICloudSupported } from '@/lib/backup/providers/icloud';
+import { podPaired, podState } from '@/lib/own-services/pod-state';
 import { createdAtFromRemoteFilename } from '@/lib/backup/remote-names';
 import { backgroundBackupIsAvailable } from '@/lib/background/backup-task';
 import type { BackupCadence, BackupProvider } from '@/lib/backup/types';
@@ -64,6 +65,8 @@ function cloudProviderFor(id: BackupProviderId): BackupProvider | null {
 export function useBackupSection({ autoOpenRecover }: { autoOpenRecover: boolean }) {
   const { t } = useTranslation();
   const tRef = useRef(t);
+  // Reactive, so unpairing on another screen brings the actions back.
+  const paired = podState.useStore((s) => s.hydrated && s.value?.state === 'active');
   tRef.current = t;
 
   // ── backup state ──────────────────────────────────────────────────────────
@@ -127,7 +130,8 @@ export function useBackupSection({ autoOpenRecover }: { autoOpenRecover: boolean
         setState((prev) => (prev === 'setup' && !configured ? prev : configured ? 'on' : 'off'));
         const id = backupProviderId();
         const cloud = id ? cloudProviderFor(id) : null;
-        if (configured && cloud && backupLastRunAt() === null) {
+        // A listing of the backup folder: not while paired (only metadata probes run then).
+        if (configured && cloud && backupLastRunAt() === null && !podPaired()) {
           listBackups(cloud)
             .then((paths) => {
               if (cancelled) return;
@@ -231,7 +235,7 @@ export function useBackupSection({ autoOpenRecover }: { autoOpenRecover: boolean
   }, [fail, refresh, rereadSettings]);
 
   const onSwitch = (on: boolean) => {
-    if (busy) return;
+    if (busy || paired) return;
     if (on) void turnOn();
     else if (state === 'on') void turnOff();
     else {
@@ -289,7 +293,7 @@ export function useBackupSection({ autoOpenRecover }: { autoOpenRecover: boolean
 
   const backUpNow = useCallback(async () => {
     const id = backupProviderId();
-    if (!id) return;
+    if (!id || paired) return;
     try {
       setBusy('run');
       const result = await runBackup(cloudProviderFor(id) as BackupProvider);
@@ -314,7 +318,7 @@ export function useBackupSection({ autoOpenRecover }: { autoOpenRecover: boolean
     } finally {
       setBusy(null);
     }
-  }, [fail, refresh]);
+  }, [fail, refresh, paired]);
 
   const openRecoveryCode = useCallback(async () => {
     try {
@@ -344,10 +348,10 @@ export function useBackupSection({ autoOpenRecover }: { autoOpenRecover: boolean
   // `?restore=1` opens the restore steps once the load settled, ONCE.
   const autoOpened = useRef(false);
   useEffect(() => {
-    if (!autoOpenRecover || autoOpened.current || state === 'loading') return;
+    if (!autoOpenRecover || autoOpened.current || state === 'loading' || paired) return;
     autoOpened.current = true;
     setRstep('where');
-  }, [autoOpenRecover, state]);
+  }, [autoOpenRecover, state, paired]);
 
   const lookForBackup = useCallback(async () => {
     const id = rsource;
@@ -373,7 +377,7 @@ export function useBackupSection({ autoOpenRecover }: { autoOpenRecover: boolean
   const restore = useCallback(async () => {
     const target = found;
     const cloud = target ? cloudProviderFor(target.source) : null;
-    if (!target || !cloud) return;
+    if (!target || !cloud || paired) return;
     try {
       setBusy('adopt');
       // Crockford already forgives case, hyphens and I/L/O, so a refusal really
@@ -418,9 +422,10 @@ export function useBackupSection({ autoOpenRecover }: { autoOpenRecover: boolean
       fail(err, 'run-restore');
       setRstep('code');
     }
-  }, [found, typedCode, fail]);
+  }, [found, typedCode, fail, paired]);
 
   return {
+    paired,
     settings,
     state,
     step,

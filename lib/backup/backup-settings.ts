@@ -27,6 +27,12 @@ export const BACKUP_PROVIDER_KEY = 'backup_provider';
 export const BACKUP_WIFI_ONLY_KEY = 'backup_wifi_only';
 export const BACKUP_LAST_RUN_KEY = 'backup_last_run_at';
 export const BACKUP_LAST_FAILED_KEY = 'backup_last_failed_at';
+/**
+ * Set when the phone pairs with a server. Every scheduled run prunes the oldest backup, so after
+ * unpairing a few automatic runs would remove the backups made before pairing, which may be the only
+ * copy of that profile. The schedule stays held until the person backs up or restores.
+ */
+export const BACKUP_HELD_AFTER_PAIRING_KEY = 'backup_held_after_pairing';
 
 export type BackupProviderId = 'icloud' | 'google-drive';
 
@@ -218,4 +224,16 @@ export async function connectionSatisfiesWifiOnly(): Promise<boolean> {
     // No NetInfo means no proof of Wi-Fi, and the answer to that is to wait.
     return false;
   }
+}
+
+export async function holdBackupsAfterPairing(): Promise<void> {
+  await setSetting(BACKUP_HELD_AFTER_PAIRING_KEY, '1');
+}
+
+export async function releaseBackupHold(): Promise<void> {
+  await setSetting(BACKUP_HELD_AFTER_PAIRING_KEY, '0');
+}
+
+export async function backupsHeldAfterPairing(): Promise<boolean> {
+  return (await getSetting(BACKUP_HELD_AFTER_PAIRING_KEY)) === '1';
 }

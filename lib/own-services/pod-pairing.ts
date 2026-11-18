@@ -39,6 +39,9 @@ export async function pairAndErase(input: { baseUrl: string; code: string }, con
   if (!confirmed) throw new OwnServiceError('not-confirmed');
   const addr = parseServiceAddress(input.baseUrl);
   if (!addr.ok) throw new OwnServiceError('address', addr.reason);
+  // A backup or restore rewrites the same tables the erase does: the two never overlap.
+  const { backupOrRestoreRunning } = await import('@/lib/backup/backup-service');
+  if (backupOrRestoreRunning()) throw new PodError('backup_running');
 
   const answer = await pairWithCode(addr.url, input.code, deviceName());
   const target: Target = { baseUrl: addr.url, token: answer.token };
@@ -68,6 +71,9 @@ export async function pairAndErase(input: { baseUrl: string; code: string }, con
     throw e instanceof SyncVersionError ? fromSyncVersionError(e) : new PodError('failed');
   }
 
+  // The backups from before pairing may be the only copy of that profile: no scheduled run until the person chooses.
+  const { holdBackupsAfterPairing } = await import('@/lib/backup/backup-settings');
+  await holdBackupsAfterPairing();
   // Off only now: until the erase landed, the phone is as it was.
   const { setOwnAiOn } = await import('./own-ai-state');
   const { setOwnNewsOn } = await import('./own-news-state');

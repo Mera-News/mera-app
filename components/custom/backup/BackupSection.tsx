@@ -91,6 +91,7 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
   // Lite / Reduce Motion: no earned-moment animation at all.
   const motion = useMotionAllowed();
   const {
+    paired,
     state,
     step,
     editing,
@@ -273,8 +274,8 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
         hint: t('backup.whereDescription'),
         summary: providerName(settings.providerId ?? pickedProvider),
         status: statusOf('where'),
-        actionLabel: on ? t('backup.change') : undefined,
-        onAction: on
+        actionLabel: on && !paired ? t('backup.change') : undefined,
+        onAction: on && !paired
           ? () => {
               setPickedProvider(settings.providerId);
               setEditing('where');
@@ -292,8 +293,8 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
         title: t('backup.whenTitle'),
         summary: cadenceName(settings.cadence),
         status: statusOf('when'),
-        actionLabel: on ? t('backup.change') : undefined,
-        onAction: on
+        actionLabel: on && !paired ? t('backup.change') : undefined,
+        onAction: on && !paired
           ? () => {
               const c = settings.cadence;
               setPickedCadence(c === 'off' ? 'daily' : c);
@@ -428,6 +429,7 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
   }
 
   const switchOn = state !== 'off';
+  const pausedLine = t('ownServices.pod.backupsOff');
   const earnSource = gameAnimationFor('game-mark-earn');
 
   return (
@@ -440,12 +442,21 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
             busy === 'setup' || busy === 'off' ? (
               <Spinner size="small" />
             ) : (
-              <Switch testID="backup-switch" value={switchOn} onToggle={onSwitch} size="md" />
+              <Switch
+                testID="backup-switch"
+                value={switchOn}
+                onToggle={onSwitch}
+                size="md"
+                isDisabled={paired}
+                accessibilityLabel={t('backup.title')}
+                accessibilityHint={paired ? pausedLine : undefined}
+                accessibilityState={paired ? { disabled: true } : undefined}
+              />
             )
           }
         />
       </Group>
-      <Help>{t('backup.offDescription')}</Help>
+      <Help>{paired ? t('ownServices.pod.backupsOff') : t('backup.offDescription')}</Help>
 
       {earned && motion && earnSource ? (
         // The one earned moment: backup turned on for the first time.
@@ -464,13 +475,26 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
       {state !== 'off' ? <StepsAccordion testID="backup-steps" steps={backupSteps()} doneLabel={t('common.done')} /> : null}
       {state === 'on' ? (
         <Group>
-          <Row
-            testID="backup-run-now"
-            title={busy === 'run' ? t('backup.working') : t('backup.runNow')}
-            subtitle={t('backup.runNowHint')}
-            trailing={busy === 'run' ? <Spinner size="small" /> : null}
-            onPress={() => void backUpNow()}
-          />
+          {paired ? (
+            <Pressable
+              testID="backup-run-now"
+              disabled
+              accessibilityRole="button"
+              accessibilityLabel={t('backup.runNow')}
+              accessibilityHint={pausedLine}
+              accessibilityState={{ disabled: true }}
+            >
+              <Row title={t('backup.runNow')} subtitle={t('backup.runNowHint')} titleColor={colors.ink3} />
+            </Pressable>
+          ) : (
+            <Row
+              testID="backup-run-now"
+              title={busy === 'run' ? t('backup.working') : t('backup.runNow')}
+              subtitle={t('backup.runNowHint')}
+              trailing={busy === 'run' ? <Spinner size="small" /> : null}
+              onPress={() => void backUpNow()}
+            />
+          )}
         </Group>
       ) : null}
 
@@ -479,15 +503,18 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
         <Text accessibilityRole="header" style={{ color: colors.ink, fontSize: 16, fontWeight: '600' }}>
           {t('backup.restore')}
         </Text>
-        {rstep === 'idle' ? (
+        {rstep === 'idle' || paired ? (
           <>
             <Text style={{ color: colors.ink2, fontSize: 13, lineHeight: 18 }}>{t('backup.restoreBody')}</Text>
             <Pressable
               testID="restore-start"
               onPress={() => setRstep('where')}
+              disabled={paired}
               accessibilityRole="button"
               accessibilityLabel={t('backup.startRestoring')}
-              style={[styles.secondary, { borderColor: colors.trackBorder }]}
+              accessibilityHint={paired ? pausedLine : undefined}
+              accessibilityState={paired ? { disabled: true } : undefined}
+              style={[styles.secondary, { borderColor: colors.trackBorder, opacity: paired ? 0.45 : 1 }]}
             >
               <Text style={{ color: colors.ink, fontSize: 15, fontWeight: '600' }}>{t('backup.startRestoring')}</Text>
             </Pressable>

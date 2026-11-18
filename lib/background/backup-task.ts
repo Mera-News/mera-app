@@ -53,8 +53,11 @@ import {
   scheduledBackupEnabled,
   scheduledBackupIsDue,
   backupCadence,
+  backupsHeldAfterPairing,
+  holdBackupsAfterPairing,
 } from '@/lib/backup/backup-settings';
 import type { BackupProvider } from '@/lib/backup/types';
+import { podPaired, podState } from '@/lib/own-services/pod-state';
 
 /** The retired task name. Kept only so the one-task migration can unregister
  *  it (`background-task.ts`). Nothing defines it any more. */
@@ -101,6 +104,13 @@ export async function runScheduledBackup(): Promise<void> {
     // The mirror is module state and this process may have been started by
     // the OS purely to run this task, so nothing has hydrated it.
     await hydrateBackupSettings();
+    // Not a failure and not stamped: the next wake after unpairing finds the run due as before.
+    podState.hydrateSync();
+    if (podPaired()) {
+      await holdBackupsAfterPairing();
+      return;
+    }
+    if (await backupsHeldAfterPairing()) return;
 
     const now = Date.now();
     if (!scheduledBackupEnabled() || !scheduledBackupIsDue(now)) return;

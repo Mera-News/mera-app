@@ -6,7 +6,7 @@ import type { PodPairing } from './pod-state';
 
 export type PodErrorCode =
   | 'unreachable' | 'refused' | 'version' | 'wrong_code' | 'pairing_closed' | 'too_many_tries'
-  | 'already_paired' | 'failed' | 'phone-old' | 'server-old';
+  | 'already_paired' | 'failed' | 'phone-old' | 'server-old' | 'backup_running';
 
 // Messages are fixed text: a token, a code or an address must never end up in one.
 export class PodError extends Error {

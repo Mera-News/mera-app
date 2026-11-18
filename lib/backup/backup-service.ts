@@ -31,6 +31,8 @@ import { watermelonRowSink } from '@/lib/backup/adapters/watermelon-row-sink';
 import { watermelonRowSource } from '@/lib/backup/adapters/watermelon-row-source';
 import { exportBackup, type ExportProgress } from '@/lib/backup/export';
 import { importBackup, type ImportProgress, type ImportResult } from '@/lib/backup/import';
+import { podState } from '@/lib/own-services/pod-state';
+import { releaseBackupHold } from './backup-settings';
 import { getBackupKey, isRecoveryCodeConfirmed } from './key-store';
 import { REMOTE_DIRECTORY } from './providers/shared';
 import { REMOTE_FILENAME_PREFIX, remoteFilenameFor } from '@/lib/backup/remote-names';
@@ -47,9 +49,32 @@ export const BACKUP_KEEP_COUNT = 3;
 
 export { REMOTE_FILENAME_PREFIX, remoteFilenameFor } from '@/lib/backup/remote-names';
 
+/**
+ * Paired phones keep their data on the person's own server, so nothing leaves or replaces it here. A
+ * pairing still in progress (pending) counts too: its erase and a restore both rewrite every table.
+ */
+function refuseWhilePaired(): void {
+  podState.hydrateSync(); // a background wake may start before anything has read the pairing
+  if (podState.get() !== null) throw new BackupServiceError('paired', 'Backup is off while this phone is paired with a server');
+}
+
+// Counted from the first line of a run, before any await, so a pairing that starts meanwhile sees it.
+let running = 0;
+async function counted<T>(work: () => Promise<T>): Promise<T> {
+  running += 1;
+  try {
+    return await work();
+  } finally {
+    running -= 1;
+  }
+}
+
+/** Whether a backup or a restore is under way: pairing waits for neither, it refuses. */
+export const backupOrRestoreRunning = (): boolean => running > 0;
+
 export class BackupServiceError extends Error {
   constructor(
-    readonly reason: RestoreRefusal | 'no-key' | 'code-unconfirmed',
+    readonly reason: RestoreRefusal | 'no-key' | 'code-unconfirmed' | 'paired',
     message: string,
   ) {
     super(message);
@@ -109,10 +134,15 @@ export function knownColumns(): Record<string, readonly string[]> {
 
 // ---- backup ---------------------------------------------------------------
 
-export async function runBackup(
+export function runBackup(provider: BackupProvider, onProgress?: (progress: ExportProgress) => void): Promise<BackupRunResult> {
+  return counted(() => backupNow(provider, onProgress));
+}
+
+async function backupNow(
   provider: BackupProvider,
   onProgress?: (progress: ExportProgress) => void,
 ): Promise<BackupRunResult> {
+  refuseWhilePaired();
   // A locked or unreadable keychain (an overnight wake before the first unlock) is a normal state
   // of a phone, not a fault: the key is not available, which is what `no-key` already means.
   const key = await getBackupKey().catch(() => {
@@ -157,6 +187,8 @@ export async function runBackup(
 
     const remotePath = `${REMOTE_DIRECTORY}/${filename}`;
     await provider.upload(blobFile.path, remotePath);
+    // A backup the person chose to make ends the hold that pairing set.
+    await releaseBackupHold();
     await pruneOldBackups(provider);
     return { header, blobBytes, remotePath };
   } finally {
@@ -220,11 +252,16 @@ export async function verifyProviderAccess(provider: BackupProvider): Promise<vo
 
 // ---- restore --------------------------------------------------------------
 
-export async function runRestore(
+export function runRestore(provider: BackupProvider, remotePath: string, onProgress?: (progress: ImportProgress) => void): Promise<ImportResult> {
+  return counted(() => restoreNow(provider, remotePath, onProgress));
+}
+
+async function restoreNow(
   provider: BackupProvider,
   remotePath: string,
   onProgress?: (progress: ImportProgress) => void,
 ): Promise<ImportResult> {
+  refuseWhilePaired();
   const key = await getBackupKey();
   if (!key) throw new BackupServiceError('no-key', 'Backup is not set up on this device');
 
@@ -244,6 +281,7 @@ export async function runRestore(
     // Lazy: this module loads in places that must not open the database.
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     await (require('@/lib/database/services/topic-generation-status-service') as typeof import('@/lib/database/services/topic-generation-status-service')).restartTopicClocks();
+    await releaseBackupHold();
     return result;
   } finally {
     await local.remove();

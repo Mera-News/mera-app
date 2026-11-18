@@ -171,9 +171,11 @@ describe('a good pairing', () => {
     expect(after).toEqual(before);
 
     for (const [key, value] of Object.entries(KEPT_VALUES)) {
-      if (key === 'app_language' || key === 'mera_skip_notes') continue;
+      if (key === 'app_language' || key === 'mera_skip_notes' || key === 'backup_held_after_pairing') continue;
       expect([key, await getSetting(key)]).toEqual([key, value]);
     }
+    // Written after the erase: no scheduled backup until the person backs up or restores.
+    expect(await getSetting('backup_held_after_pairing')).toBe('1');
     for (const key of Object.keys(ERASED_VALUES)) expect([key, await getSetting(key)]).toEqual([key, null]);
     expect(await getSetting('feed_card_state_v1')).toBeNull();
     expect(await getSetting('app_language')).toBe('de');
@@ -486,6 +488,7 @@ describe('the settings the erase meets', () => {
       [
         'developer_mode', 'ota_last_running_update', 'ota_update_noticed_id', 'last_handled_notification_id', 'invoices_note_shown',
         'feed_privacy_intro_dismissed', 'last_foreground_at', 'mera_selected_model_id', 'mera_chat_in_cloud',
+        'backup_held_after_pairing',
       ].sort(),
     );
   });
