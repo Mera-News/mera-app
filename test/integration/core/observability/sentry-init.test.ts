@@ -320,6 +320,17 @@ describe('sentry-init (prod path: __DEV__ = false)', () => {
         'secret',
         'password',
         'Authorization',
+        // Model- or person-written text: a guardrail warning's reason, a block reason, a feedback
+        // answer, an appeal, a search query, a checked claim, a question asked in chat.
+        'reason',
+        'blockedReason',
+        'feedback',
+        'answer',
+        'appeal',
+        'query',
+        'claim',
+        'question',
+        'comment',
       ])('redacts short values under the key %s', (key) => {
         const event = { extra: { [key]: 'short-but-sensitive' }, request: {} };
         const result = capturedBeforeSend!(event);
@@ -343,6 +354,16 @@ describe('sentry-init (prod path: __DEV__ = false)', () => {
         const event = { extra: { token: null }, request: {} };
         const result = capturedBeforeSend!(event);
         expect(result.extra.token).toBeNull();
+      });
+
+      it('redacts the reason a chat guardrail warning logs, and keeps its counts', () => {
+        const event = {
+          extra: {},
+          breadcrumbs: [{ message: '[issueWarning] Warning issued', data: { reason: 'asked about a neighbour', warningCount: 1, blocked: false } }],
+          request: {},
+        };
+        const result = capturedBeforeSend!(event);
+        expect(result.breadcrumbs[0].data).toEqual({ reason: '[redacted:key]', warningCount: 1, blocked: false });
       });
 
       it('applies to breadcrumb data too', () => {
