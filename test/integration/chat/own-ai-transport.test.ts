@@ -81,6 +81,12 @@ it('before hydrate: the call waits for the item, lands at the own host, and jobs
   expect(transportServesJobs()).toBe(false);
 });
 
+it('nothing stored and nothing in memory yet: the gateway and its jobs are offered at once', async () => {
+  ownAiState.resetMemory();
+  expect(transportServesJobs()).toBe(true);
+  expect(ownAiState.isHydrated()).toBe(true);
+});
+
 it('editing the address while on turns it off, the next call goes to the gateway, and the old transport is not reused', async () => {
   await ownAiState.save(config());
   await cloudComplete(REQUEST);

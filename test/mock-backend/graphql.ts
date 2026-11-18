@@ -285,25 +285,6 @@ query<'articlesForPublisher'>('GetArticlesForPublisherNoOrder', publisherPage);
 
 // ---- clusters -----------------------------------------------------------------------
 
-const clustersPage = (c: Ctx, list: readonly FixtureArticle[]) => {
-    const page = pageOf(isEmpty(c) ? [] : storyLeaders(list), c.variables.first, c.variables.after);
-    return {
-        __typename: 'NewsClustersResponse' as const,
-        newsClusters: page.items.map((a) => newsCluster(a, c, 1)),
-        pageInfo: page.pageInfo,
-    };
-};
-query<'newsClusters'>('GetNewsClusters', (c) => {
-    const codes: string[] | null = c.variables.countryCodes ?? null;
-    const list =
-        codes && codes.length > 0 && !codes.includes('GLOBAL')
-            ? articles.filter((a) => codes.includes(publications[a.publicationIndex].countryCode))
-            : articles;
-    return { newsClusters: clustersPage(c, list) };
-});
-query<'newsClustersForTopicText'>('GetNewsClustersForTopicText', (c) => ({
-    newsClustersForTopicText: clustersPage(c, articles),
-}));
 query<'newsClusterForArticle'>('GetNewsClusterForArticle', (c) => {
     const a = articleById(c.variables.articleId);
     return { newsClusterForArticle: a ? newsCluster(a, c, c.variables.first ?? 10) : null };

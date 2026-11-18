@@ -20,20 +20,21 @@ export function createServiceState<T extends { on: boolean }>(opts: {
     setReportSecrets(opts.kind, value ? opts.secrets(value) : null);
   };
 
+  const parseRaw = (raw: string | null): T | null => {
+    if (raw == null) return null;
+    try {
+      return opts.parse(JSON.parse(raw));
+    } catch {
+      return null;
+    }
+  };
+
   const read = async () => {
     const started = generation;
     // A throw propagates: an error is never "no item", which would send requests to Mera.
     const raw = await secureStore.getItemAsync(opts.key);
     if (started !== generation) return;
-    let value: T | null = null;
-    if (raw != null) {
-      try {
-        value = opts.parse(JSON.parse(raw));
-      } catch {
-        value = null;
-      }
-    }
-    apply(value, true);
+    apply(parseRaw(raw), true);
   };
 
   return {
@@ -47,6 +48,24 @@ export function createServiceState<T extends { on: boolean }>(opts: {
         });
       }
       return loading;
+    },
+    /**
+     * Reads the item synchronously when it is not in memory yet, for a caller that must decide now.
+     * True once the state is known. A keychain that throws (locked) leaves it unknown: never "no item".
+     */
+    hydrateSync(): boolean {
+      if (useStore.getState().hydrated) return true;
+      let raw: string | null;
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const SecureStore = require('expo-secure-store') as typeof import('expo-secure-store');
+        raw = SecureStore.getItem(opts.key, { keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY });
+      } catch {
+        return false;
+      }
+      generation += 1;
+      apply(parseRaw(raw), true);
+      return true;
     },
     get: () => useStore.getState().value,
     isHydrated: () => useStore.getState().hydrated,

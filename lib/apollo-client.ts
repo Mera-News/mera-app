@@ -38,7 +38,7 @@ import { clientHeaderValue } from './observability/client-header';
 import { toastManager } from './toast-manager';
 import { GRAPHQL_SERVER_ENDPOINT } from '@/lib/config/endpoints';
 import { clearLatch, latchUnsupported, useOwnNewsHealth } from '@/lib/own-services/news-latch';
-import { MERA_ONLY_OPERATIONS, NEWS_OPERATIONS } from '@/lib/own-services/news-operations';
+import { isNewsOperation, MERA_ONLY_OPERATIONS } from '@/lib/own-services/news-operations';
 import { ownNewsRoute, ownNewsState } from '@/lib/own-services/own-news-state';
 
 // Cache TTL in milliseconds (10 minutes)
@@ -694,7 +694,7 @@ const ownChain = ownErrorLink.concat(ownRetryLink.concat(cacheEvictionLink.conca
 const ownNewsSplit = new ApolloLink((operation, forward) => {
     const name = operation.operationName ?? '';
     const meraOnly = MERA_ONLY_OPERATIONS.has(name);
-    if (!meraOnly && !NEWS_OPERATIONS.has(name)) return meraChain.request(operation, forward);
+    if (!meraOnly && !isNewsOperation(name)) return meraChain.request(operation, forward);
     return new Observable<ApolloLink.Result>((observer) => {
         let inner: { unsubscribe(): void } | undefined;
         let closed = false;

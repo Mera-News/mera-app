@@ -90,38 +90,6 @@ describe('getArticlesForCountry', () => {
     });
 });
 
-describe('getNewsClusters', () => {
-
-    it('rethrows with a breadcrumb and no capture of its own', async () => {
-        const logs = spyLogger();
-        server.use(mockGqlError('GetNewsClusters', 'INTERNAL_SERVER_ERROR', { message: 'clusters error' }));
-        await expect(ArticleService.getNewsClusters()).rejects.toThrow('clusters error');
-        expectNoServiceCapture(logs.capture);
-        expect(logs.crumb).toHaveBeenCalledWith(
-            expect.stringContaining('getNewsClusters failed'),
-            'article-service',
-            expect.objectContaining({ method: 'getNewsClusters' }),
-            'warning',
-        );
-    });
-});
-
-describe('getNewsClustersForTopicText', () => {
-
-    it('rethrows with a breadcrumb and no capture of its own', async () => {
-        const logs = spyLogger();
-        server.use(mockGqlError('GetNewsClustersForTopicText', 'INTERNAL_SERVER_ERROR', { message: 'topic text error' }));
-        await expect(ArticleService.getNewsClustersForTopicText('bad topic')).rejects.toThrow('topic text error');
-        expectNoServiceCapture(logs.capture);
-        expect(logs.crumb).toHaveBeenCalledWith(
-            expect.stringContaining('getNewsClustersForTopicText failed'),
-            'article-service',
-            expect.objectContaining({ method: 'getNewsClustersForTopicText' }),
-            'warning',
-        );
-    });
-});
-
 describe('getNewsClusterForArticle', () => {
 
     it('rethrows with a breadcrumb and no capture of its own', async () => {

@@ -19,8 +19,7 @@ const pending = async (): Promise<LlmTransport> => {
   return ownAiOn() ? ownTransport() : gatewayTransport;
 };
 
-// While this is in place usesGateway() reads false, so a prewarm or web search in the first moments after
-// a cold start is skipped; hydration finishes before db-ready, so no scheduled task sees it.
+// In place only while the keychain cannot be read: usesGateway() then reads false and nothing goes out.
 const failClosed: LlmTransport = {
   asyncJobs: false,
   complete: async (request, options) => (await pending()).complete(request, options),
@@ -31,6 +30,8 @@ const failClosed: LlmTransport = {
 };
 
 export function currentTransport(): LlmTransport | undefined {
-  if (!ownAiState.isHydrated()) return failClosed;
+  // Read the mode now if it is not in memory, so the gateway's tools and jobs are offered from the
+  // first call. Only a keychain that cannot be read leaves the fail-closed transport in place.
+  if (!ownAiState.hydrateSync()) return failClosed;
   return ownAiOn() ? ownTransport() : undefined;
 }

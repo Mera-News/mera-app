@@ -1,73 +1,34 @@
-// Becomes a re-export once the client exports its news list (the pod's passthrough uses the same list).
+// Where each GraphQL operation may go. The client owns the lists (its pod passes news through with
+// the same ones); only the account documents that live in the app are named here.
+import {
+    ACCOUNT_OPERATION_NAMES,
+    HOST_NEWS_OPERATION_NAMES,
+    isNewsOperation,
+    MERA_SERVICE_OPERATION_NAMES,
+    NEWS_OPERATION_NAMES,
+} from '@/lib/graphql/news-operations';
 
-/** Operations that stay on Mera whatever the news mode is: accounts, billing, push, feedback. */
-export const ACCOUNT_OPERATIONS: ReadonlySet<string> = new Set([
-    'AdvanceOnboardingStage',
-    'DeleteExpoPushToken',
-    'UpdateExpoPushToken',
-    'IssueLlmWarning',
-    'RequestUnblock',
-    'UnblockRequestStatus',
-    'SubmitFeedbackResponse',
-    'ActiveFeedbackRequests',
-    'FeedbackTree',
-    'UpdateNotificationWindow',
-    'UpdateNotificationsEnabled',
-    'UpdateProcessingMode',
-    'UpdateUserConfig',
+export { isNewsOperation };
+
+/** Account documents in the app itself (billing, plans, support, consent): always Mera. */
+const APP_ACCOUNT_OPERATION_NAMES = [
     'AppVersionInfo',
     'GetIntercomIdentity',
     'GetPlanPromo',
-    'GetReadingPlans',
     'GetUserBilling',
     'GetUserBillingLapseState',
-    'GetUserPersona',
     'GetUserReading',
     'LegalConsentAppConfig',
-]);
+];
+
+/** Operations that stay on Mera whatever the news mode is: accounts, billing, push, feedback. */
+export const ACCOUNT_OPERATIONS: ReadonlySet<string> = new Set([...ACCOUNT_OPERATION_NAMES, ...APP_ACCOUNT_OPERATION_NAMES]);
 
 /** Only Mera serves these, and they refer to articles Mera's server may not have: while own news is on they go nowhere. */
-export const MERA_ONLY_OPERATIONS: ReadonlySet<string> = new Set([
-    'GetFactCheck',
-    'GetFactCheckLegacy',
-    'GetCachedFactCheck',
-    'GetCachedFactCheckLegacy',
-    'RequestFactCheckAgain',
-]);
+export const MERA_ONLY_OPERATIONS: ReadonlySet<string> = new Set(MERA_SERVICE_OPERATION_NAMES);
 
 /** Operations that go to the person's own news server while that mode is on. */
-export const NEWS_OPERATIONS: ReadonlySet<string> = new Set([
-    'AllCountries',
-    'ClusterMembershipsForArticles',
-    'GetArticleById',
-    'GetArticleIdsForPersona',
-    'GetArticleIdsForTopics',
-    'GetArticlesForCountry',
-    'GetArticlesForPublisher',
-    'GetArticlesForPublisherNoOrder',
-    'GetArticlesForStories',
-    'GetArticlesForStoriesLegacy',
-    'GetArticlesForTopicsByIds',
-    'GetArticlesForTopicsByIdsLegacy',
-    'GetCanonicalTopics',
-    'GetNewsClusterForArticle',
-    'GetNewsClusters',
-    'GetNewsClustersForTopicText',
-    'GetNewsPublishers',
-    'GetRecentArticleCount',
-    'GetRelatedArticlesPage',
-    'GetRelatedArticlesPageFiltered',
-    'GetRelatedArticlesPageLegacy',
-    'GetTopHeadlinesForCountry',
-    'GetTopHeadlinesForCountryWindowed',
-    'GetWorldHeadlines',
-    'PlaceSearch',
-    'PublicationDisplayNames',
-    'PublicationProfile',
-    'PublicationSourcesForNewsPublisher',
-    'SearchNews',
-    'SearchPublishers',
-]);
+export const NEWS_OPERATIONS: ReadonlySet<string> = new Set([...NEWS_OPERATION_NAMES, ...HOST_NEWS_OPERATION_NAMES]);
 
 export type FeatureKey =
     | 'search'
