@@ -5,18 +5,11 @@ import { forgetPairing, podConfig, podHost, podPaired, podState, savePairing, ty
 import { reportSecrets, setReportSecrets } from '@/lib/own-services/report-secrets';
 import { wipeAllLocalUserData } from '@/lib/security/local-wipe';
 import { secureStore } from '@/lib/utils/secure-store-adapter';
-import { failSecureStore, secureStoreDump } from '@/test/helpers';
+import { failSecureStore, fakePod, podPairing, secureStoreDump } from '@/test/helpers';
 
 const TOKEN = 'pod-token-abcdef123456';
-const pairing = (over: Partial<PodPairing> = {}): PodPairing => ({
-  v: 1,
-  baseUrl: 'https://Pod.Own.Test/',
-  deviceId: 'device-1',
-  token: TOKEN,
-  podName: 'Home pod',
-  pairedAt: 1_700_000_000_000,
-  ...over,
-});
+const pairing = (over: Partial<PodPairing> = {}): PodPairing =>
+  podPairing({ baseUrl: 'https://Pod.Own.Test/', token: TOKEN, pairedAt: 1_700_000_000_000, ...over });
 
 beforeEach(() => podState.resetMemory());
 afterEach(() => setReportSecrets('pod', null));
@@ -42,13 +35,26 @@ describe('pairing item', () => {
     expect(podConfig()).toEqual(pairing({ baseUrl: 'https://pod.own.test' }));
   });
 
-  it('the mode is the presence of the item, nothing inside it', async () => {
-    await secureStore.setItemAsync(POD_PAIRING_KEY, JSON.stringify({ ...pairing(), on: false }));
-    await podState.hydrate();
+  it('only an active item pairs the phone; a pending one has no host and no config', async () => {
+    await savePairing(pairing({ state: 'pending', pendingAt: 5 }));
+    expect(podState.get()?.state).toBe('pending');
+    expect(podPaired()).toBe(false);
+    expect(podHost()).toBeNull();
+    expect(podConfig()).toBeNull();
+    await savePairing(pairing());
     expect(podPaired()).toBe(true);
     await forgetPairing();
     expect(podPaired()).toBe(false);
     expect(secureStoreDump()[POD_PAIRING_KEY]).toBeUndefined();
+  });
+
+  it('an item stored without a confirmation or a state reads as not paired, and cannot be saved', async () => {
+    const { confirmed: _c, state: _s, ...old } = pairing();
+    await secureStore.setItemAsync(POD_PAIRING_KEY, JSON.stringify(old));
+    await podState.hydrate();
+    expect(podState.get()).toBeNull();
+    expect(podPaired()).toBe(false);
+    await expect(savePairing({ ...pairing(), confirmed: undefined as never })).rejects.toMatchObject({ code: 'not-confirmed' });
   });
 
   it.each([
@@ -80,9 +86,11 @@ describe('pairing item', () => {
     expect(reportSecrets()).toEqual({ hosts: [], secrets: [] });
   });
 
-  it('a local wipe removes the item, and no backup lists it', async () => {
+  it('a local wipe tells the server, removes the item, and no backup lists it', async () => {
+    const pod = fakePod({ token: TOKEN });
     await savePairing(pairing());
     await wipeAllLocalUserData();
+    expect(pod.revoked.has(TOKEN)).toBe(true);
     expect(secureStoreDump()[POD_PAIRING_KEY]).toBeUndefined();
     for (const name of [...BACKUP_SETTING_KEYS, ...BACKUP_TABLES]) expect(name).not.toMatch(/pod_/);
   });

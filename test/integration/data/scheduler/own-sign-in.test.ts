@@ -32,8 +32,11 @@ const news = (on: boolean) =>
     v: 1, baseUrl: 'https://news.own.test', key: 'news-key-12345678',
     on, checkedAt: 1, status: 'connected', fields: null, confirmed: CONFIRMED,
   });
-const pair = () =>
-  podState.save({ v: 1, baseUrl: 'https://pod.own.test', deviceId: 'd1', token: 'pod-token-12345678', podName: 'pod', pairedAt: 1 });
+const pair = (state: 'pending' | 'active' = 'active') =>
+  podState.save({
+    v: 1, baseUrl: 'https://pod.own.test', deviceId: 'd1', token: 'pod-token-12345678', podName: 'pod', pairedAt: 1,
+    confirmed: CONFIRMED, state, pendingAt: state === 'pending' ? 1 : undefined,
+  });
 
 beforeEach(async () => {
   freezeClock(T0);
@@ -153,6 +156,13 @@ describe('scheduler', () => {
     await pair();
     expect(await tick('feed-sync')).toBe(1);
     expect(authPaths).toEqual([]);
+  });
+
+  it('does not start feed sync for a pending pairing, signed out', async () => {
+    await pair('pending');
+    expect(taskNeedsMeraSignIn('feed-sync')).toBe(true);
+    expect(await tick('feed-sync')).toBe(0);
+    expect(authPaths.length).toBeGreaterThan(0);
   });
 
   it('keeps the check on the feedback sync with both own services on', async () => {

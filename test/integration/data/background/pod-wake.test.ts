@@ -13,7 +13,7 @@ import { runBackgroundRefresh } from '@/lib/background/background-task';
 import { forgetPairing, podState, savePairing } from '@/lib/own-services/pod-state';
 import { resetPodHealth } from '@/lib/own-services/pod-health';
 import { NEWS_OPERATIONS } from '@/lib/own-services/news-operations';
-import { advanceUntilDone, fakePod, gatewayCalls, POD_URL, server } from '@/test/helpers';
+import { advanceUntilDone, fakePod, gatewayCalls, podPairing, POD_URL, server } from '@/test/helpers';
 import { drive, ids, resetCycleWorld, submitJobs, watchResultsGets, gatewayPolls } from '@/test/integration/chat/jobs/support';
 
 import { resetNativeTasks } from './native-fakes';
@@ -22,7 +22,7 @@ import { rowsById, serveFresh, wakeCleanup, wakeWorld } from './support';
 jest.setTimeout(60_000);
 
 const TOKEN = 'pod-token-abcdef123456';
-const pair = () => savePairing({ v: 1, baseUrl: POD_URL, deviceId: 'device-1', token: TOKEN, podName: 'Home pod', pairedAt: 1 });
+const pair = () => savePairing(podPairing({ token: TOKEN }));
 
 /** Every news or gateway-bound GraphQL operation sent to a host other than the server. */
 function watchMeraNews() {

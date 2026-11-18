@@ -42,6 +42,7 @@ import {
   fakePod,
   gatewayCalls,
   initI18nEn,
+  podPairing,
   podSnapshotFrom,
   POD_URL,
   server,
@@ -57,7 +58,7 @@ jest.setTimeout(60_000);
 const TOKEN = 'pod-token-abcdef123456';
 const HASHES_KEY = 'pod_sync_hashes';
 const LOCAL = { schemaVersion: appSchema.version, registry: COMMAND_REGISTRY_VERSION };
-const PAIRING = { v: 1 as const, baseUrl: POD_URL, deviceId: 'device-1', token: TOKEN, podName: 'Home pod', pairedAt: 1 };
+const PAIRING = podPairing({ token: TOKEN });
 const COPY = {
   unreachable: "Can't reach your server. Nothing was changed.",
   failed: "Your server couldn't save this. Try again.",

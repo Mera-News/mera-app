@@ -1,10 +1,22 @@
 import { parseServiceAddress } from './address';
-import { OwnServiceError } from './gate';
+import { OwnServiceError, parseConfirmation, type Confirmation } from './gate';
 import { POD_PAIRING_KEY } from './keys';
 import { createServiceState } from './service-state';
 
 // The token is the only credential; the server keeps only its hash.
-export type PodPairing = { v: 1; baseUrl: string; deviceId: string; token: string; podName: string; pairedAt: number };
+// A pending item exists between the server accepting the phone and the erase landing: it routes nothing.
+export type PodPairing = {
+  v: 1;
+  baseUrl: string;
+  deviceId: string;
+  token: string;
+  podName: string;
+  pairedAt: number;
+  confirmed: Confirmation;
+  state: 'pending' | 'active';
+  /** When a pending item was stored, to tell whether the erase marker is from this pairing. */
+  pendingAt?: number;
+};
 
 export const podState = createServiceState<PodPairing>({
   key: POD_PAIRING_KEY,
@@ -14,6 +26,8 @@ export const podState = createServiceState<PodPairing>({
     if (!r || r.v !== 1 || typeof r.baseUrl !== 'string' || typeof r.token !== 'string' || !r.token) return null;
     const addr = parseServiceAddress(r.baseUrl);
     if (!addr.ok) return null;
+    const confirmed = parseConfirmation(r.confirmed);
+    if (!confirmed || (r.state !== 'pending' && r.state !== 'active')) return null;
     return {
       v: 1,
       baseUrl: addr.url,
@@ -21,6 +35,9 @@ export const podState = createServiceState<PodPairing>({
       token: r.token,
       podName: String(r.podName ?? ''),
       pairedAt: typeof r.pairedAt === 'number' ? r.pairedAt : 0,
+      confirmed,
+      state: r.state,
+      ...(typeof r.pendingAt === 'number' ? { pendingAt: r.pendingAt } : {}),
     };
   },
   secrets(v) {
@@ -29,18 +46,21 @@ export const podState = createServiceState<PodPairing>({
   },
 });
 
-// The mode is the presence of the item: nothing inside it turns it on or off.
-export const podPaired = (): boolean => podState.isHydrated() && podState.get() !== null;
+// The mode is an active item: a pending one has not been erased into yet and routes nothing.
+export const podPaired = (): boolean => podState.isHydrated() && podState.get()?.state === 'active';
+
+const active = (): PodPairing | null => (podPaired() ? podState.get() : null);
 
 export function podHost(): string | null {
-  const v = podState.get();
+  const v = active();
   const addr = v ? parseServiceAddress(v.baseUrl) : null;
   return addr?.ok ? addr.host : null;
 }
 
-export const podConfig = (): PodPairing | null => podState.get();
+export const podConfig = (): PodPairing | null => active();
 
 export async function savePairing(p: PodPairing): Promise<void> {
+  if (!parseConfirmation(p.confirmed)) throw new OwnServiceError('not-confirmed');
   const addr = parseServiceAddress(p.baseUrl);
   if (!addr.ok) throw new OwnServiceError('address', addr.reason);
   await podState.save({ ...p, baseUrl: addr.url });

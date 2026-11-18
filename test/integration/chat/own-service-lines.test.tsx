@@ -13,7 +13,7 @@ import { ownNewsState, recordOwnNewsCheck, saveOwnNewsFields, setOwnNewsOn } fro
 import { PodError } from '@/lib/own-services/pod-client';
 import { recordPodError, recordPodOk, resetPodHealth } from '@/lib/own-services/pod-health';
 import { forgetPairing, podState, savePairing, type PodPairing } from '@/lib/own-services/pod-state';
-import { http, HttpResponse, initI18nEn, POD_URL, server } from '@/test/helpers';
+import { http, HttpResponse, initI18nEn, podPairing, POD_URL, server } from '@/test/helpers';
 import { fakeClock, resetTransport, run } from '@/test/integration/chat/transport/transport-kit';
 import '@/lib/apollo-client';
 
@@ -23,7 +23,7 @@ const AI_LINE = "Your AI service isn't answering. Check it in Mera Protocol.";
 const NEWS_LINE = "Your news server isn't answering.";
 const POD_LINE = "Can't reach your server.";
 const AI_URL = 'https://ai.own.test/v1/chat/completions';
-const pairing: PodPairing = { v: 1, baseUrl: POD_URL, deviceId: 'device-1', token: 'pod-token-abcdef123456', podName: 'Home pod', pairedAt: 1 };
+const pairing: PodPairing = podPairing();
 
 const Thread = ({ blockedMessage = null, onRetry }: { blockedMessage?: string | null; onRetry?: () => void } = {}) => (
   <ChatThread

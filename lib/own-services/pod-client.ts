@@ -6,7 +6,7 @@ import type { PodPairing } from './pod-state';
 
 export type PodErrorCode =
   | 'unreachable' | 'refused' | 'version' | 'wrong_code' | 'pairing_closed' | 'too_many_tries'
-  | 'not_only_device' | 'failed' | 'phone-old' | 'server-old';
+  | 'already_paired' | 'failed' | 'phone-old' | 'server-old';
 
 // Messages are fixed text: a token, a code or an address must never end up in one.
 export class PodError extends Error {
@@ -18,12 +18,12 @@ export class PodError extends Error {
 }
 
 export type PodStatus = { reading: 'on' | 'paused'; podName: string } & SyncPeer;
-export type PairAnswer = { deviceId: string; token: string; podName: string; hasProfile: boolean; firstDevice: boolean };
+export type PairAnswer = { deviceId: string; token: string; podName: string };
 type Target = Pick<PodPairing, 'baseUrl' | 'token'>;
 
 const SHORT_MS = 15_000;
 const LONG_MS = 30_000;
-const KNOWN = new Set<string>(['wrong_code', 'pairing_closed', 'too_many_tries', 'not_only_device']);
+const KNOWN = new Set<string>(['wrong_code', 'pairing_closed', 'too_many_tries']);
 
 /** A plain fetch to the paired host only: no cookie, no redirect, no header but the content type and the token. */
 async function call<T>(target: Target | string, method: 'GET' | 'POST', path: string, body: unknown, ms: number, auth = true): Promise<T> {
@@ -50,7 +50,10 @@ async function call<T>(target: Target | string, method: 'GET' | 'POST', path: st
     }
     if (res.status === 0 || res.type === 'opaqueredirect' || (res.status >= 300 && res.status < 400)) throw new PodError('unreachable');
     if (res.status === 401) throw new PodError('refused');
-    if (res.status === 409) throw new PodError('version');
+    if (res.status === 409) {
+      const code = ((await res.json().catch(() => null)) as { error?: unknown } | null)?.error;
+      throw new PodError(code === 'already_paired' ? 'already_paired' : 'version');
+    }
     if (!res.ok) {
       const code = ((await res.json().catch(() => null)) as { error?: unknown } | null)?.error;
       throw new PodError(typeof code === 'string' && KNOWN.has(code) && (res.status === 403 || res.status === 429) ? (code as PodErrorCode) : 'failed');
@@ -72,10 +75,6 @@ export const pull = (cfg: Target, request: SyncRequest): Promise<Snapshot> => ca
 
 export const send = (cfg: Target, commands: SyncCommand[], request: SyncRequest): Promise<{ results: CommandResult[]; snapshot?: Snapshot }> =>
   call(cfg, 'POST', '/commands', { ...request, commands }, LONG_MS);
-
-export async function replaceProfile(cfg: Target, body: SyncPeer & { tables: unknown }): Promise<void> {
-  await call(cfg, 'POST', '/profile/replace', body, LONG_MS);
-}
 
 export const status = (cfg: Target): Promise<PodStatus> => call(cfg, 'GET', '/status', undefined, SHORT_MS);
 

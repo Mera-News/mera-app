@@ -3,18 +3,32 @@ import { HttpResponse, http } from 'msw';
 import appSchema from '@/lib/database/schema';
 import { COMMAND_REGISTRY_VERSION } from '@/lib/sync/command';
 import { buildSnapshot, type Snapshot } from '@/lib/sync/snapshot';
+import type { PodPairing } from '@/lib/own-services/pod-state';
 import { resetDatabase } from './db';
 import { server } from './msw';
 
 export const POD_URL = 'https://pod.own.test';
 
+/** An active, confirmed pairing with the fake pod, as the phone stores it once the erase has landed. */
+export const podPairing = (over: Partial<PodPairing> = {}): PodPairing => ({
+  v: 1,
+  baseUrl: POD_URL,
+  deviceId: 'device-1',
+  token: 'pod-token-abcdef123456',
+  podName: 'Home pod',
+  pairedAt: 1,
+  confirmed: { at: 1, privacyVersion: null },
+  state: 'active',
+  ...over,
+});
+
 export type FakePodRequest = { path: string; headers: Record<string, string>; body: any };
-type PairingSetup = { code: string; hasProfile: boolean; firstDevice: boolean; closed?: boolean };
+type PairingSetup = { code: string; closed?: boolean; alreadyPaired?: boolean };
 type CommandAnswer = { ok: unknown } | { error: { code: string; message: string } };
 
 export function fakePod(options: { pairing?: Partial<PairingSetup>; token?: string } = {}) {
   const pod = {
-    pairing: { code: 'K7Q2M9XD', hasProfile: false, firstDevice: true, closed: false, ...options.pairing } as PairingSetup,
+    pairing: { code: 'K7Q2M9XD', closed: false, alreadyPaired: false, ...options.pairing } as PairingSetup,
     versions: { schemaVersion: appSchema.version as number, registry: COMMAND_REGISTRY_VERSION as number },
     snapshot: { schemaVersion: appSchema.version, registry: COMMAND_REGISTRY_VERSION, tables: {} } as Snapshot,
     onCommand: ((_name: string, _args: unknown[]): CommandAnswer => ({ ok: null })) as (name: string, args: unknown[]) => CommandAnswer,
@@ -22,7 +36,6 @@ export function fakePod(options: { pairing?: Partial<PairingSetup>; token?: stri
     tokens: new Set<string>(options.token ? [options.token] : []),
     revoked: new Set<string>(),
     reading: 'on' as 'on' | 'paused',
-    onlyDevice: true,
     chatReply: 'Hello from the pod.',
     /** Data per GraphQL operation name. */
     graphql: {} as Record<string, unknown>,
@@ -82,21 +95,18 @@ export function fakePod(options: { pairing?: Partial<PairingSetup>; token?: stri
       if (pod.pairing.closed || used) return json({ error: 'pairing_closed' }, 403);
       if (tries.filter((t) => now - t < 60_000).length >= 6) return json({ error: 'too_many_tries' }, 429);
       if (b?.code !== pod.pairing.code) return json({ error: 'wrong_code' }, 403);
+      // Only a caller that holds a valid code learns the server is taken.
+      if (pod.pairing.alreadyPaired) return json({ error: 'already_paired' }, 409);
       used = true;
       const token = `pod-token-${(issued += 1)}-0123456789`;
       pod.tokens.add(token);
-      return json({ deviceId: `device-${issued}`, token, podName: 'Home pod', hasProfile: pod.pairing.hasProfile, firstDevice: pod.pairing.firstDevice });
+      return json({ deviceId: `device-${issued}`, token, podName: 'Home pod' });
     }),
     route('post', '/snapshot', true, (b) => (differs(b) ? mismatch() : json(answerFor(b.hashes)))),
     route('post', '/commands', true, (b) => {
       if (differs(b)) return mismatch();
       const results = (b.commands as { name: string; args: unknown[] }[]).map((c) => pod.onCommand(c.name, c.args));
       return json({ results, snapshot: answerFor(b.hashes) });
-    }),
-    route('post', '/profile/replace', true, (b) => {
-      if (differs(b)) return mismatch();
-      if (!pod.onlyDevice) return json({ error: 'not_only_device' }, 403);
-      return json({});
     }),
     route('get', '/status', true, () => json(status())),
     route('post', '/reading', true, (b) => {

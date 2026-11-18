@@ -4,7 +4,7 @@ import { holdFeedSyncForMode } from '@/lib/own-services/mode-hold';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { enterPodMode, leavePodMode } from '@/lib/own-services/pod-runner';
 import { forgetPairing, podState, savePairing } from '@/lib/own-services/pod-state';
-import { fakePod, http, HttpResponse, POD_URL, server, setAppState, signInFixtureAccount } from '@/test/helpers';
+import { fakePod, http, HttpResponse, podPairing, POD_URL, server, setAppState, signInFixtureAccount } from '@/test/helpers';
 
 const tick = () => new Promise<void>((r) => setImmediate(r));
 const paused = () => AppScheduler.isPaused('feed-sync');
@@ -53,7 +53,7 @@ describe('while paired', () => {
   beforeEach(async () => {
     podState.resetMemory();
     pod = fakePod({ token: TOKEN });
-    await savePairing({ v: 1, baseUrl: POD_URL, deviceId: 'd1', token: TOKEN, podName: 'Home pod', pairedAt: 1 });
+    await savePairing(podPairing({ deviceId: 'd1', token: TOKEN }));
     await enterPodMode();
   });
   afterEach(async () => {

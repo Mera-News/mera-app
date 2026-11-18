@@ -18,7 +18,7 @@ import { ownNewsState, recordOwnNewsCheck, saveOwnNewsFields, setOwnNewsOn } fro
 import { PodError } from '@/lib/own-services/pod-client';
 import { recordPodError, recordPodOk, resetPodHealth } from '@/lib/own-services/pod-health';
 import { forgetPairing, podState, savePairing, type PodPairing } from '@/lib/own-services/pod-state';
-import { fakePod, http, HttpResponse, initI18nEn, POD_URL, server } from '@/test/helpers';
+import { fakePod, http, HttpResponse, initI18nEn, podPairing, POD_URL, server } from '@/test/helpers';
 import { fakeClock, resetTransport, run } from '@/test/integration/chat/transport/transport-kit';
 import { resetLinkState } from '@/test/integration/data/apollo/link-chain/kit';
 
@@ -51,7 +51,7 @@ const AI_URL = 'https://ai.own.test/v1/chat/completions';
 const AI_KEY = 'own-ai-key-12345678';
 const NEWS_KEY = 'own-news-key-12345678';
 const TOKEN = 'pod-token-abcdef123456';
-const pairing: PodPairing = { v: 1, baseUrl: POD_URL, deviceId: 'device-1', token: TOKEN, podName: 'Home pod', pairedAt: 1 };
+const pairing: PodPairing = podPairing({ token: TOKEN });
 const REPLY = { choices: [{ message: { content: 'own reply' } }] };
 const NEWS = gql`
   query GetArticleIdsForPersona($query: PersonaQueryInput!) {

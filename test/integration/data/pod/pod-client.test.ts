@@ -1,12 +1,15 @@
 import appSchema from '@/lib/database/schema';
 import { COMMAND_REGISTRY_VERSION } from '@/lib/sync/command';
-import { PodError, pairWithCode, pull, replaceProfile, resolveVersion, revoke, send, setReading, status } from '@/lib/own-services/pod-client';
+import { PodError, pairWithCode, pull, resolveVersion, revoke, send, setReading, status } from '@/lib/own-services/pod-client';
 import { recordPodError, recordPodOk, resetPodHealth, usePodHealth } from '@/lib/own-services/pod-health';
 import type { PodPairing } from '@/lib/own-services/pod-state';
 import { advanceUntilDone, delay, fakePod, http, HttpResponse, POD_URL, server, useFakeClock } from '@/test/helpers';
 
 const TOKEN = 'pod-token-abcdef123456';
-const cfg: PodPairing = { v: 1, baseUrl: POD_URL, deviceId: 'device-1', token: TOKEN, podName: 'Home pod', pairedAt: 1 };
+const cfg: PodPairing = {
+  v: 1, baseUrl: POD_URL, deviceId: 'device-1', token: TOKEN, podName: 'Home pod', pairedAt: 1,
+  confirmed: { at: 1, privacyVersion: null }, state: 'active',
+};
 const local = { schemaVersion: appSchema.version, registry: COMMAND_REGISTRY_VERSION };
 const request = { ...local, hashes: {} as Record<string, string> };
 const table = (hash: string) => ({ hash, mode: 'replace' as const, rows: [{ id: 'r1' }] });
@@ -32,9 +35,10 @@ afterEach(() => {
 
 describe('pairing', () => {
   it('trims and upper-cases the code, sends only the code and the device name, and no Authorization', async () => {
-    const pod = fakePod({ pairing: { hasProfile: true, firstDevice: false } });
+    const pod = fakePod();
     const answer = await pairWithCode(POD_URL, ' k7q2m9xd ', 'My phone');
-    expect(answer).toMatchObject({ podName: 'Home pod', hasProfile: true, firstDevice: false });
+    expect(Object.keys(answer).sort()).toEqual(['deviceId', 'podName', 'token']);
+    expect(answer.podName).toBe('Home pod');
     expect(pod.tokens.has(answer.token)).toBe(true);
     expect(pod.requests).toHaveLength(1);
     expect(pod.requests[0].body).toEqual({ code: 'K7Q2M9XD', deviceName: 'My phone' });
@@ -52,6 +56,21 @@ describe('pairing', () => {
     fakePod();
     await pairWithCode(POD_URL, 'K7Q2M9XD', 'p');
     expect((await fail(pairWithCode(POD_URL, 'K7Q2M9XD', 'p'))).code).toBe('pairing_closed');
+  });
+
+  it('a taken server is already_paired, read from the body, and only after a valid code', async () => {
+    const pod = fakePod({ pairing: { alreadyPaired: true } });
+    expect((await fail(pairWithCode(POD_URL, 'NOPE0000', 'p'))).code).toBe('wrong_code');
+    expect((await fail(pairWithCode(POD_URL, 'K7Q2M9XD', 'p'))).code).toBe('already_paired');
+    expect(pod.tokens.size).toBe(0);
+  });
+
+  it('any other 409 on pairing is version', async () => {
+    const pod = fakePod();
+    pod.answer('/pair', 409, { error: 'version_mismatch' });
+    expect((await fail(pairWithCode(POD_URL, 'K7Q2M9XD', 'p'))).code).toBe('version');
+    pod.answer('/pair', 409);
+    expect((await fail(pairWithCode(POD_URL, 'K7Q2M9XD', 'p'))).code).toBe('version');
   });
 
   it('the sixth try in a minute is too_many_tries', async () => {
@@ -142,9 +161,8 @@ describe('what a request carries', () => {
     await send(cfg, [], request);
     await status(cfg);
     await setReading(cfg, false);
-    await replaceProfile(cfg, { ...local, tables: {} });
     await revoke(cfg);
-    expect(pod.requests.map((r) => r.path)).toEqual(['/snapshot', '/commands', '/status', '/reading', '/profile/replace', '/devices/revoke']);
+    expect(pod.requests.map((r) => r.path)).toEqual(['/snapshot', '/commands', '/status', '/reading', '/devices/revoke']);
     for (const r of pod.requests) {
       expect(r.headers.authorization).toBe(`Bearer ${TOKEN}`);
       expect(r.headers['content-type']).toMatch(/application\/json/);
@@ -179,23 +197,13 @@ describe('snapshots and commands', () => {
   });
 });
 
-describe('status, reading, profile and revoke', () => {
+describe('status, reading and revoke', () => {
   it('setReading pauses the pod and the next status agrees', async () => {
     fakePod({ token: TOKEN });
     expect((await status(cfg)).reading).toBe('on');
     expect((await setReading(cfg, true)).reading).toBe('paused');
     expect((await status(cfg)).reading).toBe('paused');
     expect((await setReading(cfg, false)).reading).toBe('on');
-  });
-
-  it('replaceProfile throws version for a different schema and not_only_device when other devices exist', async () => {
-    const pod = fakePod({ token: TOKEN });
-    await expect(replaceProfile(cfg, { ...local, tables: {} })).resolves.toBeUndefined();
-    pod.versions.schemaVersion += 1;
-    expect((await fail(replaceProfile(cfg, { ...local, tables: {} }))).code).toBe('version');
-    pod.versions.schemaVersion -= 1;
-    pod.onlyDevice = false;
-    expect((await fail(replaceProfile(cfg, { ...local, tables: {} }))).code).toBe('not_only_device');
   });
 
   it('revoke removes the device, so its token is refused afterwards', async () => {

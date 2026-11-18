@@ -135,6 +135,14 @@ export async function hasLocalUserData(): Promise<boolean> {
 export async function wipeAllLocalUserData(
   opts: { keepSession?: boolean } = {},
 ): Promise<void> {
+  // Before the keychain loop deletes the token. Best effort: the wipe goes on if the server is away.
+  try {
+    const { revokeStoredPairing } = require('@/lib/own-services/pod-pairing');
+    await revokeStoredPairing();
+  } catch {
+    // Never block the wipe on the server.
+  }
+
   for (const key of SECURE_STORE_KEYS) {
     if (opts.keepSession && SESSION_KEYS.has(key)) continue;
     try {

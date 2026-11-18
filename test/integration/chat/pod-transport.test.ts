@@ -3,11 +3,11 @@ import { cloudChatStream, transportServesJobs } from '@/lib/llm/cloudComplete';
 import { POD_PAIRING_KEY } from '@/lib/own-services/keys';
 import { ownAiState, type OwnAiConfig } from '@/lib/own-services/own-ai-state';
 import { forgetPairing, podState, savePairing, type PodPairing } from '@/lib/own-services/pod-state';
-import { attestationRequests, failSecureStore, fakePod, gatewayCalls, healSecureStore, http, HttpResponse, POD_URL, server, signInFixtureAccount } from '@/test/helpers';
+import { attestationRequests, failSecureStore, fakePod, gatewayCalls, healSecureStore, http, HttpResponse, podPairing, POD_URL, server, signInFixtureAccount } from '@/test/helpers';
 import { fakeClock, resetTransport, run } from '@/test/integration/chat/transport/transport-kit';
 
 const TOKEN = 'pod-token-abcdef123456';
-const pairing: PodPairing = { v: 1, baseUrl: POD_URL, deviceId: 'device-1', token: TOKEN, podName: 'Home pod', pairedAt: 1 };
+const pairing: PodPairing = podPairing({ token: TOKEN });
 const ownAi: OwnAiConfig = { v: 1, baseUrl: 'https://ai.own.test/v1', model: 'own-model', key: 'own-ai-key-12345678', on: true, checkedAt: 1, status: 'connected', confirmed: { at: 1, privacyVersion: null } };
 const REQUEST = { messages: [{ role: 'user' as const, content: 'hi' }], route: 'topics' as const, enableThinking: false };
 

@@ -7,7 +7,7 @@ import { clearLatch, useOwnNewsHealth } from '@/lib/own-services/news-latch';
 import { ownNewsState, recordOwnNewsCheck, saveOwnNewsFields, setOwnNewsOn } from '@/lib/own-services/own-news-state';
 import { resetPodHealth, usePodHealth } from '@/lib/own-services/pod-health';
 import { forgetPairing, podState, savePairing, type PodPairing } from '@/lib/own-services/pod-state';
-import { fakePod, http, HttpResponse, POD_URL, server, signInFixtureAccount } from '@/test/helpers';
+import { fakePod, http, HttpResponse, podPairing, POD_URL, server, signInFixtureAccount } from '@/test/helpers';
 import { useNetworkStore } from '@/lib/stores/network-store';
 import { resetLinkState } from './link-chain/kit';
 
@@ -37,7 +37,7 @@ const FACT_CHECK = gql`
 `;
 
 const TOKEN = 'pod-token-abcdef123456';
-const pairing: PodPairing = { v: 1, baseUrl: POD_URL, deviceId: 'device-1', token: TOKEN, podName: 'Home pod', pairedAt: 1 };
+const pairing: PodPairing = podPairing({ token: TOKEN });
 const NEWS_DATA = { articleIdsForPersona: { __typename: 'PersonaArticleIds', topicResults: [] } };
 const noCache = { fetchPolicy: 'no-cache' as const };
 const askNews = () => client.query({ query: NEWS, variables: { query: { topics: [] } }, ...noCache });

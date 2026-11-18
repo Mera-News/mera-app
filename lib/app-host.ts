@@ -82,6 +82,15 @@ async function hydrateAppState(): Promise<void> {
       });
     }
   }
+  // A pairing cut short (the app closed between the server's answer and the restart) is settled
+  // first: active if the erase landed, revoked and forgotten if it did not.
+  if (require('@/lib/own-services/pod-state').podState.get()?.state === 'pending') {
+    try {
+      await require('@/lib/own-services/pod-pairing').settlePendingPairing();
+    } catch (e) {
+      require('@/lib/logger').default.captureException(e, { tags: { module: 'hydrate-stores', step: 'pod-pending' } });
+    }
+  }
   // Before the scheduler's first kick, so that kick is a sync with the server.
   if (require('@/lib/own-services/pod-state').podPaired()) {
     try {
