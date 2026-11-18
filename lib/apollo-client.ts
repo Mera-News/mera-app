@@ -753,6 +753,8 @@ ownNewsState.useStore.subscribe((s) => {
     ownNewsSignature = signature;
     if (previous === null || previous === signature) return;
     clearLatch();
+    // The old server's "isn't answering" says nothing about the new route.
+    useOwnNewsHealth.setState({ health: null });
     client.clearStore().catch(() => {});
 });
 
