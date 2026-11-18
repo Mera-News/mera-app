@@ -55,6 +55,13 @@ describe('Mera Protocol: your own services', () => {
         expect(screen.queryByText('Using your own AI service')).toBeNull();
     });
 
+    it('marks the group as Beta on its heading, and the heading reads Beta to a screen reader', async () => {
+        await mount();
+        expect(screen.getByTestId('own-services-beta')).toBeTruthy();
+        expect(screen.getByLabelText('Your own services, Beta')).toBeTruthy();
+        expect(screen.queryByTestId('mera-protocol-own-ai-beta')).toBeNull();
+    });
+
     it('with On this phone on, the footer is replaced', async () => {
         useMeraProtocolStore.setState({ processingMode: ProcessingMode.OnDevice });
         await mount();

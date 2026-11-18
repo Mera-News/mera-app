@@ -663,8 +663,18 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             </View>
 
             <View onLayout={(e) => { groupY.current = e.nativeEvent.layout.y; }} style={{ paddingHorizontal: 14, marginBottom: 6 }}>
-                <View ref={groupHeadRef} accessible accessibilityRole="header" accessibilityLabel={t('ownServices.groupTitle')}>
+                <View
+                    ref={groupHeadRef}
+                    accessible
+                    accessibilityRole="header"
+                    accessibilityLabel={`${t('ownServices.groupTitle')}, ${t('common.beta')}`}
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}
+                >
                     <GroupLabel>{t('ownServices.groupTitle')}</GroupLabel>
+                    {/* GroupLabel sits 14 above and 6 below; the pill centres on its text. */}
+                    <View style={{ marginTop: 8 }}>
+                        <BetaBadge testID="own-services-beta" />
+                    </View>
                 </View>
                 <Group>
                     <Row testID="mera-protocol-own-ai" title={t('ownServices.aiRow')} onPress={() => router.push(OWN_ROUTES.ai as Href)} />

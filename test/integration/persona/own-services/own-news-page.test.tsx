@@ -41,6 +41,11 @@ beforeEach(() => {
 });
 
 describe('own news server page', () => {
+    it('marks the server as Beta beside its intro', async () => {
+        await mount();
+        expect(screen.getByTestId('own-news-beta')).toBeTruthy();
+    });
+
     it('empty: Check and the switch are disabled; http:// shows the not-https line', async () => {
         await mount();
         expect(screen.getByTestId('own-news-check')).toBeDisabled();

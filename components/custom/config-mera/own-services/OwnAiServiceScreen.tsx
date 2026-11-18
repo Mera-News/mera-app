@@ -1,4 +1,4 @@
-import { Group, Help, Row } from '@/components/custom/you/rows';
+import { Group, Row } from '@/components/custom/you/rows';
 import { Button, ButtonSpinner, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { ownAiState } from '@/lib/own-services/own-ai-state';
@@ -7,6 +7,7 @@ import { router, type Href } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
+import { BetaIntro } from './BetaIntro';
 import { ModeSwitchRow, ServicePage } from './ModeSwitchRow';
 import { OWN_ROUTES } from './own-services-copy';
 import { ServiceField } from './ServiceField';
@@ -20,7 +21,7 @@ function OwnAiForm() {
     const s = useOwnAiService();
     return (
         <>
-            <Help>{t('ownServices.ai.intro')}</Help>
+            <BetaIntro text={t('ownServices.ai.intro')} testID="own-ai-beta" />
             <ServiceField kind="address" label={t('ownServices.field.address')} value={s.address} onChangeText={s.setAddress} error={s.addressError} testID="own-ai-address" />
             <ServiceField kind="text" label={t('ownServices.ai.model')} value={s.model} onChangeText={s.setModel} testID="own-ai-model" />
             <ServiceField kind="key" label={t('ownServices.field.key')} value={s.key} onChangeText={s.setKey} testID="own-ai-key" />

@@ -57,6 +57,11 @@ beforeEach(() => {
 });
 
 describe('own AI service page', () => {
+    it('marks the service as Beta beside its intro', async () => {
+        await mount();
+        expect(screen.getByTestId('own-ai-beta')).toBeTruthy();
+    });
+
     it('empty: Check and the switch are disabled', async () => {
         await mount();
         expect(screen.getByTestId('own-ai-check')).toBeDisabled();
