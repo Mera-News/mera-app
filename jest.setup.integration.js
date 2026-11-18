@@ -311,6 +311,18 @@ afterEach(() => {
   }
 });
 afterAll(() => server.close());
+// A mute holds its purge on a 60 s timer, and a jest worker outlives the file that started it: left
+// waiting, it fires in a later file against a torn-down module registry. Required inside the hook so
+// the test file's own mocks apply; a file that made the module unloadable cannot have muted anything.
+afterEach(() => {
+  let actions;
+  try {
+    actions = require('@/lib/database/services/publication-pref-ui-actions');
+  } catch {
+    return;
+  }
+  actions.cancelPendingPurges?.();
+});
 
 // 12. Per-test reset.
 beforeEach(async () => {
