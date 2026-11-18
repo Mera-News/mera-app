@@ -18,7 +18,7 @@ import { AttestationVerificationRow } from '@/components/custom/config-mera/Atte
 import BetaBadge from '@/components/custom/BetaBadge';
 import HelpButton from '@/components/custom/nav/HelpButton';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     AccessibilityInfo,
@@ -43,6 +43,9 @@ import {
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { gbText } from '@/lib/algorithms/format-bytes';
 import { useMeraProtocolSettings, type ModelRowState } from './useMeraProtocolSettings';
+import { OWN_ROUTES } from './own-services/own-services-copy';
+import { ownAiOn, ownAiState } from '@/lib/own-services/own-ai-state';
+import { ownNewsOn, ownNewsState } from '@/lib/own-services/own-news-state';
 
 /** The downloadable model is Apache 2.0 (it ships no LICENSE file), so the tab links the licence text. */
 const MODELS_LICENSE_URL = 'https://www.apache.org/licenses/LICENSE-2.0';
@@ -97,6 +100,13 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         handleDeleteModel,
     } = useMeraProtocolSettings();
     const insets = useSafeAreaInsets();
+    const aiOn = ownAiState.useStore((s) => s.hydrated && s.value?.on === true);
+    const newsOn = ownNewsState.useStore((s) => s.hydrated && s.value?.on === true);
+    useEffect(() => {
+        // A failed read leaves both modes off here; the pages themselves refuse to open on one.
+        ownAiState.hydrate().catch(() => {});
+        ownNewsState.hydrate().catch(() => {});
+    }, []);
     // The topic stays set while the card fades out, so its text never blanks mid-close.
     const [help, setHelp] = useState<{ topic: HelpTopic; open: boolean } | null>(null);
     const openHelp = (topic: HelpTopic) => setHelp({ topic, open: true });
@@ -116,7 +126,8 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     useEffect(() => {
         if (isLoading || focus !== 'on-device' || pickedRef.current) return;
         pickedRef.current = true;
-        if (!onDeviceIntent) void selectMode(ProcessingMode.OnDevice);
+        // A link can never put the phone on device under an own mode.
+        if (!onDeviceIntent && !ownAiOn() && !ownNewsOn()) void selectMode(ProcessingMode.OnDevice);
         // Once, when the load lands: selectMode is a fresh closure every render.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isLoading]);
@@ -152,6 +163,20 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         focusState.current.rowTag = tag;
         tryFocusModes();
     };
+
+    // "Using your own services" scrolls to the group and gives its header screen-reader focus.
+    const groupY = useRef(0);
+    const groupHeadRef = useRef<React.ComponentRef<typeof View>>(null);
+    const focusGroup = () => {
+        scrollRef.current?.scrollTo({ y: Math.max(0, groupY.current - 16), animated: true });
+        const tag = findNodeHandle(groupHeadRef.current);
+        if (tag != null) AccessibilityInfo.setAccessibilityFocus(tag);
+    };
+    const usingRow = (testID: string, title: string, onPress: () => void) => (
+        <Group>
+            <Row testID={testID} title={title} onPress={onPress} />
+        </Group>
+    );
 
     /** A group label with its "?" on the trailing side. The 44pt frame overhangs, so the label keeps its rhythm. */
     const sectionHead = (label: string, topic: HelpTopic, onLayout?: (e: LayoutChangeEvent) => void, trailing?: React.ReactNode) => (
@@ -525,6 +550,14 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
 
     const renderContent = () => (
         <>
+            {aiOn ? (
+                <View onLayout={onSectionLayout} style={{ paddingHorizontal: 14, marginBottom: 16 }}>
+                    {sectionHead(t('meraProtocol.howRuns'), 'modes', onModesHeadLayout)}
+                    {newsOn
+                        ? usingRow('mera-protocol-using-both', t('ownServices.usingBoth'), focusGroup)
+                        : usingRow('mera-protocol-using-ai', t('ownServices.usingAi'), () => router.push(OWN_ROUTES.ai as Href))}
+                </View>
+            ) : (<>
             <View onLayout={onSectionLayout} style={{ paddingHorizontal: 14, marginBottom: 16 }}>
                 {sectionHead(t('meraProtocol.howRuns'), 'modes', onModesHeadLayout, isUpdatingMode ? <Spinner size="small" /> : null)}
                 <SegmentedControl<ProcessingMode>
@@ -541,6 +574,11 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     ]}
                     stretch
                 />
+                {newsOn ? (
+                    <View style={{ marginTop: 10 }}>
+                        {usingRow('mera-protocol-using-news', t('ownServices.usingNews'), () => router.push(OWN_ROUTES.news as Href))}
+                    </View>
+                ) : null}
                 {runsInCloudMeanwhile && settingUp ? (
                     <View style={{ marginTop: 8 }} testID="mera-protocol-in-use-cloud">
                         <Help>{t('meraProtocol.inUseCloud')}</Help>
@@ -579,9 +617,10 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     ) : null}
                 </View>
             )}
+            </>)}
 
-            {/* Verify (it names each provider): whenever chat or the feed reaches the cloud. */}
-            {!onPhoneTab || runsInCloudMeanwhile || steps.cloudChat ? (
+            {/* Verify (it names each provider): whenever chat or the feed reaches the cloud. It checks the private cloud only, so an own AI service hides it. */}
+            {!aiOn && (!onPhoneTab || runsInCloudMeanwhile || steps.cloudChat) ? (
                 <View style={{ marginTop: 12 }}>
                     <AttestationVerificationRow />
                 </View>
@@ -621,6 +660,19 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                         }
                     />
                 </Group>
+            </View>
+
+            <View onLayout={(e) => { groupY.current = e.nativeEvent.layout.y; }} style={{ paddingHorizontal: 14, marginBottom: 6 }}>
+                <View ref={groupHeadRef} accessible accessibilityRole="header" accessibilityLabel={t('ownServices.groupTitle')}>
+                    <GroupLabel>{t('ownServices.groupTitle')}</GroupLabel>
+                </View>
+                <Group>
+                    <Row testID="mera-protocol-own-ai" title={t('ownServices.aiRow')} onPress={() => router.push(OWN_ROUTES.ai as Href)} />
+                    <Row testID="mera-protocol-own-news" title={t('ownServices.newsRow')} onPress={() => router.push(OWN_ROUTES.news as Href)} />
+                </Group>
+                <View style={{ marginTop: 8 }}>
+                    <Help>{processingMode === ProcessingMode.OnDevice ? t('ownServices.footerOnDevice') : t('ownServices.footer')}</Help>
+                </View>
             </View>
         </>
     );
