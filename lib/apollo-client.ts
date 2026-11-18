@@ -39,7 +39,11 @@ import { toastManager } from './toast-manager';
 import { GRAPHQL_SERVER_ENDPOINT } from '@/lib/config/endpoints';
 import { clearLatch, latchUnsupported, useOwnNewsHealth } from '@/lib/own-services/news-latch';
 import { isNewsOperation, MERA_ONLY_OPERATIONS } from '@/lib/own-services/news-operations';
-import { ownNewsRoute, ownNewsState } from '@/lib/own-services/own-news-state';
+import { ownNewsState } from '@/lib/own-services/own-news-state';
+import { hydrateRoutes, newsRoute } from '@/lib/own-services/news-route';
+import { recordPodError, recordPodOk, resetPodHealth } from '@/lib/own-services/pod-health';
+import { PodError } from '@/lib/own-services/pod-client';
+import { podState } from '@/lib/own-services/pod-state';
 
 // Cache TTL in milliseconds (10 minutes)
 const CACHE_TTL_MS = 10 * 60 * 1000;
@@ -578,7 +582,7 @@ const cacheEvictionLink = new ApolloLink((operation, forward) => {
 // Mera's chain, unchanged: errorLink → authSuccessLink → retryLink → cacheEvictionLink → authLink → httpLink
 const meraChain = errorLink.concat(authSuccessLink.concat(retryLink.concat(cacheEvictionLink.concat(authLink.concat(httpLink)))));
 
-type OwnRoute = NonNullable<ReturnType<typeof ownNewsRoute>>;
+type OwnRoute = NonNullable<ReturnType<typeof newsRoute>>;
 
 const OWN_REQUEST_TIMEOUT_MS = 30_000;
 
@@ -633,10 +637,9 @@ const ownHttpLink = new HttpLink({
     fetch: ownFetch,
 });
 
-// Replaces every header another link or caller set: only content-type and the person's own key go out.
+// Replaces every header another link or caller set: only content-type and the route's own credential go out.
 const ownHeadersLink = new SetContextLink(async (prev) => {
-    const key = (prev.ownRoute as OwnRoute).key;
-    return { headers: { 'content-type': 'application/json', ...(key ? { 'x-api-key': key } : {}) } };
+    return { headers: { 'content-type': 'application/json', ...(prev.ownRoute as OwnRoute).headers } };
 });
 
 const isValidationResponse = (status: number | undefined, contentType: string | null | undefined) =>
@@ -646,6 +649,10 @@ const isValidationResponse = (status: number | undefined, contentType: string | 
 const ownErrorLink = new ApolloLink((operation, forward) =>
     new Observable<ApolloLink.Result>((observer) => {
         const name = operation.operationName ?? 'unknown';
+        const pod = (operation.getContext().ownRoute as OwnRoute).kind === 'pod';
+        const health = pod
+            ? { ok: recordPodOk, error: (code: 'refused' | 'unreachable') => recordPodError(new PodError(code)) }
+            : { ok: () => useOwnNewsHealth.setState({ health: 'ok' }), error: (code: 'refused' | 'unreachable') => useOwnNewsHealth.setState({ health: code }) };
         const crumb = (code: string | number) => logger.addBreadcrumb(`own news: ${name}: ${code}`, 'own-news', {}, 'info');
         const subscription = forward(operation).subscribe({
             next: (result) => {
@@ -664,7 +671,7 @@ const ownErrorLink = new ApolloLink((operation, forward) =>
                         errors: result.errors.map((e) => ({ ...e, message: e.message, extensions: { ...e.extensions, ownServer: true } })),
                     };
                 }
-                if (typeof status === 'number' && status >= 200 && status < 300) useOwnNewsHealth.setState({ health: 'ok' });
+                if (typeof status === 'number' && status >= 200 && status < 300) health.ok();
                 observer.next(out);
             },
             error: (err) => {
@@ -674,8 +681,8 @@ const ownErrorLink = new ApolloLink((operation, forward) =>
                 // A cancelled request proves nothing about the server; ownFetch names a timeout separately.
                 const cancelled = e?.name === 'AbortError';
                 if (!cancelled) {
-                    if (status === 401 || status === 403) useOwnNewsHealth.setState({ health: 'refused' });
-                    else if (status === undefined || status >= 500) useOwnNewsHealth.setState({ health: 'unreachable' });
+                    if (status === 401 || status === 403) health.error('refused');
+                    else if (status === undefined || status >= 500) health.error('unreachable');
                 }
                 crumb(status ?? 'network');
                 if (err && typeof err === 'object') (err as { ownServer?: boolean }).ownServer = true;
@@ -698,10 +705,10 @@ const ownNewsSplit = new ApolloLink((operation, forward) => {
     return new Observable<ApolloLink.Result>((observer) => {
         let inner: { unsubscribe(): void } | undefined;
         let closed = false;
-        ownNewsState.hydrate().then(
+        hydrateRoutes().then(
             () => {
                 if (closed) return;
-                const route = ownNewsRoute();
+                const route = newsRoute();
                 if (meraOnly && route) {
                     // Mera's server may not have these articles and the own server cannot answer: send nothing anywhere.
                     latchUnsupported(name);
@@ -741,22 +748,27 @@ const client = new ApolloClient({
 });
 
 // A result from the other server must never be served: any change of mode, address or key empties the cache.
-let ownNewsSignature: string | null = null;
-ownNewsState.useStore.subscribe((s) => {
-    // Memory forgotten: the next hydrate is a first read, not a change, and must not cancel queries in flight.
-    if (!s.hydrated) {
-        ownNewsSignature = null;
-        return;
-    }
-    const signature = JSON.stringify([s.value?.on === true, s.value?.baseUrl ?? null, s.value?.key ?? null]);
-    const previous = ownNewsSignature;
-    ownNewsSignature = signature;
-    if (previous === null || previous === signature) return;
-    clearLatch();
-    // The old server's "isn't answering" says nothing about the new route.
-    useOwnNewsHealth.setState({ health: null });
-    client.clearStore().catch(() => {});
-});
+function watchRoute<T>(store: { subscribe(l: (s: { hydrated: boolean; value: T | null }) => void): unknown }, signatureOf: (v: T | null) => string) {
+    let last: string | null = null;
+    store.subscribe((s) => {
+        // Memory forgotten: the next hydrate is a first read, not a change, and must not cancel queries in flight.
+        if (!s.hydrated) {
+            last = null;
+            return;
+        }
+        const signature = signatureOf(s.value);
+        const previous = last;
+        last = signature;
+        if (previous === null || previous === signature) return;
+        clearLatch();
+        // The old server's "isn't answering" says nothing about the new route.
+        useOwnNewsHealth.setState({ health: null });
+        resetPodHealth();
+        client.clearStore().catch(() => {});
+    });
+}
+watchRoute(ownNewsState.useStore, (v) => JSON.stringify([v?.on === true, v?.baseUrl ?? null, v?.key ?? null]));
+watchRoute(podState.useStore, (v) => JSON.stringify([v !== null, v?.baseUrl ?? null, v?.deviceId ?? null]));
 
 /**
  * Evicts the Apollo InMemoryCache if it has exceeded the TTL.
