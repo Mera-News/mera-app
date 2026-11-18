@@ -1,12 +1,15 @@
 // A person's own service host, key and pairing link never ride out in an error report.
 
 const mockSentryInit = jest.fn();
+const mockBreadcrumbs = jest.fn(() => ({ name: 'Breadcrumbs' }));
+const mockSetTag = jest.fn();
+const mockSetContext = jest.fn();
 jest.mock('@sentry/react-native', () => ({
   init: mockSentryInit,
-  setContext: jest.fn(),
-  setTag: jest.fn(),
+  setContext: mockSetContext,
+  setTag: mockSetTag,
   feedbackIntegration: jest.fn(() => ({ name: 'FeedbackIntegration' })),
-  breadcrumbsIntegration: jest.fn(() => ({ name: 'Breadcrumbs' })),
+  breadcrumbsIntegration: mockBreadcrumbs,
 }));
 jest.mock('expo-application', () => ({ nativeApplicationVersion: '1', nativeBuildVersion: '1' }));
 jest.mock('expo-updates', () => ({ updateId: 'u', channel: 'production', runtimeVersion: '1', isEmbeddedLaunch: false }));
@@ -28,6 +31,9 @@ type Config = {
 };
 
 let config: Config;
+// Read in beforeAll: the integration setup clears mock calls before each test.
+let crumbArgs: unknown[][] = [];
+let tagsAndContexts = '';
 
 beforeAll(() => {
   (global as { __DEV__?: boolean }).__DEV__ = false;
@@ -35,9 +41,12 @@ beforeAll(() => {
     const secrets = require('@/lib/own-services/report-secrets') as typeof import('@/lib/own-services/report-secrets');
     secrets.setReportSecrets('ownAi', { hosts: ['ai.own.test'], secrets: ['sk-own-0123456789'] });
     secrets.setReportSecrets('ownNews', { hosts: ['news.own.test'], secrets: [] });
+    secrets.setReportSecrets('pod', { hosts: ['pod.own.test'], secrets: ['pod-token-abcdef123456'] });
     require('@/lib/sentry-init');
   });
   config = mockSentryInit.mock.calls[0][0] as Config;
+  crumbArgs = [...mockBreadcrumbs.mock.calls] as unknown[][];
+  tagsAndContexts = JSON.stringify([...mockSetTag.mock.calls, ...mockSetContext.mock.calls]);
 });
 afterAll(() => {
   (global as { __DEV__?: boolean }).__DEV__ = true;
@@ -69,6 +78,19 @@ describe('error reports carry no own host, link or key', () => {
   it('scrubs a crumb holding an own-news URL when it is recorded', () => {
     const out = config.beforeBreadcrumb({ category: 'graphql', message: 'https://news.own.test/graphql', data: { u: 'https://news.own.test/graphql' } })!;
     expect(JSON.stringify(out)).not.toContain('news.own.test');
+  });
+
+  it('records no request breadcrumbs at all, and a crumb naming the paired server is scrubbed when recorded', () => {
+    expect(crumbArgs).toContainEqual([expect.objectContaining({ fetch: false, xhr: false })]);
+    const out = config.beforeBreadcrumb({
+      category: 'fetch',
+      message: 'POST https://pod.own.test/snapshot',
+      data: { url: 'https://pod.own.test/snapshot', method: 'POST', auth: 'Bearer pod-token-abcdef123456' },
+    })!;
+    expect(JSON.stringify(out)).not.toMatch(/pod\.own\.test|pod-token-abcdef123456/);
+    // Nothing that marks a person as running their own server is set as a tag or a context.
+    expect(tagsAndContexts.length).toBeGreaterThan(2);
+    expect(tagsAndContexts).not.toMatch(/pod|paired|own[_ ]?server|own[_ ]?ai|own[_ ]?news/i);
   });
 
   it('keeps no pairing code in a breadcrumb', () => {
