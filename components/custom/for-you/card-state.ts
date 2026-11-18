@@ -3,6 +3,7 @@
 // has one layout. RN-free, so it is tested alone.
 //
 //  - 'outage'   a model lane is down (route1): ranks above everything
+//  - 'serviceDown'  a service of the reader's own is not answering: ranks right after 'outage'
 //  - 'limited'  the read hold: when Mera reads again
 //  - 'error'    scoring failed: what went wrong (the old red status icon)
 //  - 'syncFailed'  a foreground refresh failed or paused offline: the line
@@ -93,7 +94,7 @@ export function outageLineKeys(lanes: readonly OutageLane[]): OutageLine[] {
   return out;
 }
 
-export type CardState = 'outage' | 'limited' | 'error' | 'syncFailed' | 'fetched' | 'analysed' | 'relevant' | 'offline';
+export type CardState = 'outage' | 'serviceDown' | 'limited' | 'error' | 'syncFailed' | 'fetched' | 'analysed' | 'relevant' | 'offline';
 
 export interface CardStateInput {
   readonly mode: FeedStatusMode;
@@ -105,10 +106,13 @@ export interface CardStateInput {
   readonly syncFailure: SyncFailure | null;
   /** Down lanes that apply to this reader (`outageLanesOf`); absent means none. */
   readonly outageLanes?: readonly OutageLane[];
+  /** A service of the reader's own that is not answering; absent means none. */
+  readonly serviceDown?: boolean;
 }
 
 export function cardState(i: CardStateInput): CardState | null {
   if (i.outageLanes?.length) return 'outage';
+  if (i.serviceDown) return 'serviceDown';
   if (i.mode === 'limited') return 'limited';
   if (i.mode === 'error') return 'error';
   if (syncFailureKey(i.syncFailure)) return 'syncFailed';
@@ -127,8 +131,8 @@ export function cardState(i: CardStateInput): CardState | null {
 }
 
 /** Whether the Feed has an issue to lead with: the limit, a scoring error, or a failed refresh that has a line. */
-export function hasIssue(mode: FeedStatusMode, failure: SyncFailure | null, outage = false): boolean {
-  return outage || mode === 'limited' || mode === 'error' || syncFailureKey(failure) !== null;
+export function hasIssue(mode: FeedStatusMode, failure: SyncFailure | null, outage = false, serviceDown = false): boolean {
+  return outage || serviceDown || mode === 'limited' || mode === 'error' || syncFailureKey(failure) !== null;
 }
 
 /** The mark's colour (owner): orange (`accentMark`) when Mera is stuck
@@ -136,7 +140,7 @@ export function hasIssue(mode: FeedStatusMode, failure: SyncFailure | null, outa
  *  theme's ink in every other state. */
 export type MarkTone = 'alert' | 'normal';
 export function markTone(state: CardState | null): MarkTone {
-  return state === 'outage' || state === 'fetched' || state === 'limited' || state === 'analysed' || state === 'error' || state === 'syncFailed' ? 'alert' : 'normal';
+  return state === 'outage' || state === 'serviceDown' || state === 'fetched' || state === 'limited' || state === 'analysed' || state === 'error' || state === 'syncFailed' ? 'alert' : 'normal';
 }
 
 /** The lead row's Mera mark, by the sentence block's height (owner: about

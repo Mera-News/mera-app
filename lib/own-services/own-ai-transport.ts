@@ -1,6 +1,7 @@
 import type { LlmTransport } from '@/lib/llm/cloudComplete';
 import { gatewayTransport } from '@/lib/llm/gateway-transport';
 import { createOpenAiTransport } from '@/lib/llm/openai-transport';
+import { withAiHealth } from './ai-health';
 import { ownAiOn, ownAiState } from './own-ai-state';
 import { podConfig, podState } from './pod-state';
 
@@ -9,7 +10,7 @@ let memo: { baseUrl: string; model: string; key: string | null; transport: LlmTr
 function ownTransport(): LlmTransport {
   const c = ownAiState.get()!;
   if (!memo || memo.baseUrl !== c.baseUrl || memo.model !== c.model || memo.key !== c.key) {
-    memo = { baseUrl: c.baseUrl, model: c.model, key: c.key, transport: createOpenAiTransport({ baseUrl: c.baseUrl, model: c.model, apiKey: c.key ?? undefined }) };
+    memo = { baseUrl: c.baseUrl, model: c.model, key: c.key, transport: withAiHealth(createOpenAiTransport({ baseUrl: c.baseUrl, model: c.model, apiKey: c.key ?? undefined })) };
   }
   return memo.transport;
 }

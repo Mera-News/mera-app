@@ -47,6 +47,10 @@ import { useNotReadWaiting } from './feed-status-card';
 import { planRatio, useReadingPlans } from '@/lib/subscription/reading-plans';
 import { useUpgradeFrom } from './ReadHoldUpgradeButton';
 import { useReadHold } from '@/lib/subscription/read-hold';
+import { router, type Href } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useServiceDown } from '@/lib/own-services/ai-health';
+import { SERVICE_ROUTE } from '@/components/custom/config-mera/own-services/own-services-copy';
 import { limitUnlockTime as resetTimeLabel } from '@/components/custom/cards/reset-time';
 
 /** Explicit size AND line height: an inline fontSize on the ui Text keeps the
@@ -101,6 +105,30 @@ export function ReadHoldFooter() {
         <Text style={[SMALL_TYPE, { color: c.ink2, marginTop: 8 }]} testID="feed-status-reads-again">
             {offersIndividual ? t('feedStatus.readsAgainOrIndividual', { time }) : t('feedStatus.readsAgain', { time })}
         </Text>
+    );
+}
+
+const SERVICE_TITLE = { pod: 'ownServices.pod.title', ai: 'ownServices.ai.title', news: 'ownServices.news.title' } as const;
+
+/** The row that opens the page of the service that is not answering; nothing while all answer. */
+function ServiceRow() {
+    const { t } = useTranslation();
+    const down = useServiceDown((s) => s.down);
+    const c = useColors();
+    if (!down) return null;
+    const title = t(SERVICE_TITLE[down]);
+    return (
+        <Pressable
+            onPress={() => router.push(SERVICE_ROUTE[down] as Href)}
+            accessibilityRole="link"
+            accessibilityLabel={title}
+            testID="feed-status-service-row"
+            className="flex-row items-center justify-between py-1"
+            style={{ minHeight: 44 }}
+        >
+            <Text style={[ROW_TYPE, { color: c.ink }]}>{title}</Text>
+            <MaterialIcons name="chevron-right" size={22} color={c.ink} />
+        </Pressable>
     );
 }
 
@@ -161,6 +189,7 @@ const FeedStatusDetails: React.FC<{ readonly mode: FeedStatusMode }> = ({ mode }
                 <StatRow label={t('feedStatus.funnelKept')} value={fmt(relevantCount)} />
                 {waiting != null ? <StatRow label={t('feedStatus.funnelWaiting')} value={fmt(waiting)} /> : null}
                 {lastProcessedLabel ? <SmallRow label={t('feedStatus.lastProcessed')} value={lastProcessedLabel} /> : null}
+                <ServiceRow />
             </VStack>
         );
     }
@@ -182,6 +211,7 @@ const FeedStatusDetails: React.FC<{ readonly mode: FeedStatusMode }> = ({ mode }
             <StatRow label={t('feedStatus.analysed')} value={fmt(analysedCount)} />
             <StatRow label={t('feedStatus.relevant')} value={fmt(relevantCount)} />
             {lastProcessedLabel ? <StatRow label={t('feedStatus.lastProcessed')} value={lastProcessedLabel} /> : null}
+            <ServiceRow />
         </VStack>
     );
 };

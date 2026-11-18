@@ -10,6 +10,8 @@ import { useChatInCloud, useIsOnDeviceProcessing } from '@/lib/stores/mera-proto
 import { SCORING_ERROR_I18N_KEYS } from '@/lib/services/scoring-error';
 import { formatCount } from '@/lib/algorithms/format-count';
 import { useTranslation } from 'react-i18next';
+import { AccessibilityInfo } from 'react-native';
+import { useServiceDown, type DownService } from '@/lib/own-services/ai-health';
 import { useReadHold, resetDayWord } from '@/lib/subscription/read-hold';
 import { useNotReadWaiting } from './feed-status-card';
 import { limitUnlockTime } from './FeedStatusDetails';
@@ -20,7 +22,9 @@ import { useUpgradeFrom } from './ReadHoldUpgradeButton';
 /** A state's lead sentence, plain text (owner: no links; the reader finds
  *  Settings and their profile themselves; the limit's and the error's actions
  *  are in the details). */
-function useStateText(kind: CardState | null, failure: SyncFailure | null): string | null {
+const SERVICE_LINE = { pod: 'ownServices.pod.line', ai: 'ownServices.ai.line', news: 'ownServices.news.line' } as const;
+
+function useStateText(kind: CardState | null, failure: SyncFailure | null, down: DownService | null): string | null {
     const { t, i18n } = useTranslation();
     const tAny = t as unknown as (key: string) => string;
     const appLanguage = useAppLanguage();
@@ -30,6 +34,7 @@ function useStateText(kind: CardState | null, failure: SyncFailure | null): stri
     const scoringError = useForYouScoringError();
     const fmt = (count: number) => ({ count, formatted: formatCount(count, appLanguage) });
     if (kind === 'outage') return t('feed.outage.title');
+    if (kind === 'serviceDown' && down) return t(SERVICE_LINE[down]);
     if (kind === 'limited') {
         const count = waiting ?? 0;
         const day = resetDayWord(resetAt ?? Date.now());
@@ -78,7 +83,8 @@ export function useOutageLanes() {
 /** Whether the Feed has an issue (see `hasIssue`): the card shows and the first-sync scene gives way. */
 export function useFeedIssue(): boolean {
     const outage = useOutageLanes().length > 0;
-    return hasIssue(useFeedStatusMode(), syncFailureOf(useForYouSyncStatusMessage()), outage);
+    const serviceDown = useServiceDown((s) => s.down !== null);
+    return hasIssue(useFeedStatusMode(), syncFailureOf(useForYouSyncStatusMessage()), outage, serviceDown);
 }
 
 /** The counts card's lead line: the mode, the counts, the card state and the
@@ -95,8 +101,14 @@ export function useStatsCardLead() {
     const offline = useIsConnected() === false;
     const syncFailure = syncFailureOf(useForYouSyncStatusMessage());
     const outageLanes = useOutageLanes();
-    const state = cardState({ mode, noFacts, offline, articleCount, analysedCount, relevantCount, syncFailure, outageLanes });
-    const zeroText = useStateText(state, syncFailure);
+    const down = useServiceDown((s) => s.down);
+    const state = cardState({ mode, noFacts, offline, articleCount, analysedCount, relevantCount, syncFailure, outageLanes, serviceDown: down !== null });
+    const zeroText = useStateText(state, syncFailure, down);
+    // A line that appears is spoken once; the card itself is not focused.
+    const spoken = state === 'serviceDown' ? zeroText : null;
+    React.useEffect(() => {
+        if (spoken) void AccessibilityInfo.announceForAccessibility(spoken);
+    }, [spoken]);
     const stateLabel = tAny(a11yStateKey(mode));
     const processing = mode === 'processing';
     // The held card's bar draws the same gap the sentence names.

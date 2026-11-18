@@ -46,8 +46,12 @@ export const OWN_ROUTES = {
     ai: `${YOU}/own-ai`,
     aiChanges: `${YOU}/own-ai-changes`,
     news: `${YOU}/own-news`,
+    pod: `${YOU}/own-pod`,
     newsMissing: `${YOU}/own-news-missing`,
     // The link opens Mera Protocol with its On this phone control focused.
     onDevice: `${YOU}/mera-protocol?focus=on-device`,
     plans: '/logged-in/preferences/manage-subscription',
 } as const;
+
+/** The page each "isn't answering" line opens. */
+export const SERVICE_ROUTE = { pod: OWN_ROUTES.pod, ai: OWN_ROUTES.ai, news: OWN_ROUTES.news } as const;

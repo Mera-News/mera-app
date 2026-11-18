@@ -56,6 +56,9 @@ import TopicPlanCard from './TopicPlanCard';
 import TopicPlanSaveAllRow from './TopicPlanSaveAllRow';
 import ConflictResolutionCard from './ConflictResolutionCard';
 import StarterChips from './StarterChips';
+import { router, type Href } from 'expo-router';
+import { useServiceDown } from '@/lib/own-services/ai-health';
+import { SERVICE_ROUTE } from '@/components/custom/config-mera/own-services/own-services-copy';
 import type { ChatThreadItem, ChatThreadProps, StarterChip } from './types';
 
 // Short, snappy spring for freshly-arrived message bubbles. Applied ONLY to
@@ -106,9 +109,16 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   // The banner is announced each time it appears. Retry takes screen-reader
   // focus whenever it is offered, so a repeat failure lands back on it.
   const retryRef = useRef<React.ComponentRef<typeof View>>(null);
+  // The own news server has no say in chat.
+  const serviceDown = useServiceDown((st) => (st.down === 'news' ? null : st.down));
+  const serviceLine = serviceDown ? t(serviceDown === 'pod' ? 'ownServices.pod.line' : 'ownServices.ai.line') : null;
+  // One banner. A failed turn while the reader's own service is down says why in the service's words,
+  // keeping Retry; an account block keeps its own text and controls.
+  const serviceInBlocked = !!blockedMessage && !!serviceLine && !showUnblockControls;
+  const spoken = blockedMessage ? (serviceInBlocked ? serviceLine : blockedMessage) : serviceLine;
   useEffect(() => {
-    if (blockedMessage) void AccessibilityInfo.announceForAccessibility(blockedMessage);
-  }, [blockedMessage]);
+    if (spoken) void AccessibilityInfo.announceForAccessibility(spoken);
+  }, [spoken]);
   const retryOffered = !!onRetry;
   useEffect(() => {
     const node = retryOffered ? findNodeHandle(retryRef.current) : null;
@@ -494,13 +504,37 @@ const ChatThread: React.FC<ChatThreadProps> = ({
         />
       </View>
 
-      {blockedMessage && (
-        <View style={styles.blockedBanner}>
-          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="block" size={20} color={colors.negative} />
+      {serviceDown && serviceLine && !blockedMessage ? (
+        <Pressable
+          style={styles.blockedBanner}
+          onPress={() => router.push(SERVICE_ROUTE[serviceDown] as Href)}
+          accessibilityRole="link"
+          testID="chat-service-line"
+        >
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="cloud-off" size={20} color={colors.negative} />
           <View style={styles.blockedBody}>
             <Text size="sm" style={styles.blockedText}>
-              {blockedMessage}
+              {serviceLine}
             </Text>
+          </View>
+        </Pressable>
+      ) : null}
+
+      {blockedMessage && (
+        <View style={styles.blockedBanner}>
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name={serviceInBlocked ? 'cloud-off' : 'block'} size={20} color={colors.negative} />
+          <View style={styles.blockedBody}>
+            {serviceInBlocked && serviceDown ? (
+              <Pressable onPress={() => router.push(SERVICE_ROUTE[serviceDown] as Href)} accessibilityRole="link" testID="chat-service-line">
+                <Text size="sm" style={styles.blockedText}>
+                  {serviceLine}
+                </Text>
+              </Pressable>
+            ) : (
+              <Text size="sm" style={styles.blockedText}>
+                {blockedMessage}
+              </Text>
+            )}
             {onRetry && (
               // A childless labelled Pressable over a hidden visual (no icon under an
               // accessible element); the frame is a number, never a rem class.
