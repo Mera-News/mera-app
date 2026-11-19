@@ -53,6 +53,7 @@ import { useModelLifecycle } from '@/lib/hooks/useModelLifecycle';
 import { useAppStateStore, useIsNavigationReady } from '@/lib/stores/app-state-store';
 import { setCurrentPathname } from '@/lib/nav-state';
 import { holdSplash, SplashReleaser } from '@/lib/splash-hold';
+import { useForegroundGateOpen } from '@/lib/startup/foreground-gate';
 import RestoreCover from '@/components/custom/launch/RestoreCover';
 import { getNavigationTheme } from '@/lib/navigation/navigation-theme';
 import { initNetworkListener } from '@/lib/stores/network-store';
@@ -205,7 +206,13 @@ function LiteMotionConfig() {
 // Root layout: providers + the mandatory-update gate ONLY. Deliberately holds no
 // store subscriptions or boot logic of its own, so background activity can never
 // re-render the gate / update screen — when blocked, the screen is static.
+//
+// Behind the foreground gate (lib/startup/foreground-gate): a process the OS
+// started in the background renders nothing, so no boot effect, SDK start or
+// screen query runs until the app first comes to the foreground. A foreground
+// start is open from bundle evaluation, so it renders exactly as before.
 export default Sentry.wrap(function RootLayout() {
+  if (!useForegroundGateOpen()) return null;
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       {/* First, so Lite's no-motion switch is set before anything animates. */}

@@ -135,21 +135,15 @@ export async function hasLocalUserData(): Promise<boolean> {
 export async function wipeAllLocalUserData(
   opts: { keepSession?: boolean } = {},
 ): Promise<void> {
-  // Before the keychain loop deletes the token. Best effort: the wipe goes on if the server is away.
+  // First the phone leaves pod mode and forgets the pairing, then the server is told with the item read
+  // first. Out of pod mode before any store resets: a reset that writes a shared setting would
+  // otherwise go to the server as a change. Unpaired before the revoke: a wake during a slow revoke
+  // finds nothing paired. Never throws.
   try {
-    const { revokeStoredPairing } = require('@/lib/own-services/pod-pairing');
-    await revokeStoredPairing();
+    const { unpairForWipe } = require('@/lib/own-services/pod-pairing');
+    await unpairForWipe();
   } catch {
     // Never block the wipe on the server.
-  }
-
-  // Then out of pod mode, before any store resets: a reset that writes a shared setting would otherwise
-  // go to the server as a change.
-  try {
-    const { leavePodMode } = require('@/lib/own-services/pod-runner');
-    await leavePodMode();
-  } catch {
-    // The stores' own reset leaves the mode too.
   }
 
   for (const key of SECURE_STORE_KEYS) {

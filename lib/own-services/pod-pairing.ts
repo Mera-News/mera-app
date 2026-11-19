@@ -117,13 +117,28 @@ export const unpairPod = (): Promise<void> => leave(true);
 /** The server already refused this phone, so there is nobody to tell. */
 export const forgetPairingAfterRefusal = (): Promise<void> => leave(false);
 
-/** For the wipes: tells the server, never throws, and leaves the item for the wipe to delete. */
-export async function revokeStoredPairing(): Promise<void> {
+/**
+ * For the wipes: the phone leaves pod mode and forgets the pairing BEFORE the server is told, so a
+ * wake that arrives while a slow or unreachable server holds the revoke finds nothing paired. The
+ * revoke uses the item read first, is bounded and never throws; neither does anything here.
+ */
+export async function unpairForWipe(): Promise<void> {
+  let item: PodPairing | null = null;
   try {
     await podState.hydrate();
-    const item = podState.get();
-    if (item) await revoke(item);
+    item = podState.get();
   } catch {
-    // The wipe goes on whatever happens here.
+    // An unreadable keychain: nothing to tell; the wipe's keychain loop deletes the item.
   }
+  try {
+    await leavePodMode();
+  } catch {
+    // The stores' own reset leaves the mode too.
+  }
+  try {
+    await forgetPairing();
+  } catch {
+    // The wipe's keychain loop deletes the item.
+  }
+  if (item) await revoke(item);
 }

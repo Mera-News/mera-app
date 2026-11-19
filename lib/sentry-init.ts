@@ -1,17 +1,16 @@
-// Initialise Sentry at module-load time so it's available in background
-// contexts. The TaskManager task in lib/background/inference-task.ts is
-// defined and run by iOS/Android when a silent push wakes the JS context,
-// often without rendering the React tree — so Sentry.init must not live in
-// a component body. Both app/_layout.tsx and lib/background/inference-task.ts
-// import this module on their first line.
-//
-// Sentry.init is idempotent (subsequent calls are no-ops), so importing
-// from both entry paths is safe.
+// Starts Sentry at module-load time on a foreground start, so it is up before
+// anything else can throw. Both app/_layout.tsx and
+// lib/background/inference-task.ts import this module on their first line, and
+// index.js loads the task file on every launch. A launch the OS made in the
+// background (a silent push, a background task) starts Sentry only when the app
+// first comes to the foreground (./startup/foreground-gate). Started once per
+// process, so importing it from both entry paths is safe.
 
 import * as Sentry from '@sentry/react-native';
 
 import { scrubDeep, scrubOwnServices } from './own-services/report-scrub';
 import { getStaticAppContext } from './observability/app-context';
+import { whenForegroundGateOpens } from './startup/foreground-gate';
 
 // Note: this file intentionally does NOT import from ./config/endpoints.
 // sentry-init must initialise Sentry before anything else so that any later
@@ -30,6 +29,7 @@ import { getStaticAppContext } from './observability/app-context';
 //
 // ./own-services/report-scrub is the second exception: it imports only the
 // import-free ./own-services/report-secrets, so it is safe to load first.
+// ./startup/foreground-gate is the third: it imports only react and AppState.
 
 // WHAT beforeSend CAN AND CANNOT DO — read before relying on it.
 // beforeSend runs in JS, so it only sees events the JS layer sends. NATIVE
@@ -272,7 +272,12 @@ const anonymisePrefilledFeedback = {
   },
 };
 
-if (SENTRY_ENABLED) {
+let started = false;
+
+/** Starts Sentry once per process. Called through the foreground gate, never directly. */
+function startSentry(): void {
+  if (started || !SENTRY_ENABLED) return;
+  started = true;
   Sentry.init({
     dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
     // Separates dev-machine events (opted in via EXPO_PUBLIC_SENTRY_IN_DEV) from
@@ -451,3 +456,9 @@ if (SENTRY_ENABLED) {
     // without build attribution.
   }
 }
+
+// A foreground start runs this at once, at bundle evaluation, as it always has. A start the OS made
+// in the background (a silent push, a background task) starts Sentry only when the app first comes
+// to the foreground: until then nothing it holds (cached crash reports, the stored user) is sent
+// from a wake. Errors and native crashes during a background wake are not reported.
+whenForegroundGateOpens(startSentry);

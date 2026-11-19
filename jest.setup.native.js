@@ -163,9 +163,11 @@ jest.mock('expo-background-task', () => ({
 jest.mock('@react-native-community/netinfo', () => ({
   __esModule: true,
   default: {
+    configure: jest.fn(),
     fetch: jest.fn(() => Promise.resolve({ isConnected: true, isInternetReachable: true })),
     addEventListener: jest.fn(() => jest.fn()),
   },
+  configure: jest.fn(),
   fetch: jest.fn(() => Promise.resolve({ isConnected: true, isInternetReachable: true })),
   addEventListener: jest.fn(() => jest.fn()),
 }));

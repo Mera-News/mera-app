@@ -17,7 +17,7 @@ import { getSetting } from '@/lib/database/services/setting-service';
 import { inferenceQueue, __setJobHandlerForTests } from '@/lib/inference/InferenceQueue';
 import { _resetForTests as resetBreaker } from '@/lib/auth-failure-breaker';
 import { POD_PAIRING_KEY } from '@/lib/own-services/keys';
-import { forgetPairingAfterRefusal, revokeStoredPairing, unpairPod } from '@/lib/own-services/pod-pairing';
+import { forgetPairingAfterRefusal, unpairForWipe, unpairPod } from '@/lib/own-services/pod-pairing';
 import { resetPodHealth } from '@/lib/own-services/pod-health';
 import { ALL_JOB_TYPES, TASKS_PAUSED_WHILE_PAIRED, enterPodMode, leavePodMode, syncPod } from '@/lib/own-services/pod-runner';
 import { forgetPairing, podPaired, podState, savePairing, type PodPairing } from '@/lib/own-services/pod-state';
@@ -217,44 +217,64 @@ describe('unpairing', () => {
   });
 });
 
-describe('revokeStoredPairing', () => {
-  it('revokes the stored item even before the state was read, and keeps the item', async () => {
+describe('unpairForWipe', () => {
+  it('revokes the stored item even before the state was read, after forgetting it on the phone', async () => {
     await savePairing(PAIRING);
     pod.tokens.add(TOKEN);
     podState.resetMemory();
-    await revokeStoredPairing();
+    await unpairForWipe();
     expect(pod.revoked.has(TOKEN)).toBe(true);
-    expect(secureStoreDump()[POD_PAIRING_KEY]).toBeDefined();
+    expect(secureStoreDump()[POD_PAIRING_KEY]).toBeUndefined();
+    expect(podPaired()).toBe(false);
   });
 
   it('never throws: not with the server down, not with an unreadable keychain, not with nothing stored', async () => {
-    await revokeStoredPairing();
+    await unpairForWipe();
     await savePairing(PAIRING);
     pod.down();
-    await expect(revokeStoredPairing()).resolves.toBeUndefined();
+    await expect(unpairForWipe()).resolves.toBeUndefined();
     pod.up();
+    await savePairing(PAIRING);
     podState.resetMemory();
     const { failSecureStore, healSecureStore } = require('@/test/helpers');
     failSecureStore(POD_PAIRING_KEY, 'get');
-    await expect(revokeStoredPairing()).resolves.toBeUndefined();
+    await expect(unpairForWipe()).resolves.toBeUndefined();
     healSecureStore();
     expect(pod.revoked.size).toBe(0);
   });
 });
 
 describe('the wipes', () => {
-  /** Records whether the pairing item still existed when the revoke arrived. */
+  /** Records what the phone held when the revoke arrived, and the token the revoke carried. */
   function watchRevoke() {
-    const state = { itemWhenRevoked: undefined as string | undefined, seen: 0 };
+    const state = {
+      itemWhenRevoked: undefined as string | undefined,
+      pairedWhenRevoked: undefined as boolean | undefined,
+      sinkWhenRevoked: undefined as unknown,
+      authorization: null as string | null,
+      seen: 0,
+    };
     server.use(
-      http.post(`${POD_URL}/devices/revoke`, () => {
+      http.post(`${POD_URL}/devices/revoke`, ({ request }) => {
         state.seen += 1;
         state.itemWhenRevoked = secureStoreDump()[POD_PAIRING_KEY];
+        state.pairedWhenRevoked = podPaired();
+        state.sinkWhenRevoked = hostCommand();
+        state.authorization = request.headers.get('authorization');
         pod.revoked.add(TOKEN);
         return HttpResponse.json({});
       }),
     );
     return state;
+  }
+
+  /** The phone is unpaired and out of pod mode before the server hears of it, and the server still gets the token. */
+  function expectUnpairedBeforeRevoke(watched: ReturnType<typeof watchRevoke>) {
+    expect(watched.seen).toBe(1);
+    expect(watched.itemWhenRevoked).toBeUndefined();
+    expect(watched.pairedWhenRevoked).toBe(false);
+    expect(watched.sinkWhenRevoked).toBeUndefined();
+    expect(watched.authorization).toBe(`Bearer ${TOKEN}`);
   }
 
   async function expectLeft(original: unknown) {
@@ -285,7 +305,7 @@ describe('the wipes', () => {
     expect(pod.requests.slice(since).map((r) => r.path)).toEqual(['/devices/revoke']);
   });
 
-  it('signing out while paired revokes before the key is deleted, then leaves everything', async () => {
+  it('signing out while paired unpairs the phone first, then tells the server, then leaves everything', async () => {
     await signInFixtureAccount();
     const original = AppScheduler.definition('feed-sync');
     await paired();
@@ -293,21 +313,43 @@ describe('the wipes', () => {
 
     await signOutAndWipe();
 
-    expect(watched.seen).toBe(1);
-    expect(watched.itemWhenRevoked).toContain(TOKEN);
+    expectUnpairedBeforeRevoke(watched);
     await expectLeft(original);
   });
 
-  it('the account-switch wipe also revokes', async () => {
+  it('the account-switch wipe also unpairs first and revokes', async () => {
     const original = AppScheduler.definition('feed-sync');
     await paired();
     const watched = watchRevoke();
 
     await wipeAllLocalUserData({ keepSession: true });
 
-    expect(watched.seen).toBe(1);
-    expect(watched.itemWhenRevoked).toContain(TOKEN);
+    expectUnpairedBeforeRevoke(watched);
     await expectLeft(original);
+  });
+
+  it('signing out with the server unreachable: the phone is unpaired while the revoke still waits', async () => {
+    await signInFixtureAccount();
+    await paired();
+    let release!: () => void;
+    const answered = new Promise<void>((r) => (release = r));
+    let waiting = false;
+    server.use(
+      http.post(`${POD_URL}/devices/revoke`, async () => {
+        waiting = true;
+        await answered;
+        return HttpResponse.json({});
+      }),
+    );
+
+    const wipe = signOutAndWipe();
+    await until(() => waiting);
+    expect(podPaired()).toBe(false);
+    expect(secureStoreDump()[POD_PAIRING_KEY]).toBeUndefined();
+    expect(hostCommand()).toBeUndefined();
+
+    release();
+    await wipe;
   });
 
   it('a wipe with the server down still wipes', async () => {
@@ -328,7 +370,7 @@ describe('what never appears', () => {
     pod.up();
     await paired().catch((e) => errors.push(e));
     await wipeAllLocalUserData().catch((e) => errors.push(e));
-    await revokeStoredPairing().catch((e) => errors.push(e));
+    await unpairForWipe().catch((e) => errors.push(e));
 
     const seen = JSON.stringify([
       logs.flatMap((s) => s.mock.calls),

@@ -4,6 +4,8 @@
 // registrations, so module evaluation order is unchanged.
 import { router, useNavigationContainerRef, usePathname } from 'expo-router';
 import { useEffect } from 'react';
+import { AppState } from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
 import { Directory, Paths } from 'expo-file-system';
 import { useThemeMode } from '@/lib/theme/tokens';
 import { useMotionAllowed } from '@/lib/motion-gate';
@@ -97,8 +99,11 @@ export function useAppRoot() {
     void ensureSilentPushTaskRegistered();
   }, []);
 
-  // Set up network connectivity listener
+  // Set up network connectivity listener. NetInfo's reachability probe asks a
+  // host on the internet; it may run only while the app is in front, never on a
+  // wake (a background launch never mounts this tree, a warm one keeps it).
   useEffect(() => {
+    NetInfo.configure({ reachabilityShouldRun: () => AppState.currentState === 'active' });
     initNetworkListener();
   }, []);
 
