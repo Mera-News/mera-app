@@ -3,6 +3,34 @@ import { OwnServiceError, parseConfirmation, type Confirmation } from './gate';
 import { POD_PAIRING_KEY } from './keys';
 import { createServiceState } from './service-state';
 
+/** What the phone keeps about the wake-up pass it handed the server. Never the pass itself. */
+export type WakeRecord = {
+  /** Unix seconds. */
+  expiresAt?: number;
+  tokenHash?: string;
+  mintedAt?: number;
+  /** When the last refusal came and how long to leave the pass alone after it, in ms. */
+  refusedAt?: number;
+  waitMs?: number;
+  /** Wake-ups were turned off and the server has not yet said it dropped the pass. */
+  offPending?: boolean;
+};
+
+const num = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+
+function parseWake(raw: unknown): WakeRecord | null {
+  const r = raw as Partial<WakeRecord> | null;
+  if (!r || typeof r !== 'object') return null;
+  return {
+    ...(num(r.expiresAt) ? { expiresAt: r.expiresAt } : {}),
+    ...(typeof r.tokenHash === 'string' ? { tokenHash: r.tokenHash } : {}),
+    ...(num(r.mintedAt) ? { mintedAt: r.mintedAt } : {}),
+    ...(num(r.refusedAt) ? { refusedAt: r.refusedAt } : {}),
+    ...(num(r.waitMs) ? { waitMs: r.waitMs } : {}),
+    ...(r.offPending === true ? { offPending: true } : {}),
+  };
+}
+
 // The token is the only credential; the server keeps only its hash.
 // A pending item exists between the server accepting the phone and the erase landing: it routes nothing.
 export type PodPairing = {
@@ -18,6 +46,7 @@ export type PodPairing = {
   pendingAt?: number;
   /** The person's choice to let the server wake the phone with a push. Off unless true. */
   wakeups?: boolean;
+  wake?: WakeRecord;
 };
 
 export const podState = createServiceState<PodPairing>({
@@ -41,6 +70,7 @@ export const podState = createServiceState<PodPairing>({
       state: r.state,
       ...(typeof r.pendingAt === 'number' ? { pendingAt: r.pendingAt } : {}),
       ...(r.wakeups === true ? { wakeups: true } : {}),
+      ...(parseWake(r.wake) ? { wake: parseWake(r.wake)! } : {}),
     };
   },
   secrets(v) {

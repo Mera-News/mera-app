@@ -17,7 +17,8 @@ export class PodError extends Error {
   }
 }
 
-export type PodStatus = { reading: 'on' | 'paused'; podName: string } & SyncPeer;
+/** `wakeups` and `relayOrigin` are absent on a server that predates wake-ups; the phone reads that as `disabled`. */
+export type PodStatus = { reading: 'on' | 'paused'; podName: string; wakeups?: 'on' | 'off' | 'disabled'; relayOrigin?: string } & SyncPeer;
 export type PairAnswer = { deviceId: string; token: string; podName: string };
 type Target = Pick<PodPairing, 'baseUrl' | 'token'>;
 
@@ -79,6 +80,10 @@ export const send = (cfg: Target, commands: SyncCommand[], request: SyncRequest)
 export const status = (cfg: Target): Promise<PodStatus> => call(cfg, 'GET', '/status', undefined, SHORT_MS);
 
 export const setReading = (cfg: Target, paused: boolean): Promise<PodStatus> => call(cfg, 'POST', '/reading', { paused }, SHORT_MS);
+
+/** Hands the server a wake-up pass, or with `null` tells it to drop the one it holds. */
+export const sendPass = (cfg: Target, pass: { capability: string; expiresAt: number } | null): Promise<unknown> =>
+  call(cfg, 'POST', '/ping', pass ?? {}, SHORT_MS);
 
 /** Best effort: the phone is leaving whether or not the server hears it. */
 export async function revoke(cfg: Target): Promise<void> {

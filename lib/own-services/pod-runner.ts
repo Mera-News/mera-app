@@ -26,6 +26,7 @@ import { fromSyncVersionError, PodError, pull, resolveVersion, send } from './po
 import { recordPodError, recordPodOk, resetPodHealth } from './pod-health';
 import { podFeedSyncTask } from './pod-sync-task';
 import { podConfig, podPaired } from './pod-state';
+import { mintWakePass } from './wake-mint';
 import { currentPodSink, setPodSink } from './pod-sink';
 
 // Each of these reads or ranks news on the phone, which the server does while paired.
@@ -287,16 +288,22 @@ export function resetPodSyncGuard(): void {
   lastSyncEndedAt = 0;
 }
 
+async function syncSession(s: Session): Promise<void> {
+  await syncWith(s);
+  await pruneNotifications();
+}
+
+// The foreground sync is the only place the wake-up pass is asked for.
 export async function syncPod(): Promise<void> {
   if (!session) throw new PodError('failed');
-  await syncWith(session);
-  await pruneNotifications();
+  await syncSession(session);
+  await mintWakePass();
 }
 
 /** The OS wake: a sync with the server and nothing else; no sink is set for a session made only for it. */
 export const syncPodInWake = (): Promise<void> =>
   tracked(async () => {
-    if (session) return syncPod();
+    if (session) return syncSession(session);
     if (!podPaired()) throw new PodError('failed');
     const s = makeSession(await readHashes());
     try {

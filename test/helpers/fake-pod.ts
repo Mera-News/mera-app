@@ -36,6 +36,11 @@ export function fakePod(options: { pairing?: Partial<PairingSetup>; token?: stri
     tokens: new Set<string>(options.token ? [options.token] : []),
     revoked: new Set<string>(),
     reading: 'on' as 'on' | 'paused',
+    /** What /status says about wake-ups; undefined is an older server that does not say. */
+    wakeups: undefined as undefined | 'on' | 'off' | 'disabled',
+    relayOrigin: undefined as undefined | string,
+    /** The pass the phone handed over with POST /ping, if any. */
+    pass: null as null | { capability: string; expiresAt: number },
     chatReply: 'Hello from the pod.',
     /** Data per GraphQL operation name. */
     graphql: {} as Record<string, unknown>,
@@ -57,7 +62,12 @@ export function fakePod(options: { pairing?: Partial<PairingSetup>; token?: stri
   const tries: number[] = [];
   const overrides = new Map<string, { status: number; body?: unknown }>();
 
-  const status = () => ({ reading: pod.reading, podName: 'Home pod', ...pod.versions });
+  const status = () => ({
+    reading: pod.reading,
+    podName: 'Home pod',
+    ...pod.versions,
+    ...(pod.wakeups ? { wakeups: pod.wakeups, relayOrigin: pod.relayOrigin } : {}),
+  });
   const json = (body: unknown, init?: number) => HttpResponse.json(body as any, { status: init ?? 200 });
   const mismatch = () => json({ error: 'version_mismatch', message: 'The versions differ.' }, 409);
   const differs = (b: any) => b?.schemaVersion !== pod.versions.schemaVersion || (b?.registry !== undefined && b.registry !== pod.versions.registry);
@@ -113,6 +123,11 @@ export function fakePod(options: { pairing?: Partial<PairingSetup>; token?: stri
       pod.reading = b?.paused ? 'paused' : 'on';
       return json(status());
     }),
+    route('post', '/ping', true, (b) => {
+      pod.pass = typeof b?.capability === 'string' ? { capability: b.capability, expiresAt: b.expiresAt } : null;
+      if (pod.wakeups !== 'disabled') pod.wakeups = pod.pass ? 'on' : 'off';
+      return json({});
+    }),
     route('post', '/devices/revoke', true, (_b, token) => {
       pod.revoked.add(token!);
       return json({});
@@ -137,4 +152,32 @@ export async function podSnapshotFrom(seed: () => Promise<void>): Promise<Snapsh
   const snapshot = await buildSnapshot({ hashes: {}, registry: COMMAND_REGISTRY_VERSION });
   await resetDatabase();
   return snapshot;
+}
+
+export type MintAnswer = { status: number; body?: unknown; headers?: Record<string, string> };
+
+/** The auth host's pass route, `POST <auth>/api/auth/pod/ping-capability`: answers 200 with a fresh pass unless told otherwise. */
+export function fakeMint(authOrigin: string) {
+  const mint = {
+    /** Each request's body and whether it carried a signed-in session cookie. */
+    requests: [] as { body: any; session: boolean }[],
+    /** Answers used once each, first in first out; then the default 200. */
+    queue: [] as MintAnswer[],
+    expiresInS: 14 * 24 * 3600,
+    issued: [] as string[],
+  };
+  server.use(
+    http.post(`${authOrigin}/api/auth/pod/ping-capability`, async ({ request }) => {
+      // Signed in only, like the real route (better-auth's session middleware).
+      const session = /better-auth\.session_token=/.test(request.headers.get('cookie') ?? '');
+      mint.requests.push({ body: await request.json().catch(() => null), session });
+      if (!session) return HttpResponse.json({}, { status: 401 });
+      const next = mint.queue.shift();
+      if (next) return HttpResponse.json((next.body ?? {}) as any, { status: next.status, headers: next.headers });
+      const capability = `mp1.k1.pass-${mint.issued.length + 1}`;
+      mint.issued.push(capability);
+      return HttpResponse.json({ capability, expiresAt: Math.floor(Date.now() / 1000) + mint.expiresInS });
+    }),
+  );
+  return mint;
 }

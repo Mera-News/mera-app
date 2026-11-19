@@ -1,6 +1,7 @@
 import { PodError } from './pod-client';
 import { podPaired, podState, savePairing } from './pod-state';
 import { podSyncSettled, syncPodInWake } from './pod-runner';
+import { sendWakeupsOff } from './wake-mint';
 
 const WAKE_SYNC_MS = 25_000;
 
@@ -11,6 +12,8 @@ export async function setWakeups(on: boolean): Promise<void> {
   const item = podState.get();
   if (!podPaired() || !item) throw new PodError('failed');
   await savePairing({ ...item, wakeups: on || undefined });
+  // Off locally first, so no wake syncs; then the server is told at once, and at each foreground sync until it says off.
+  if (!on) await sendWakeupsOff();
 }
 
 /** The same sign-in test as the OS background task: the keychain is readable and holds a session cookie. */
