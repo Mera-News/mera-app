@@ -155,13 +155,27 @@ describe('handleIssueWarning', () => {
     expect(result).toMatchObject({ blocked: false, warningCount: 0 });
   });
 
-  it('logs the warning it issued', async () => {
+  it('logs the warning it issued with its count, never the reason, which the model wrote from the chat', async () => {
     const warn = jest.spyOn(logger, 'warn');
-    server.use(mockGql('IssueLlmWarning', { issueLlmWarning: personaWith({ llmWarningCount: 1 }) }));
+    const rec = recordGql('IssueLlmWarning');
+    server.use(rec.handler, mockGql('IssueLlmWarning', { issueLlmWarning: personaWith({ llmWarningCount: 1 }) }));
 
-    await handleIssueWarning({ reason: 'test reason' });
+    await handleIssueWarning({ reason: 'asked about my divorce lawyer' });
 
-    expect(warn).toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith(expect.any(String), { warningCount: 1, blocked: false });
+    expect(JSON.stringify(warn.mock.calls)).not.toContain('divorce');
+    // The reason still reaches Mera's server, which counts the warning.
+    expect(JSON.stringify(rec.calls)).toContain('divorce');
+  });
+
+  it('never logs the reason on the paths that fail open either', async () => {
+    const spies = (['debug', 'info', 'warn', 'error', 'captureException', 'captureMessage', 'addBreadcrumb'] as const).map((m) => jest.spyOn(logger, m));
+    server.use(mockGqlError('IssueLlmWarning', 'INTERNAL_SERVER_ERROR'));
+    await handleIssueWarning({ reason: 'asked about my divorce lawyer' });
+    useUserStore.setState({ userId: null });
+    await handleIssueWarning({ reason: 'asked about my divorce lawyer' });
+
+    expect(JSON.stringify(spies.map((s) => s.mock.calls))).not.toContain('divorce');
   });
 });
 

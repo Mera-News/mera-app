@@ -467,7 +467,8 @@ export async function handleIssueWarning(
   const userId = await getStoredUserId();
 
   if (!userId) {
-    logger.warn('[issueWarning] No userId available — failing open', { reason });
+    // Never the reason: the model writes it from the person's chat.
+    logger.warn('[issueWarning] No userId available — failing open');
     return {
       blocked: false,
       warningCount: 0,
@@ -483,7 +484,6 @@ export async function handleIssueWarning(
     useUserStore.getState().setUserPersona(persona);
 
     logger.warn('[issueWarning] Warning issued', {
-      reason,
       warningCount: persona.llmWarningCount,
       blocked: persona.blockedByLlm,
     });
