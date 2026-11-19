@@ -463,7 +463,7 @@
     "settingUpdateFailedTitle": "Güncelleme Başarısız",
     "settingUpdateFailedDescription": "İşleme modu güncellenemedi. Lütfen tekrar dene.",
     "deleteFailedTitle": "Silme Başarısız",
-    "deleteFailedDescription": "The model wasn't deleted. Try again.",
+    "deleteFailedDescription": "Model silinmedi. Tekrar dene.",
     "attestationTitle": "Tasdiki doğrula",
     "attestationVerifyButton": "Doğrulamayı çalıştır",
     "attestationVerifying": "Doğrulanıyor...",
@@ -488,7 +488,7 @@
     "attestationCheckTcbStatus": "Platform yaması düzey güncel",
     "attestationCheckGpuAttestation": "GPU tasdiki",
     "attestationNotCheckedLabel": "kontrol edilmedi",
-    "attestationScopeNotice": "This checks the cloud AI Mera uses right now. A pass here doesn't cover every request Mera makes.",
+    "attestationScopeNotice": "Bu, Mera'nın şu anda kullandığı bulut yapay zekâyı kontrol eder. Bu kontrolden geçmek, Mera'nın yaptığı her isteği kapsamaz.",
     "webSearchTitle": "Sohbette web araması",
     "extractedMetadataPanelHeading": "Çıkarılan Meta Veriler",
     "extractedMetadataEventTypeLabel": "Olay türü",
@@ -508,41 +508,41 @@
     "encrypted": "Şifreli. Mera okuyamaz.",
     "webSearchShort": "Telefonundan yalnızca arama kelimeleri, Mera'nın sunucusu üzerinden çıkar. Arama motoru senin kim olduğunu hiçbir zaman öğrenmez.",
     "whileClosed": "Mera kapalıyken",
-    "modelRowReady": "{{name}}, {{size}}, downloaded",
+    "modelRowReady": "{{name}}, {{size}}, indirildi",
     "modelRowMissing": "{{name}}, {{size}}",
-    "modelLicenseLink": "License: Apache 2.0",
-    "downloadAction": "Download ({{size}})",
-    "downloadingOf": "Downloading {{done}} of {{total}} GB",
-    "cancelDownloadAction": "Cancel download",
-    "tryAgain": "Try again",
-    "cellularTitle": "Download on mobile data?",
-    "cellularBody": "This uses {{size}} of data.",
-    "cellularConfirm": "Download",
-    "cellularWait": "Wait for Wi-Fi",
-    "freeUpToDownload": "Free up {{size}} to download.",
-    "errorFinish": "The download didn't finish. Try again.",
-    "errorFile": "Part of the download didn't arrive correctly. Try again.",
-    "errorSpace": "Not enough space. Free up {{size}} and try again.",
-    "speedRanking": "Ranking: {{seconds}} s per article",
+    "modelLicenseLink": "Lisans: Apache 2.0",
+    "downloadAction": "İndir ({{size}})",
+    "downloadingOf": "{{done}} / {{total}} GB indiriliyor",
+    "cancelDownloadAction": "İndirmeyi iptal et",
+    "tryAgain": "Tekrar dene",
+    "cellularTitle": "Mobil veriyle indirilsin mi?",
+    "cellularBody": "İndirme {{size}} mobil veri kullanır.",
+    "cellularConfirm": "İndir",
+    "cellularWait": "Wi-Fi'yi bekle",
+    "freeUpToDownload": "İndirmek için {{size}} yer aç.",
+    "errorFinish": "İndirme tamamlanamadı. Tekrar dene.",
+    "errorFile": "İndirmenin bir kısmı doğru gelmedi. Tekrar dene.",
+    "errorSpace": "Yeterli alan yok. {{size}} yer aç ve tekrar dene.",
+    "speedRanking": "Sıralama: makale başına {{seconds}} sn",
     "speedNotes": "Nedenler: makale başına {{seconds}} sn",
-    "nativeDeviceNotEligible": "This phone doesn't support {{name}}.",
-    "nativeNotEnabled": "Turn on {{name}} in Settings to use it.",
-    "nativeNotReady": "{{name}} is still getting ready. Try again later.",
-    "nativeAppLanguage": "{{name}} doesn't support Mera's current language yet.",
-    "nativeDeviceLanguage": "{{name}} doesn't support this phone's language yet.",
-    "nativeOsTooOld": "{{name}} needs a newer version of this phone's software.",
-    "nativeUnknown": "{{name}} isn't available right now.",
-    "speedLoad": "Load time: {{seconds}} s",
-    "speedRefused_one": "{{name}} declined {{count}} request",
-    "speedRefused_other": "{{name}} declined {{count}} requests",
-    "modelsWaitingNative": "Mera uses Private cloud until {{name}} is ready.",
-    "relevanceTitle": "Mera relevance model",
-    "modelQueued": "Waiting to download",
-    "deleteModelTitle": "Delete {{name}}?",
-    "deleteRelevanceBody": "This removes it ({{size}}) from this phone. Mera will use Private cloud.",
-    "nativeNeedsUpdate": "{{name}} needs a system update. Check for updates in Settings.",
-    "builtInReady": "Ready on this phone",
-    "builtInRequirement": "{{name}} on this phone",
+    "nativeDeviceNotEligible": "Bu telefon {{name}} özelliğini desteklemiyor.",
+    "nativeNotEnabled": "{{name}} özelliğini kullanmak için telefonun Ayarlar uygulamasından aç.",
+    "nativeNotReady": "{{name}} hâlâ hazırlanıyor. Daha sonra tekrar dene.",
+    "nativeAppLanguage": "{{name}}, Mera News uygulamasının seçili dilini henüz desteklemiyor.",
+    "nativeDeviceLanguage": "{{name}}, telefonun kendi dilini henüz desteklemiyor.",
+    "nativeOsTooOld": "{{name}} için bu telefonun sistem yazılımının daha yeni bir sürümü gerekiyor.",
+    "nativeUnknown": "{{name}} şu anda kullanılamıyor.",
+    "speedLoad": "Yüklenme süresi: {{seconds}} sn",
+    "speedRefused_one": "{{name}}, {{count}} isteği reddetti",
+    "speedRefused_other": "{{name}}, {{count}} isteği reddetti",
+    "modelsWaitingNative": "{{name}} hazır olana kadar Mera Özel bulut kullanır.",
+    "relevanceTitle": "Mera alaka düzeyi modeli",
+    "modelQueued": "İndirme için bekleniyor",
+    "deleteModelTitle": "{{name}} silinsin mi?",
+    "deleteRelevanceBody": "Bu, modeli ({{size}}) bu telefondan kaldırır. Mera bundan sonra Özel bulut kullanır.",
+    "nativeNeedsUpdate": "{{name}} için sistem güncellemesi gerekiyor. Telefonun Ayarlar uygulamasından güncellemeleri kontrol et.",
+    "builtInReady": "Bu telefonda hazır",
+    "builtInRequirement": "{{name}} bu telefonda",
     "notesGroup": "Nedenler",
     "skipNotesTitle": "Nedenleri atla",
     "skipNotesHelp": "Mera haberleri sıralar ama her makalenin Akışınızda neden olduğunu yazmaz. Yeni makaleler daha hızlı görünür.",
@@ -718,17 +718,17 @@
     "networkErrorTitle": "Ağ hatası"
   },
   "download": {
-    "modelDownloading": "Downloading Mera models",
+    "modelDownloading": "Mera modelleri indiriliyor",
     "modelProgress": "{{percent}}%",
     "completeTitle": "İndirme tamamlandı",
     "failedTitle": "İndirme başarısız",
     "failedConnection": "Bağlantınızı kontrol edip tekrar deneyin.",
     "failedServer": "İndirme sunucusunda bir sorun oluştu. Lütfen daha sonra tekrar deneyin.",
     "failedDamaged": "İndirme bozuk geldi. Lütfen tekrar deneyin.",
-    "onDeviceReady": "Mera now runs on this phone.",
-    "failedSpace": "Not enough space on this phone. Free up space and try again.",
+    "onDeviceReady": "Mera artık bu telefonda çalışıyor.",
+    "failedSpace": "Bu telefonda yeterli alan yok. Alan açıp tekrar dene.",
     "betaTitle": "{{title}} (Beta)",
-    "relevanceDone": "The Mera relevance model is on this phone."
+    "relevanceDone": "Mera alaka düzeyi modeli artık bu telefonda."
   },
   "chat": {
     "startingChat": "Sohbet başlatılıyor...",
@@ -765,7 +765,7 @@
     "replyLeakFallback": "Anladım. Eklemek istediğiniz başka bir şey var mı?",
     "replyProcessFallback": "Özür dilerim, buna yetişemedim. Bir daha söyleyebilir misiniz?",
     "cloudOnlyNotice": "Bunun için Mera'nın “Özel bulut” modu gerekir. Ayarlar'da, Mera Protocol bölümünden geçiş yapılabilir.",
-    "onDeviceBetaNote": "On this phone is in Beta, so replies can be slower or less accurate.",
+    "onDeviceBetaNote": "Bu telefonda modu Beta aşamasında olduğu için yanıtlar daha yavaş veya daha az doğru olabilir.",
     "statusWarming": "Hazırlanıyor",
     "statusReady": "Hazır",
     "statusError": "Hata",
@@ -1258,8 +1258,8 @@
       "setSourceScopePref": "Kaynak kapsamı ayarlandı",
       "migrateFact": "Bir ilgi alanı taşındı",
       "setScoringOverride": "Hikayelerinizin sıralanmasını ayarladı",
-      "setFactPlaces": "Changed where news comes from",
-      "setFactNewsStopped": "Stopped news for an interest"
+      "setFactPlaces": "Haberlerin nereden geldiği değiştirildi",
+      "setFactNewsStopped": "İlgi alanlarından biri için haberler durduruldu"
     },
     "summary": {
       "added": "{{name}} eklendi",
@@ -1278,8 +1278,8 @@
       "clearedSourcesFrom": "{{name}} kaynakları için ayarınız temizlendi",
       "carriedOver": "{{name}} aktarıldı",
       "undone": "Geri alındı: {{change}}",
-      "placesSet": "Changed where news comes from for {{name}}",
-      "newsStopped": "Stopped news for {{name}}",
+      "placesSet": "{{name}} için haberlerin nereden geldiği değiştirildi",
+      "newsStopped": "{{name}} için haberler durduruldu",
       "preferred": "{{name}} Tercih edilen olarak ayarlandı",
       "notPreferred": "{{name}} Tercih edilmeyen olarak ayarlandı",
       "preferredSourcesFrom": "{{name}} ülkesinin kaynakları Tercih edilen olarak ayarlandı"
@@ -1668,8 +1668,8 @@
     "blocked": "Bu haber aranamadı.",
     "claimsHeading": "Denetlenen iddialar",
     "citationsHeading": "Danışılan kaynaklar",
-    "noCitations": "Bu kontrol herhangi bir belirli sayfaya atıf yapmadı. Bu başarısız bir arama değil, kaynaklar olmadan özeti biraz daha dikkatle ele alın.",
-    "disclaimer": "Bu, yapay zeka tarafından yazılan bir web aramasının Mera'nın kendi okumasıdır. Hatalı veya eksik olabilir, bu nedenle ona güvenmeden önce kaynakları okuyun.",
+    "noCitations": "Bu kontrol belirli hiçbir sayfayı kaynak göstermedi. Bu başarısız bir arama değil, ama özete daha dikkatli yaklaş.",
+    "disclaimer": "Bu, Mera'nın bir web aramasını kendi okuyuşudur ve yapay zeka tarafından yazılmıştır. Hatalı veya eksik olabilir, bu yüzden güvenmeden önce kaynakları oku.",
     "verdict": {
       "supported": {
         "label": "Kaynaklarla tutarlı",
@@ -1677,23 +1677,23 @@
       },
       "disputed": {
         "label": "Kaynaklar anlaşmazlık içinde",
-        "detail": "Araması, bu haberin bazı kısımlarıyla çelişen kaynaklar buldu. Okuyun ve kendiniz karar verin."
+        "detail": "Arama, bu haberin bazı kısımlarıyla çelişen kaynaklar buldu. Onları oku ve kendin karar ver."
       },
       "unsupported": {
         "label": "Destek bulunamadı",
-        "detail": "Araması bu bulguyu destekleyen bir şey bulamadı. Bu, sadece haberin yeni veya niş olduğu anlamına gelebilir, onu yanlış yapmaz."
+        "detail": "Arama bunu destekleyen bir şey bulamadı. Bu sadece haberin yeni ya da niş olduğunu gösterebilir, yanlış olduğunu değil."
       },
       "mixed": {
         "label": "Kısmen tutarlı",
-        "detail": "Bazı kısımlar aramanın bulduğu bilgilerle uyumlu, bazıları ise uyumsuz. İddia-iddialı notlar hangisinin hangisi olduğunu söyler."
+        "detail": "Bazı kısımlar aramanın bulduklarıyla uyuşuyor, bazıları uyuşmuyor. Hangilerinin uyuştuğunu iddia iddia notlar gösteriyor."
       },
       "unverifiable": {
         "label": "Doğrulanamadı",
-        "detail": "Araması bu haberi doğrulamak veya çürütmek için yeterli bilgi bulamadı. Bu, onu yanlış olduğunu bulmak değil."
+        "detail": "Arama bu haberi doğrulamak ya da çürütmek için yeterli bilgi bulamadı. Bu, haberin yanlış olduğuna dair bir bulgu değil."
       },
       "unknown": {
         "label": "Açık cevap yok",
-        "detail": "Araması, özetleyebileceğimiz bir sonuç olmadan tamamlandı. Aşağıdaki kaynaklar aramanın baktığı şeylerdir."
+        "detail": "Arama, özetleyebileceğimiz bir sonuca varmadan bitti. Aşağıdaki kaynaklar aramanın baktığı yerler."
       }
     },
     "assessment": {
@@ -1708,38 +1708,38 @@
       "listTitle": "Doğruluk kontrolleri",
       "untitled": "Başlıksız haber",
       "openA11y": "Bu makaleyi aç",
-      "articleGone": "Makale süresi dolmuş, bu nedenle açılamıyor. Bulduğumuz gerçek kontrolü burada saklıyoruz.",
-      "couldNotCheck": "Bu konuda kimin yayın yaptığını kontrol edemedik. Aramanın ne bulduğunu görmek için dokunun.",
-      "noneFound": "Yayınlanmış gerçek kontrolü bulunamadı"
+      "articleGone": "Makalenin süresi doldu, bu yüzden açılamıyor. Bulduğumuz doğruluk kontrolü burada saklanıyor.",
+      "couldNotCheck": "Bu konuda kimin bir şey yayımladığını kontrol edemedik. Aramanın ne bulduğunu görmek için dokun.",
+      "noneFound": "Yayımlanmış doğruluk kontrolü bulunamadı"
     },
     "explainer": "Mera kendisi haberler üzerinde doğruluk kontrolü yapmaz. Resmi doğruluk kontrolü kuruluşlarının bu haber hakkında yayımladıklarını arar.",
-    "noCheckedBy": "Bu hikaye hakkında yayınlanmış bir gerçek kontrolü bulamadık. Bu hikayelenin yanlış olduğu anlamına gelmez. Çoğu hikaye hiçbir zaman kontrol edilmez.",
-    "organisationA11y": "{{organisation}} tarafından yapılan gerçek kontrolünü açın, {{rating}} ile değerlendirilmiş, uygulama içi tarayıcıda",
-    "queued": "Bu kontrol arka planda çalışmaya devam ediyor. Burada beklemenize gerek yok, makaleyi terk etseniz bile sorun değil.",
-    "queuedHint": "Sonuç hazır olduğunda Panoda Gerçek Kontroller altında görüntülenir.",
+    "noCheckedBy": "Bu haber hakkında yayımlanmış bir doğruluk kontrolü bulamadık. Bu, haberin yanlış olduğu anlamına gelmez. Çoğu haber hiçbir zaman doğruluk kontrolünden geçmez.",
+    "organisationA11y": "{{organisation}} tarafından yapılan ve {{rating}} olarak değerlendirilen doğruluk kontrolünü uygulama içi tarayıcıda aç",
+    "queued": "Bu kontrol arka planda çalışmaya devam ediyor. Makaleden çıkabilirsin.",
+    "queuedHint": "Sonuç hazır olduğunda Panondaki Doğruluk kontrolleri bölümünde görünür.",
     "citationA11y": "{{source}} kaynağını uygulama içinde aç",
-    "actionA11yPending": "Gerçek kontrol talep edildi, sonuç için kontrol edin",
-    "actionA11yDone": "Gerçek kontrol hazır, sonuç aşağıda gösterilir",
-    "checkedByUnavailable": "Bir gerçek kontrol kuruluşunun bu hikayede yayın yapıp yapmadığını kontrol edemedik. Bu, kimsenin yayın yapmadığı anlamına gelmez. Aşağıda daha geniş aramanın bulduklarını görebilirsiniz.",
+    "actionA11yPending": "Doğruluk kontrolü istendi. Sonuç için tekrar bak.",
+    "actionA11yDone": "Doğruluk kontrolü hazır. Sonuç aşağıda gösteriliyor.",
+    "checkedByUnavailable": "Bir doğruluk kontrolü kuruluşunun bu haber hakkında bir şey yayımlayıp yayımlamadığını kontrol edemedik. Bu, hiç kimsenin yayımlamadığı anlamına gelmez. Daha geniş aramanın bulduklarını aşağıda görebilirsin.",
     "claimProposalTitle": "Bu iddiayı kontrol et?",
-    "actionCheckClaim": "Iddiayı kontrol et",
+    "actionCheckClaim": "İddiayı kontrol et",
     "chatSeed": "Bu hikaye hakkında ne kontrol edilebilir?",
     "actionCheckArticle": "Tüm makaleyi kontrol et",
     "chipQuickFactCheck": "Hızlı doğrulama",
     "optionWholeArticle": "Tüm makale",
     "quickAnswered": "Hızlı web araması şunları buldu:",
     "quickArticleFailed": "Mera isteğin gönderildiğini doğrulayamadı. Birazdan tekrar dene.",
-    "quickArticleRequested": "İstek gönderildi. Mera tüm makaleyi kontrol edecek, sonuç Dashboard'unuzdaki Gerçek Kontroller bölümünde hazır olduğunda görünecek.",
+    "quickArticleRequested": "İstek gönderildi. Mera tüm makaleyi kontrol edecek ve sonuç Panondaki Doğruluk kontrolleri bölümünde görünecek.",
     "quickArticleSending": "İstek gönderiliyor…",
     "quickCouldNotSearch": "Mera şu anda web'de arama yapamadı, bu nedenle bu bir cevap değil, birazdan tekrar dene.",
-    "quickDisclaimer": "Bu, hızlı bir web araması olup, bir gerçek doğrulama kuruluşu tarafından yapılan bir kontrol değildir ve kaydedilmez. Kaynaklarla birlikte kapsamlı bir kontrol için \"Tüm makale\" seçeneğini seç.",
+    "quickDisclaimer": "Bu hızlı bir web araması, doğruluk kontrolü kuruluşlarının yaptığı bir kontrol değil ve kaydedilmiyor. Adları belirtilen kaynaklarla kapsamlı bir kontrol için \"Tüm makale\" seçeneğini seç.",
     "quickFailed": "Mera bazı bilgiler buldu ancak bu kez bir cevap oluşturamadı. Birazdan tekrar dene.",
-    "quickNothingFound": "Arama, bununla ilgili hiçbir şey bulamamıştır. Bu, bunun yanlış olduğu anlamına gelmez, sadece yeni, niş veya çevrimiçi olarak yaygın olarak kapsanan bir konu olmayabilir.",
+    "quickNothingFound": "Arama bununla ilgili bir şey bulamadı. Bu, yanlış olduğu anlamına gelmez. Sadece yeni, niş ya da internette pek yer almayan bir konu olabilir.",
     "quickRunning": "Web aranıyor…",
-    "stillChecking": "Bu normalden daha uzun sürüyor. Arka planda hala kontrol ediliyor, daha sonra geri gel veya Dashboard'unuzdaki Gerçek Kontroller bölümüne bak.",
+    "stillChecking": "Bu normalden uzun sürüyor. Arka planda hâlâ çalışıyor, sonra Panondaki Doğruluk kontrolleri bölümüne tekrar bak.",
     "collapseA11y": "Bu doğrulamayı gizle",
     "expandA11y": "Bu doğrulamayı göster",
-    "checkedByRelatedNote": "Bunlar anahtar sözcük aramasından gelir ve farklı bir hikaye hakkında olabilir. Kontrol etmek için birini açın.",
+    "checkedByRelatedNote": "Bunlar bir anahtar sözcük aramasından gelir ve başka bir haberle ilgili olabilir. Kontrol etmek için birini aç.",
     "searchFoundEmpty": "Arama, Mera'nın burada özet yapabileceği kadar bilgi sağlamadı.",
     "headerA11y": "{{title}}. {{status}}. {{action}}",
     "notify": {
@@ -2701,7 +2701,7 @@
   "askChoice": {
     "answeredA11y": "zaten yanıtlandı",
     "saveAll": "Tümünü kaydet",
-    "somethingElse": "Something else"
+    "somethingElse": "Başka bir şey"
   },
   "chatPhases": {
     "preparing": [
@@ -3101,25 +3101,25 @@
     },
     "fact": {
       "places": {
-        "about": "About",
-        "notSet": "Not set yet",
-        "addCountry": "Add a country",
-        "anywhere": "Anywhere",
-        "remove": "Remove {{place}}",
-        "search": "Search countries",
-        "noCountry": "No country found",
+        "about": "Yerler",
+        "notSet": "Henüz ayarlanmadı",
+        "addCountry": "Ülke ekle",
+        "anywhere": "Herhangi bir yer",
+        "remove": "{{place}} kaldır",
+        "search": "Ülkelerde ara",
+        "noCountry": "Ülke bulunamadı",
         "blocs": {
-          "EU": "European Union",
-          "EEA": "European Economic Area",
-          "EFTA": "European Free Trade Association",
-          "UK": "United Kingdom",
-          "Europe": "Europe",
-          "Asia": "Asia",
-          "Africa": "Africa",
-          "North America": "North America",
-          "South America": "South America",
-          "Oceania": "Oceania",
-          "Antarctica": "Antarctica"
+          "EU": "Avrupa Birliği",
+          "EEA": "Avrupa Ekonomik Alanı",
+          "EFTA": "Avrupa Serbest Ticaret Birliği",
+          "UK": "Birleşik Krallık",
+          "Europe": "Avrupa",
+          "Asia": "Asya",
+          "Africa": "Afrika",
+          "North America": "Kuzey Amerika",
+          "South America": "Güney Amerika",
+          "Oceania": "Okyanusya",
+          "Antarctica": "Antarktika"
         }
       }
     }
@@ -3223,42 +3223,42 @@
     "newest": "Yeni olanlar ilk"
   },
   "kevChat": {
-    "askIntent": "What would you like to do?",
-    "askFact": "Which fact do you mean?",
-    "askTopic": "Which topic do you mean?",
+    "askIntent": "Ne yapmak istersin?",
+    "askFact": "Hangi gerçeği kastediyorsun?",
+    "askTopic": "Hangi konuyu kastediyorsun?",
     "persona": {
-      "share": "Add this as a new fact",
-      "remove": "Remove a saved fact",
-      "correct": "Update a saved fact",
-      "chat": "Just chatting"
+      "share": "Bunu yeni bir gerçek olarak ekle",
+      "remove": "Kayıtlı bir gerçeği kaldır",
+      "correct": "Kayıtlı bir gerçeği güncelle",
+      "chat": "Sadece sohbet"
     },
     "card": {
-      "agree": "Apply the change",
-      "decline": "Leave it as it is"
+      "agree": "Değişikliği uygula",
+      "decline": "Olduğu gibi bırak"
     },
     "article": {
-      "answer": "Answer a question",
-      "follow": "Follow this story",
-      "less": "Show less like this",
-      "more": "Show more like this",
+      "answer": "Bir soruyu yanıtla",
+      "follow": "Bu haberi takip et",
+      "less": "Buna benzerleri daha az göster",
+      "more": "Buna benzerleri daha fazla göster",
       "mute": "Bu yayını Tercih edilmeyen olarak işaretleyin"
     },
     "follow": {
-      "follow": "Follow a story",
-      "other": "Ask something else"
+      "follow": "Bir haberi takip et",
+      "other": "Başka bir şey sor"
     },
     "reply": {
-      "pickOnCard": "Tap the one you want on the card.",
-      "saveFailed": "I couldn't catch that. Could you say it another way?",
-      "alreadyKnown": "I already have that in your profile.",
-      "removeCard": "Tap Remove to confirm, or Keep to leave it.",
-      "notFound": "I couldn't find that in your profile.",
-      "applied": "Done.",
-      "cancelled": "Okay, I left it as it is.",
-      "ack": "Anytime.",
-      "chat": "Sorry, I couldn't answer that on this phone. Try asking another way.",
-      "followFailed": "Which story would you like to follow?",
-      "changeCard": "Tap the card to confirm the change."
+      "pickOnCard": "Kartta istediğine dokun.",
+      "saveFailed": "Ne dediğini anlayamadım. Bunu başka bir şekilde söyler misin?",
+      "alreadyKnown": "Bu zaten profilinde var.",
+      "removeCard": "Onaylamak için Kaldır'a, olduğu gibi bırakmak için Tut'a dokun.",
+      "notFound": "Bunu profilinde bulamadım.",
+      "applied": "Yapıldı.",
+      "cancelled": "Tamam, olduğu gibi bıraktım, hiçbir şey değişmedi.",
+      "ack": "Rica ederim.",
+      "chat": "Üzgünüm, bunu bu telefonda yanıtlayamadım. Başka bir şekilde sormayı dene.",
+      "followFailed": "Hangi haberi takip etmek istersin?",
+      "changeCard": "Değişikliği onaylamak için karta dokun."
     }
   },
   "factCheckExport": {
