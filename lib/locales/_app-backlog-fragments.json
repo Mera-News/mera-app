@@ -1,0 +1,2352 @@
+{
+  "en": {},
+  "ar": {
+    "askChoice": {
+      "somethingElse": "شيء آخر"
+    },
+    "chat": {
+      "onDeviceBetaNote": "الوضع على هذا الهاتف تجريبي، لذلك قد تكون الردود أبطأ أو أقل دقة."
+    },
+    "download": {
+      "betaTitle": "{{title}} (تجريبي)",
+      "failedSpace": "لا توجد مساحة كافية على هذا الهاتف. أفرغ مساحة وحاول مرة أخرى."
+    },
+    "kevChat": {
+      "article": {
+        "answer": "الإجابة على سؤال",
+        "follow": "متابعة هذه القصة",
+        "less": "إظهار أقل من هذا النوع",
+        "more": "إظهار المزيد من هذا النوع"
+      },
+      "askFact": "أي حقيقة تقصد؟",
+      "askIntent": "ماذا تريد أن تفعل؟",
+      "askTopic": "أي موضوع تقصد؟",
+      "card": {
+        "agree": "تطبيق التغيير",
+        "decline": "تركه كما هو"
+      },
+      "follow": {
+        "follow": "متابعة قصة",
+        "other": "اسأل عن شيء آخر"
+      },
+      "persona": {
+        "chat": "مجرد دردشة",
+        "correct": "تحديث حقيقة محفوظة",
+        "remove": "إزالة حقيقة محفوظة",
+        "share": "إضافة هذا كحقيقة جديدة"
+      },
+      "reply": {
+        "ack": "على الرحب والسعة.",
+        "alreadyKnown": "لديّ هذا بالفعل في ملفك الشخصي.",
+        "applied": "تم.",
+        "cancelled": "حسنًا، تركته كما كان ولم يتغيّر شيء.",
+        "changeCard": "اضغط على البطاقة لتأكيد التغيير.",
+        "chat": "عذرًا، لم أستطع الإجابة عن ذلك على هذا الهاتف. جرّب أن تسأل بطريقة أخرى.",
+        "followFailed": "أي قصة تود متابعتها؟",
+        "notFound": "لم أجد ذلك في ملفك الشخصي.",
+        "pickOnCard": "اضغط على الخيار الذي تريده في البطاقة.",
+        "removeCard": "اضغط على إزالة للتأكيد، أو على الإبقاء لترك الحقيقة كما هي.",
+        "saveFailed": "لم أفهم ما قلته. هل يمكنك قوله بطريقة أخرى؟"
+      }
+    },
+    "meraProtocol": {
+      "builtInReady": "جاهز على هذا الهاتف",
+      "builtInRequirement": "{{name}} على هذا الهاتف",
+      "cancelDownloadAction": "إلغاء التنزيل",
+      "cellularBody": "التنزيل يستهلك {{size}} من بيانات الجوال.",
+      "cellularConfirm": "تنزيل",
+      "cellularTitle": "هل تريد التنزيل باستخدام بيانات الجوال؟",
+      "cellularWait": "انتظار شبكة Wi-Fi",
+      "deleteFailedDescription": "لم يُحذف النموذج. حاول مرة أخرى.",
+      "deleteModelTitle": "أتريد حذف {{name}}؟",
+      "downloadAction": "تنزيل ({{size}})",
+      "downloadingOf": "جارٍ التنزيل: {{done}} من {{total}} غيغابايت",
+      "errorFile": "لم يصل جزء من التنزيل بشكل صحيح. حاول مرة أخرى.",
+      "errorFinish": "لم يكتمل التنزيل. حاول مرة أخرى.",
+      "errorSpace": "لا توجد مساحة كافية. أفرغ {{size}} وحاول مرة أخرى.",
+      "freeUpToDownload": "أفرغ {{size}} للتنزيل.",
+      "modelLicenseLink": "الترخيص: Apache 2.0",
+      "modelQueued": "في انتظار التنزيل",
+      "modelRowReady": "{{name}}، {{size}}، تم التنزيل",
+      "nativeDeviceLanguage": "{{name}} لا يدعم لغة هذا الهاتف بعد.",
+      "nativeDeviceNotEligible": "هذا الهاتف لا يدعم {{name}}.",
+      "nativeNeedsUpdate": "{{name}} يحتاج إلى تحديث للنظام. تحقّق من التحديثات في إعدادات الهاتف.",
+      "nativeNotEnabled": "فعّل {{name}} من إعدادات الهاتف لاستخدامه.",
+      "nativeNotReady": "{{name}} ما زال قيد التجهيز. حاول مرة أخرى لاحقًا.",
+      "nativeOsTooOld": "{{name}} يحتاج إلى إصدار أحدث من برنامج هذا الهاتف.",
+      "nativeUnknown": "{{name}} غير متاح الآن.",
+      "speedLoad": "زمن التحميل: {{seconds}} ث",
+      "speedRanking": "الترتيب: {{seconds}} ث لكل مقال",
+      "speedRefused_one": "رفض {{name}} {{count}} طلب",
+      "speedRefused_other": "رفض {{name}} {{count}} طلب",
+      "tryAgain": "إعادة المحاولة",
+      "speedRefused_zero": "لم يرفض {{name}} أي طلب",
+      "speedRefused_two": "رفض {{name}} طلبين",
+      "speedRefused_few": "رفض {{name}} {{count}} طلبات",
+      "speedRefused_many": "رفض {{name}} {{count}} طلبًا"
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactNewsStopped": "تم إيقاف الأخبار لأحد الاهتمامات",
+        "setFactPlaces": "تم تغيير الأماكن التي تأتي منها الأخبار لأحد الاهتمامات"
+      },
+      "summary": {
+        "newsStopped": "تم إيقاف الأخبار عن {{name}}",
+        "placesSet": "تم تغيير الأماكن التي تأتي منها أخبار {{name}}"
+      }
+    },
+    "you": {
+      "fact": {
+        "places": {
+          "about": "الأماكن",
+          "addCountry": "إضافة دولة",
+          "anywhere": "أي مكان",
+          "blocs": {
+            "Africa": "أفريقيا",
+            "Antarctica": "القارة القطبية الجنوبية",
+            "Asia": "آسيا",
+            "EEA": "المنطقة الاقتصادية الأوروبية",
+            "EFTA": "الرابطة الأوروبية للتجارة الحرة",
+            "EU": "الاتحاد الأوروبي",
+            "Europe": "أوروبا",
+            "North America": "أمريكا الشمالية",
+            "Oceania": "أوقيانوسيا",
+            "South America": "أمريكا الجنوبية",
+            "UK": "المملكة المتحدة"
+          },
+          "noCountry": "لم يُعثر على أي دولة",
+          "notSet": "لم يُحدَّد بعد",
+          "remove": "إزالة {{place}}",
+          "search": "البحث عن الدول"
+        }
+      }
+    }
+  },
+  "de": {
+    "askChoice": {
+      "somethingElse": "Etwas anderes"
+    },
+    "chat": {
+      "onDeviceBetaNote": "Die Option Auf diesem Telefon ist in der Beta, daher können Antworten langsamer oder weniger genau sein."
+    },
+    "download": {
+      "failedSpace": "Auf diesem Telefon ist nicht genug Speicher frei. Gib Speicher frei und versuch es erneut.",
+      "modelDownloading": "Mera-Modelle werden heruntergeladen",
+      "onDeviceReady": "Mera läuft jetzt auf diesem Telefon.",
+      "relevanceDone": "Das Mera-Relevanzmodell ist jetzt auf diesem Telefon."
+    },
+    "kevChat": {
+      "article": {
+        "answer": "Eine Frage beantworten",
+        "follow": "Dieser Geschichte folgen",
+        "less": "Weniger davon anzeigen",
+        "more": "Mehr davon anzeigen"
+      },
+      "askFact": "Welchen Fakt meinst du?",
+      "askIntent": "Was möchtest du tun?",
+      "askTopic": "Welches Thema meinst du?",
+      "card": {
+        "agree": "Änderung übernehmen",
+        "decline": "So lassen, wie es ist"
+      },
+      "follow": {
+        "follow": "Geschichten folgen",
+        "other": "Etwas anderes fragen"
+      },
+      "persona": {
+        "chat": "Nur plaudern",
+        "correct": "Gespeicherten Fakt aktualisieren",
+        "remove": "Gespeicherten Fakt entfernen",
+        "share": "Als neuen Fakt hinzufügen"
+      },
+      "reply": {
+        "ack": "Jederzeit gern.",
+        "alreadyKnown": "Das habe ich schon in deinem Profil.",
+        "applied": "Erledigt.",
+        "cancelled": "Okay, ich habe es so gelassen, wie es war, ohne etwas zu ändern.",
+        "changeCard": "Tippe auf die Karte, um die Änderung zu bestätigen.",
+        "chat": "Tut mir leid, das konnte ich auf diesem Telefon nicht beantworten. Versuch, anders zu fragen.",
+        "followFailed": "Welcher Geschichte möchtest du folgen?",
+        "notFound": "Das konnte ich in deinem Profil nicht finden.",
+        "pickOnCard": "Tippe auf der Karte auf die gewünschte Option.",
+        "removeCard": "Tippe auf Entfernen, um zu bestätigen, oder auf Behalten, um den Fakt so zu lassen.",
+        "saveFailed": "Das habe ich nicht verstanden. Kannst du es anders sagen?"
+      }
+    },
+    "meraProtocol": {
+      "attestationScopeNotice": "Das prüft die Cloud-KI, die Mera im Moment nutzt. Eine bestandene Prüfung deckt nicht jede Anfrage ab, die Mera stellt.",
+      "builtInReady": "Auf diesem Telefon bereit",
+      "builtInRequirement": "{{name}} auf diesem Telefon",
+      "cancelDownloadAction": "Download abbrechen",
+      "cellularBody": "Dafür werden {{size}} mobiles Datenvolumen verwendet.",
+      "cellularConfirm": "Herunterladen",
+      "cellularTitle": "Über mobile Daten herunterladen?",
+      "cellularWait": "Auf WLAN warten",
+      "deleteFailedDescription": "Das Modell wurde nicht gelöscht. Versuch es erneut.",
+      "deleteModelTitle": "{{name}} löschen?",
+      "deleteRelevanceBody": "Damit wird es ({{size}}) von diesem Telefon entfernt. Mera nutzt dann Private Cloud.",
+      "downloadAction": "Herunterladen ({{size}})",
+      "downloadingOf": "Wird heruntergeladen: {{done}} von {{total}} GB",
+      "errorFile": "Ein Teil des Downloads ist nicht richtig angekommen. Versuch es erneut.",
+      "errorFinish": "Der Download wurde nicht abgeschlossen. Versuch es erneut.",
+      "errorSpace": "Nicht genug Speicher. Gib {{size}} frei und versuch es erneut.",
+      "freeUpToDownload": "Gib {{size}} frei, um es herunterzuladen.",
+      "modelLicenseLink": "Lizenz: Apache 2.0",
+      "modelQueued": "Wartet auf das Herunterladen",
+      "modelRowReady": "{{name}}, {{size}}, heruntergeladen",
+      "modelsWaitingNative": "Mera nutzt Private Cloud, bis {{name}} bereit ist.",
+      "nativeAppLanguage": "{{name}} unterstützt die aktuelle Sprache der Mera News App noch nicht.",
+      "nativeDeviceLanguage": "{{name}} unterstützt die Sprache dieses Telefons noch nicht.",
+      "nativeDeviceNotEligible": "Dieses Telefon unterstützt {{name}} nicht.",
+      "nativeNeedsUpdate": "{{name}} braucht ein Systemupdate. Suche in den Einstellungen deines Telefons nach Updates.",
+      "nativeNotEnabled": "Aktiviere {{name}} in den Einstellungen deines Telefons, um es zu verwenden.",
+      "nativeNotReady": "{{name}} wird noch vorbereitet. Versuch es später erneut.",
+      "nativeOsTooOld": "{{name}} braucht eine neuere Version der Systemsoftware dieses Telefons.",
+      "nativeUnknown": "{{name}} ist im Moment nicht verfügbar.",
+      "relevanceTitle": "Mera-Relevanzmodell",
+      "speedLoad": "Ladezeit: {{seconds}} s",
+      "speedRanking": "Rangfolge: {{seconds}} s pro Artikel",
+      "speedRefused_one": "{{name}} hat {{count}} Anfrage abgelehnt",
+      "speedRefused_other": "{{name}} hat {{count}} Anfragen abgelehnt",
+      "tryAgain": "Erneut versuchen"
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactNewsStopped": "Nachrichten zu einem Interesse gestoppt",
+        "setFactPlaces": "Herkunft der Nachrichten zu einem Interesse geändert"
+      },
+      "summary": {
+        "newsStopped": "Nachrichten zu {{name}} gestoppt",
+        "placesSet": "Herkunft der Nachrichten zu {{name}} geändert"
+      }
+    },
+    "you": {
+      "fact": {
+        "places": {
+          "about": "Orte",
+          "addCountry": "Land hinzufügen",
+          "anywhere": "Überall",
+          "blocs": {
+            "Africa": "Afrika",
+            "Antarctica": "Antarktis",
+            "Asia": "Asien",
+            "EEA": "Europäischer Wirtschaftsraum",
+            "EFTA": "Europäische Freihandelsassoziation",
+            "EU": "Europäische Union",
+            "Europe": "Europa",
+            "North America": "Nordamerika",
+            "Oceania": "Ozeanien",
+            "South America": "Südamerika",
+            "UK": "Vereinigtes Königreich"
+          },
+          "noCountry": "Kein Land gefunden",
+          "notSet": "Noch nicht festgelegt",
+          "remove": "{{place}} entfernen",
+          "search": "Länder suchen"
+        }
+      }
+    }
+  },
+  "es": {
+    "askChoice": {
+      "somethingElse": "Otra cosa"
+    },
+    "chat": {
+      "onDeviceBetaNote": "La opción En este teléfono está en Beta, así que las respuestas pueden tardar más o ser menos precisas."
+    },
+    "download": {
+      "failedSpace": "No hay suficiente espacio en este teléfono. Libera espacio e inténtalo de nuevo.",
+      "modelDownloading": "Descargando modelos de Mera",
+      "onDeviceReady": "Mera ya funciona en este teléfono.",
+      "relevanceDone": "El modelo de relevancia de Mera ya está en este teléfono."
+    },
+    "kevChat": {
+      "article": {
+        "answer": "Responder una pregunta",
+        "follow": "Seguir esta historia",
+        "less": "Mostrar menos de este tipo",
+        "more": "Mostrar más de este tipo"
+      },
+      "askFact": "¿A qué hecho te refieres?",
+      "askIntent": "¿Qué te gustaría hacer?",
+      "askTopic": "¿A qué tema te refieres?",
+      "card": {
+        "agree": "Aplicar el cambio",
+        "decline": "Dejarlo como está"
+      },
+      "follow": {
+        "follow": "Seguir una historia",
+        "other": "Preguntar otra cosa"
+      },
+      "persona": {
+        "chat": "Solo charlar",
+        "correct": "Actualizar un hecho guardado",
+        "remove": "Eliminar un hecho guardado",
+        "share": "Añadir esto como un hecho nuevo"
+      },
+      "reply": {
+        "ack": "Cuando quieras.",
+        "alreadyKnown": "Ya tengo eso en tu perfil.",
+        "applied": "Listo.",
+        "cancelled": "De acuerdo, lo he dejado como estaba, sin cambios.",
+        "changeCard": "Toca la tarjeta para confirmar el cambio.",
+        "chat": "Lo siento, no pude responder a eso en este teléfono. Prueba a preguntar de otra forma.",
+        "followFailed": "¿Qué historia quieres seguir?",
+        "notFound": "No encontré eso en tu perfil.",
+        "pickOnCard": "Toca la opción que quieras en la tarjeta.",
+        "removeCard": "Toca Eliminar para confirmar, o Conservar para dejar el hecho como está.",
+        "saveFailed": "No te he entendido. ¿Podrías decirlo de otra forma?"
+      }
+    },
+    "meraProtocol": {
+      "attestationScopeNotice": "Esto comprueba la IA en la nube que usa Mera ahora mismo. Superar esta comprobación aquí no cubre todas las solicitudes que hace Mera.",
+      "builtInReady": "Listo en este teléfono",
+      "builtInRequirement": "{{name}} en este teléfono",
+      "cancelDownloadAction": "Cancelar descarga",
+      "cellularBody": "Descargar usa {{size}} de datos móviles.",
+      "cellularConfirm": "Descargar",
+      "cellularTitle": "¿Descargar con datos móviles?",
+      "cellularWait": "Esperar al Wi-Fi",
+      "deleteFailedDescription": "El modelo no se eliminó. Inténtalo de nuevo.",
+      "deleteModelTitle": "¿Eliminar {{name}}?",
+      "deleteRelevanceBody": "Esto elimina el modelo ({{size}}) de este teléfono. Mera usará la Nube privada.",
+      "downloadAction": "Descargar ({{size}})",
+      "downloadingOf": "Descargando {{done}} de {{total}} GB",
+      "errorFile": "Parte de la descarga no llegó correctamente. Inténtalo de nuevo.",
+      "errorFinish": "La descarga no terminó. Inténtalo de nuevo.",
+      "errorSpace": "No hay espacio suficiente. Libera {{size}} e inténtalo de nuevo.",
+      "freeUpToDownload": "Libera {{size}} para descargar.",
+      "modelLicenseLink": "Licencia: Apache 2.0",
+      "modelQueued": "Esperando para descargar",
+      "modelRowReady": "{{name}}, {{size}}, descargado",
+      "modelsWaitingNative": "Mera usa la Nube privada hasta que {{name}} esté listo.",
+      "nativeAppLanguage": "{{name}} aún no admite el idioma de la app Mera News.",
+      "nativeDeviceLanguage": "{{name}} todavía no admite el idioma de este teléfono.",
+      "nativeDeviceNotEligible": "Este teléfono no admite {{name}}.",
+      "nativeNeedsUpdate": "{{name}} necesita una actualización del sistema. Busca actualizaciones en los ajustes de tu teléfono.",
+      "nativeNotEnabled": "Activa {{name}} en los ajustes de tu teléfono para usarlo.",
+      "nativeNotReady": "{{name}} todavía se está preparando. Inténtalo más tarde.",
+      "nativeOsTooOld": "{{name}} necesita una versión más reciente del software de este teléfono.",
+      "nativeUnknown": "{{name}} no está disponible en este momento.",
+      "relevanceTitle": "Modelo de relevancia de Mera",
+      "speedLoad": "Tiempo de carga: {{seconds}} s",
+      "speedRanking": "Clasificación: {{seconds}} s por artículo",
+      "speedRefused_one": "{{name}} rechazó {{count}} solicitud",
+      "speedRefused_other": "{{name}} rechazó {{count}} solicitudes",
+      "tryAgain": "Reintentar"
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactNewsStopped": "Se dejaron de mostrar noticias de un interés",
+        "setFactPlaces": "Se cambió de dónde vienen las noticias de un interés"
+      },
+      "summary": {
+        "newsStopped": "Se dejaron de mostrar noticias de {{name}}",
+        "placesSet": "Se cambió de dónde vienen las noticias de {{name}}"
+      }
+    },
+    "you": {
+      "fact": {
+        "places": {
+          "about": "Lugares",
+          "addCountry": "Añadir un país",
+          "anywhere": "Cualquier lugar",
+          "blocs": {
+            "Africa": "África",
+            "Antarctica": "Antártida",
+            "EEA": "Espacio Económico Europeo",
+            "EFTA": "Asociación Europea de Libre Comercio",
+            "EU": "Unión Europea",
+            "Europe": "Europa",
+            "North America": "América del Norte",
+            "Oceania": "Oceanía",
+            "South America": "América del Sur",
+            "UK": "Reino Unido"
+          },
+          "noCountry": "No se encontró ningún país",
+          "notSet": "Aún sin definir",
+          "remove": "Quitar {{place}}",
+          "search": "Buscar países"
+        }
+      }
+    }
+  },
+  "fr": {
+    "askChoice": {
+      "somethingElse": "Autre chose"
+    },
+    "chat": {
+      "onDeviceBetaNote": "Le mode Sur ce téléphone est en Bêta, donc les réponses peuvent être plus lentes ou moins précises."
+    },
+    "download": {
+      "betaTitle": "{{title}} (Bêta)",
+      "failedSpace": "Il n'y a pas assez d'espace sur ce téléphone. Libérez de l'espace et réessayez.",
+      "modelDownloading": "Téléchargement des modèles Mera",
+      "onDeviceReady": "Mera fonctionne maintenant sur ce téléphone.",
+      "relevanceDone": "Le modèle de pertinence de Mera est maintenant sur ce téléphone."
+    },
+    "kevChat": {
+      "article": {
+        "answer": "Répondre à une question",
+        "follow": "Suivre cette histoire",
+        "less": "Afficher moins de ce type",
+        "more": "Afficher plus de ce type"
+      },
+      "askFact": "De quel fait parlez-vous ?",
+      "askIntent": "Que souhaitez-vous faire ?",
+      "askTopic": "De quel sujet parlez-vous ?",
+      "card": {
+        "agree": "Appliquer la modification",
+        "decline": "La laisser telle quelle"
+      },
+      "follow": {
+        "follow": "Suivre une histoire",
+        "other": "Demander autre chose"
+      },
+      "persona": {
+        "chat": "Simplement discuter",
+        "correct": "Modifier un fait enregistré",
+        "remove": "Supprimer un fait enregistré",
+        "share": "Ajouter ceci comme nouveau fait"
+      },
+      "reply": {
+        "ack": "Avec plaisir.",
+        "alreadyKnown": "Je l'ai déjà dans votre profil.",
+        "applied": "C'est fait.",
+        "cancelled": "D'accord, je l'ai laissé tel quel, rien n'a changé.",
+        "changeCard": "Appuyez sur la carte pour confirmer la modification.",
+        "chat": "Désolé, je n'ai pas pu répondre à cela sur ce téléphone. Essayez de demander autrement.",
+        "followFailed": "Quelle histoire souhaitez-vous suivre ?",
+        "notFound": "Je n'ai pas trouvé cela dans votre profil.",
+        "pickOnCard": "Appuyez sur l'option de votre choix sur la carte.",
+        "removeCard": "Appuyez sur Supprimer pour confirmer, ou sur Garder pour laisser le fait tel quel.",
+        "saveFailed": "Je n'ai pas bien compris. Pouvez-vous le dire autrement ?"
+      }
+    },
+    "meraProtocol": {
+      "attestationScopeNotice": "Ceci vérifie l'IA dans le cloud que Mera utilise actuellement. Une vérification réussie ici ne couvre pas chaque requête de Mera.",
+      "builtInReady": "Prêt sur ce téléphone",
+      "builtInRequirement": "{{name}} sur ce téléphone",
+      "cancelDownloadAction": "Annuler le téléchargement",
+      "cellularBody": "Le téléchargement utilise {{size}} de données mobiles.",
+      "cellularConfirm": "Télécharger",
+      "cellularTitle": "Télécharger avec les données mobiles ?",
+      "cellularWait": "Attendre le Wi-Fi",
+      "deleteFailedDescription": "Le modèle n'a pas été supprimé. Réessayez.",
+      "deleteModelTitle": "Supprimer {{name}} ?",
+      "deleteRelevanceBody": "Cela supprime le modèle ({{size}}) de ce téléphone. Mera utilisera le Cloud privé.",
+      "downloadAction": "Télécharger ({{size}})",
+      "downloadingOf": "Téléchargement de {{done}} sur {{total}} Go",
+      "errorFile": "Une partie du téléchargement n'est pas bien arrivée. Réessayez.",
+      "errorFinish": "Le téléchargement ne s'est pas terminé. Réessayez.",
+      "errorSpace": "Espace insuffisant. Libérez {{size}} et réessayez.",
+      "freeUpToDownload": "Libérez {{size}} pour télécharger.",
+      "modelLicenseLink": "Licence : Apache 2.0",
+      "modelQueued": "En attente de téléchargement",
+      "modelRowReady": "{{name}}, {{size}}, téléchargé",
+      "modelsWaitingNative": "Mera utilise le Cloud privé jusqu'à ce que {{name}} soit prêt.",
+      "nativeAppLanguage": "{{name}} ne prend pas encore en charge la langue de l'application Mera News.",
+      "nativeDeviceLanguage": "{{name}} ne prend pas encore en charge la langue de ce téléphone.",
+      "nativeDeviceNotEligible": "Ce téléphone ne prend pas en charge {{name}}.",
+      "nativeNeedsUpdate": "{{name}} nécessite une mise à jour du système. Recherchez les mises à jour dans les paramètres de votre téléphone.",
+      "nativeNotEnabled": "Activez {{name}} dans les paramètres de votre téléphone pour l'utiliser.",
+      "nativeNotReady": "{{name}} se prépare encore. Réessayez plus tard.",
+      "nativeOsTooOld": "{{name}} nécessite une version plus récente du logiciel de ce téléphone.",
+      "nativeUnknown": "{{name}} n'est pas disponible pour le moment.",
+      "relevanceTitle": "Modèle de pertinence de Mera",
+      "speedLoad": "Temps de chargement : {{seconds}} s",
+      "speedRanking": "Classement : {{seconds}} s par article",
+      "speedRefused_one": "{{name}} a refusé {{count}} requête",
+      "speedRefused_other": "{{name}} a refusé {{count}} requêtes",
+      "tryAgain": "Réessayer"
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactNewsStopped": "Actualités arrêtées pour un intérêt",
+        "setFactPlaces": "Provenance des actualités modifiée pour un intérêt"
+      },
+      "summary": {
+        "newsStopped": "Actualités arrêtées pour {{name}}",
+        "placesSet": "Provenance des actualités modifiée pour {{name}}"
+      }
+    },
+    "you": {
+      "fact": {
+        "places": {
+          "about": "Lieux",
+          "addCountry": "Ajouter un pays",
+          "anywhere": "Partout",
+          "blocs": {
+            "Africa": "Afrique",
+            "Antarctica": "Antarctique",
+            "Asia": "Asie",
+            "EEA": "Espace économique européen",
+            "EFTA": "Association européenne de libre-échange",
+            "EU": "Union européenne",
+            "North America": "Amérique du Nord",
+            "Oceania": "Océanie",
+            "South America": "Amérique du Sud",
+            "UK": "Royaume-Uni"
+          },
+          "noCountry": "Aucun pays trouvé",
+          "notSet": "Pas encore défini",
+          "remove": "Retirer {{place}}",
+          "search": "Rechercher des pays"
+        }
+      }
+    }
+  },
+  "hi": {
+    "askChoice": {
+      "somethingElse": "कुछ और"
+    },
+    "chat": {
+      "onDeviceBetaNote": "इस फ़ोन पर वाला विकल्प अभी बीटा में है, इसलिए जवाब धीमे या कम सटीक हो सकते हैं।"
+    },
+    "download": {
+      "betaTitle": "{{title}} (बीटा)",
+      "failedSpace": "इस फ़ोन पर पर्याप्त जगह नहीं है। जगह खाली करें और फिर से कोशिश करें।"
+    },
+    "kevChat": {
+      "article": {
+        "answer": "किसी सवाल का जवाब दें",
+        "follow": "इस स्टोरी को फ़ॉलो करें",
+        "less": "ऐसी चीज़ें कम दिखाएं",
+        "more": "ऐसी चीज़ें ज़्यादा दिखाएं"
+      },
+      "askFact": "आप किस तथ्य की बात कर रहे हैं?",
+      "askIntent": "आप क्या करना चाहेंगे?",
+      "askTopic": "आप किस विषय की बात कर रहे हैं?",
+      "card": {
+        "agree": "बदलाव लागू करें",
+        "decline": "जैसा है वैसा रहने दें"
+      },
+      "follow": {
+        "follow": "कोई स्टोरी फ़ॉलो करें",
+        "other": "कुछ और पूछें"
+      },
+      "persona": {
+        "chat": "बस बातचीत करें",
+        "correct": "सेव किया गया तथ्य अपडेट करें",
+        "remove": "सेव किया गया तथ्य हटाएं",
+        "share": "इसे नए तथ्य के रूप में जोड़ें"
+      },
+      "reply": {
+        "ack": "कोई बात नहीं।",
+        "alreadyKnown": "यह जानकारी मेरे पास आपकी प्रोफ़ाइल में पहले से है।",
+        "applied": "हो गया।",
+        "cancelled": "ठीक है, मैंने इसे जैसा था वैसा ही रहने दिया, कुछ नहीं बदला।",
+        "changeCard": "बदलाव की पुष्टि के लिए कार्ड पर टैप करें।",
+        "chat": "माफ़ करें, मैं इस फ़ोन पर इसका जवाब नहीं दे सका। दूसरे तरीके से पूछकर देखें।",
+        "followFailed": "आप कौन सी स्टोरी फ़ॉलो करना चाहेंगे?",
+        "notFound": "यह मुझे आपकी प्रोफ़ाइल में नहीं मिला।",
+        "pickOnCard": "कार्ड पर वह विकल्प टैप करें जो आप चाहते हैं।",
+        "removeCard": "पुष्टि के लिए हटाएं पर टैप करें, या तथ्य को जैसा है वैसा रखने के लिए रखें पर टैप करें।",
+        "saveFailed": "मैं यह समझ नहीं पाया। क्या आप इसे किसी और तरीके से कह सकते हैं?"
+      }
+    },
+    "meraProtocol": {
+      "builtInReady": "इस फ़ोन पर तैयार",
+      "builtInRequirement": "इस फ़ोन पर {{name}}",
+      "cancelDownloadAction": "डाउनलोड रद्द करें",
+      "cellularBody": "डाउनलोड में {{size}} मोबाइल डेटा लगेगा।",
+      "cellularConfirm": "डाउनलोड करें",
+      "cellularTitle": "क्या मोबाइल डेटा पर डाउनलोड करें?",
+      "cellularWait": "Wi-Fi का इंतज़ार करें",
+      "deleteFailedDescription": "मॉडल हटाया नहीं गया। फिर से कोशिश करें।",
+      "deleteModelTitle": "क्या {{name}} हटाएं?",
+      "downloadAction": "डाउनलोड करें ({{size}})",
+      "downloadingOf": "{{total}} GB में से {{done}} GB डाउनलोड हो रहा है",
+      "errorFile": "डाउनलोड का कुछ हिस्सा सही से नहीं पहुँचा। फिर से कोशिश करें।",
+      "errorFinish": "डाउनलोड पूरा नहीं हुआ। फिर से कोशिश करें।",
+      "errorSpace": "पर्याप्त जगह नहीं है। {{size}} जगह खाली करें और फिर से कोशिश करें।",
+      "freeUpToDownload": "डाउनलोड के लिए {{size}} जगह खाली करें।",
+      "modelLicenseLink": "लाइसेंस: Apache 2.0",
+      "modelQueued": "डाउनलोड के लिए प्रतीक्षा में",
+      "modelRowReady": "{{name}}, {{size}}, डाउनलोड हो गया",
+      "nativeDeviceLanguage": "{{name}} अभी इस फ़ोन की भाषा का समर्थन नहीं करता।",
+      "nativeDeviceNotEligible": "यह फ़ोन {{name}} का समर्थन नहीं करता।",
+      "nativeNeedsUpdate": "{{name}} के लिए सिस्टम अपडेट चाहिए। फ़ोन की सेटिंग्स में अपडेट की जाँच करें।",
+      "nativeNotEnabled": "इस्तेमाल करने के लिए फ़ोन की सेटिंग्स में {{name}} चालू करें।",
+      "nativeNotReady": "{{name}} अभी तैयार हो रहा है। बाद में फिर से कोशिश करें।",
+      "nativeOsTooOld": "{{name}} को इस फ़ोन के सॉफ़्टवेयर के नए संस्करण की ज़रूरत है।",
+      "nativeUnknown": "{{name}} अभी उपलब्ध नहीं है।",
+      "speedLoad": "लोड होने का समय: {{seconds}} से.",
+      "speedRanking": "रैंकिंग: प्रति लेख {{seconds}} से.",
+      "speedRefused_one": "{{name}} ने {{count}} अनुरोध ठुकराया",
+      "speedRefused_other": "{{name}} ने {{count}} अनुरोध ठुकराए",
+      "tryAgain": "फिर से कोशिश करें"
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactNewsStopped": "किसी रुचि की खबरें रोकी गईं",
+        "setFactPlaces": "किसी रुचि के लिए खबरें कहाँ से आती हैं, यह बदला गया"
+      },
+      "summary": {
+        "newsStopped": "{{name}} की खबरें रोकी गईं",
+        "placesSet": "{{name}} के लिए खबरें कहाँ से आती हैं, यह बदला गया"
+      }
+    },
+    "you": {
+      "fact": {
+        "places": {
+          "about": "जगहें",
+          "addCountry": "देश जोड़ें",
+          "anywhere": "कहीं भी",
+          "blocs": {
+            "Africa": "अफ़्रीका",
+            "Antarctica": "अंटार्कटिका",
+            "Asia": "एशिया",
+            "EEA": "यूरोपीय आर्थिक क्षेत्र",
+            "EFTA": "यूरोपीय मुक्त व्यापार संघ",
+            "EU": "यूरोपीय संघ",
+            "Europe": "यूरोप",
+            "North America": "उत्तरी अमेरिका",
+            "Oceania": "ओशिनिया",
+            "South America": "दक्षिण अमेरिका",
+            "UK": "यूनाइटेड किंगडम"
+          },
+          "noCountry": "कोई देश नहीं मिला",
+          "notSet": "अभी तय नहीं है",
+          "remove": "{{place}} हटाएं",
+          "search": "देश खोजें"
+        }
+      }
+    }
+  },
+  "id": {
+    "askChoice": {
+      "somethingElse": "Hal lain"
+    },
+    "chat": {
+      "onDeviceBetaNote": "Mode Di ponsel ini masih Beta, jadi balasan bisa lebih lambat atau kurang akurat."
+    },
+    "download": {
+      "failedSpace": "Ruang di ponsel ini tidak cukup. Kosongkan ruang lalu coba lagi.",
+      "modelDownloading": "Mengunduh model Mera",
+      "onDeviceReady": "Mera sekarang berjalan di ponsel ini.",
+      "relevanceDone": "Model relevansi Mera sudah ada di ponsel ini."
+    },
+    "kevChat": {
+      "article": {
+        "answer": "Jawab pertanyaan",
+        "follow": "Ikuti cerita ini",
+        "less": "Tampilkan lebih sedikit yang seperti ini",
+        "more": "Tampilkan lebih banyak yang seperti ini"
+      },
+      "askFact": "Fakta yang mana maksudmu?",
+      "askIntent": "Apa yang ingin kamu lakukan?",
+      "askTopic": "Topik yang mana maksudmu?",
+      "card": {
+        "agree": "Terapkan perubahan",
+        "decline": "Biarkan seperti ini"
+      },
+      "follow": {
+        "follow": "Ikuti sebuah cerita",
+        "other": "Tanyakan hal lain"
+      },
+      "persona": {
+        "chat": "Sekadar mengobrol",
+        "correct": "Perbarui fakta yang tersimpan",
+        "remove": "Hapus fakta yang tersimpan",
+        "share": "Tambahkan ini sebagai fakta baru"
+      },
+      "reply": {
+        "ack": "Sama-sama.",
+        "alreadyKnown": "Saya sudah punya itu di profil kamu.",
+        "applied": "Selesai.",
+        "cancelled": "Oke, saya biarkan seperti semula.",
+        "changeCard": "Ketuk kartu untuk mengonfirmasi perubahan.",
+        "chat": "Maaf, saya tidak bisa menjawab itu di ponsel ini. Coba tanyakan dengan cara lain.",
+        "followFailed": "Cerita mana yang ingin kamu ikuti?",
+        "notFound": "Saya tidak bisa menemukan itu di profil kamu.",
+        "pickOnCard": "Ketuk yang kamu mau di kartu.",
+        "removeCard": "Ketuk Hapus untuk mengonfirmasi, atau Simpan untuk membiarkan fakta itu tetap.",
+        "saveFailed": "Saya tidak menangkap itu. Bisa kamu katakan dengan cara lain?"
+      }
+    },
+    "meraProtocol": {
+      "attestationScopeNotice": "Ini memeriksa cloud AI yang dipakai Mera saat ini. Hasil lolos di sini tidak mencakup setiap permintaan yang dibuat Mera.",
+      "builtInReady": "Siap di ponsel ini",
+      "builtInRequirement": "{{name}} di ponsel ini",
+      "cancelDownloadAction": "Batalkan unduhan",
+      "cellularBody": "Unduhan ini memakai {{size}} data seluler.",
+      "cellularConfirm": "Unduh",
+      "cellularTitle": "Unduh lewat data seluler?",
+      "cellularWait": "Tunggu Wi-Fi",
+      "deleteFailedDescription": "Model gagal dihapus. Coba lagi.",
+      "deleteModelTitle": "Hapus {{name}}?",
+      "deleteRelevanceBody": "Ini menghapus model ({{size}}) dari ponsel ini. Mera kemudian akan memakai Cloud pribadi.",
+      "downloadAction": "Unduh ({{size}})",
+      "downloadingOf": "Mengunduh {{done}} dari {{total}} GB",
+      "errorFile": "Sebagian unduhan tidak masuk dengan benar. Coba lagi.",
+      "errorFinish": "Unduhan belum selesai. Coba lagi.",
+      "errorSpace": "Ruang tidak cukup. Kosongkan {{size}} lalu coba lagi.",
+      "freeUpToDownload": "Kosongkan {{size}} untuk mengunduh.",
+      "modelLicenseLink": "Lisensi: Apache 2.0",
+      "modelQueued": "Menunggu untuk diunduh",
+      "modelRowReady": "{{name}}, {{size}}, sudah diunduh",
+      "modelsWaitingNative": "Mera memakai Cloud pribadi sampai {{name}} siap.",
+      "nativeAppLanguage": "{{name}} belum mendukung bahasa yang dipakai aplikasi Mera News.",
+      "nativeDeviceLanguage": "{{name}} belum mendukung bahasa ponsel ini.",
+      "nativeDeviceNotEligible": "Ponsel ini tidak mendukung {{name}}.",
+      "nativeNeedsUpdate": "{{name}} perlu pembaruan sistem. Periksa pembaruan di pengaturan ponsel Anda.",
+      "nativeNotEnabled": "Aktifkan {{name}} di pengaturan ponsel Anda untuk memakainya.",
+      "nativeNotReady": "{{name}} masih disiapkan. Coba lagi nanti.",
+      "nativeOsTooOld": "{{name}} memerlukan versi perangkat lunak ponsel ini yang lebih baru.",
+      "nativeUnknown": "{{name}} tidak tersedia saat ini.",
+      "relevanceTitle": "Model relevansi Mera",
+      "speedLoad": "Waktu muat: {{seconds}} s",
+      "speedRanking": "Peringkat: {{seconds}} s per artikel",
+      "speedRefused_other": "{{name}} menolak {{count}} permintaan",
+      "tryAgain": "Coba lagi"
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactNewsStopped": "Berita untuk salah satu minat dihentikan",
+        "setFactPlaces": "Asal berita diubah"
+      },
+      "summary": {
+        "newsStopped": "Berita untuk {{name}} dihentikan",
+        "placesSet": "Asal berita untuk {{name}} diubah"
+      }
+    },
+    "you": {
+      "fact": {
+        "places": {
+          "about": "Tempat",
+          "addCountry": "Tambahkan negara",
+          "anywhere": "Di mana saja",
+          "blocs": {
+            "Africa": "Afrika",
+            "Antarctica": "Antarktika",
+            "EEA": "Wilayah Ekonomi Eropa",
+            "EFTA": "Asosiasi Perdagangan Bebas Eropa",
+            "EU": "Uni Eropa",
+            "Europe": "Eropa",
+            "North America": "Amerika Utara",
+            "Oceania": "Oseania",
+            "South America": "Amerika Selatan",
+            "UK": "Britania Raya"
+          },
+          "noCountry": "Negara tidak ditemukan",
+          "notSet": "Belum diatur",
+          "remove": "Hapus {{place}}",
+          "search": "Cari negara"
+        }
+      }
+    }
+  },
+  "it": {
+    "askChoice": {
+      "somethingElse": "Altro"
+    },
+    "chat": {
+      "onDeviceBetaNote": "Su questo telefono è in Beta, quindi le risposte possono essere più lente o meno accurate."
+    },
+    "download": {
+      "failedSpace": "Spazio insufficiente su questo telefono. Libera spazio e riprova.",
+      "modelDownloading": "Scaricamento dei modelli Mera",
+      "onDeviceReady": "Mera ora funziona su questo telefono.",
+      "relevanceDone": "Il modello di rilevanza Mera è su questo telefono."
+    },
+    "kevChat": {
+      "article": {
+        "answer": "Rispondi a una domanda",
+        "follow": "Segui questa storia",
+        "less": "Mostra meno di questo tipo",
+        "more": "Mostra più di questo tipo"
+      },
+      "askFact": "Quale fatto intendi?",
+      "askIntent": "Cosa vorresti fare?",
+      "askTopic": "Quale argomento intendi?",
+      "card": {
+        "agree": "Applica la modifica",
+        "decline": "Lascia com'è"
+      },
+      "follow": {
+        "follow": "Segui una storia",
+        "other": "Chiedi altro"
+      },
+      "persona": {
+        "chat": "Solo due chiacchiere",
+        "correct": "Aggiorna un fatto salvato",
+        "remove": "Rimuovi un fatto salvato",
+        "share": "Aggiungi questo come nuovo fatto"
+      },
+      "reply": {
+        "ack": "Quando vuoi.",
+        "alreadyKnown": "Ce l'ho già nel tuo profilo.",
+        "applied": "Fatto.",
+        "cancelled": "Ok, ho lasciato tutto com'era.",
+        "changeCard": "Tocca la scheda per confermare la modifica.",
+        "chat": "Scusa, su questo telefono non riesco a rispondere. Prova a chiederlo in un altro modo.",
+        "followFailed": "Quale storia vorresti seguire?",
+        "notFound": "Non riesco a trovarlo nel tuo profilo.",
+        "pickOnCard": "Tocca quello che vuoi sulla scheda.",
+        "removeCard": "Tocca Rimuovi per confermare, o Tieni per lasciarlo com'è.",
+        "saveFailed": "Non ho capito. Puoi dirlo in un altro modo?"
+      }
+    },
+    "meraProtocol": {
+      "attestationScopeNotice": "Questo controlla il cloud AI che Mera usa in questo momento. Un esito positivo qui non copre ogni richiesta che Mera fa.",
+      "builtInReady": "Pronto su questo telefono",
+      "builtInRequirement": "{{name}} su questo telefono",
+      "cancelDownloadAction": "Annulla lo scaricamento",
+      "cellularBody": "Lo scaricamento usa {{size}} di dati mobili.",
+      "cellularConfirm": "Scarica",
+      "cellularTitle": "Scaricare usando i dati mobili?",
+      "cellularWait": "Attendi il Wi-Fi",
+      "deleteFailedDescription": "Il modello non è stato eliminato. Riprova.",
+      "deleteModelTitle": "Eliminare {{name}}?",
+      "deleteRelevanceBody": "Questo rimuove il modello ({{size}}) da questo telefono. Mera userà poi Cloud privato.",
+      "downloadAction": "Scarica ({{size}})",
+      "downloadingOf": "Scaricamento di {{done}} di {{total}} GB",
+      "errorFile": "Una parte dello scaricamento non è arrivata correttamente. Riprova.",
+      "errorFinish": "Lo scaricamento non è terminato. Riprova.",
+      "errorSpace": "Spazio insufficiente. Libera {{size}} e riprova.",
+      "freeUpToDownload": "Libera {{size}} per scaricare.",
+      "modelLicenseLink": "Licenza: Apache 2.0",
+      "modelQueued": "In attesa di scaricamento",
+      "modelRowReady": "{{name}}, {{size}}, scaricato",
+      "modelsWaitingNative": "Mera usa Cloud privato finché {{name}} non è pronto.",
+      "nativeAppLanguage": "{{name}} non supporta ancora la lingua impostata nell'app Mera News.",
+      "nativeDeviceLanguage": "{{name}} non supporta ancora la lingua di questo telefono.",
+      "nativeDeviceNotEligible": "Questo telefono non supporta {{name}}.",
+      "nativeNeedsUpdate": "{{name}} richiede un aggiornamento di sistema. Controlla gli aggiornamenti nelle impostazioni del telefono.",
+      "nativeNotEnabled": "Attiva {{name}} nelle impostazioni del telefono per usarlo.",
+      "nativeNotReady": "{{name}} si sta ancora preparando. Riprova più tardi.",
+      "nativeOsTooOld": "{{name}} richiede una versione più recente del software di questo telefono.",
+      "nativeUnknown": "{{name}} non è disponibile al momento.",
+      "relevanceTitle": "Modello di rilevanza Mera",
+      "speedLoad": "Tempo di caricamento: {{seconds}} s",
+      "speedRanking": "Ordinamento: {{seconds}} s per articolo",
+      "speedRefused_one": "{{name}} ha rifiutato {{count}} richiesta",
+      "speedRefused_other": "{{name}} ha rifiutato {{count}} richieste",
+      "tryAgain": "Riprova"
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactNewsStopped": "Notizie interrotte per un interesse",
+        "setFactPlaces": "Cambiata la provenienza delle notizie"
+      },
+      "summary": {
+        "newsStopped": "Notizie interrotte per {{name}}",
+        "placesSet": "Cambiata la provenienza delle notizie per {{name}}"
+      }
+    },
+    "relevance": {
+      "medium": "Medio"
+    },
+    "you": {
+      "fact": {
+        "places": {
+          "about": "Luoghi",
+          "addCountry": "Aggiungi un paese",
+          "anywhere": "Ovunque",
+          "blocs": {
+            "Antarctica": "Antartide",
+            "EEA": "Spazio economico europeo",
+            "EFTA": "Associazione europea di libero scambio",
+            "EU": "Unione europea",
+            "Europe": "Europa",
+            "North America": "Nord America",
+            "South America": "Sud America",
+            "UK": "Regno Unito"
+          },
+          "noCountry": "Nessun paese trovato",
+          "notSet": "Non ancora impostato",
+          "remove": "Rimuovi {{place}}",
+          "search": "Cerca paesi"
+        }
+      }
+    }
+  },
+  "ja": {
+    "askChoice": {
+      "somethingElse": "その他"
+    },
+    "chat": {
+      "onDeviceBetaNote": "この電話上の機能はベータ版のため、返信が遅くなったり、精度が下がったりすることがあります。"
+    },
+    "download": {
+      "betaTitle": "{{title}}（ベータ）",
+      "failedSpace": "この電話には空き容量が足りません。空き容量を増やして、もう一度試してください。"
+    },
+    "kevChat": {
+      "article": {
+        "answer": "質問に答える",
+        "follow": "このストーリーをフォローする",
+        "less": "このような記事を減らす",
+        "more": "このような記事を増やす"
+      },
+      "askFact": "どのファクトのことですか？",
+      "askIntent": "何をしたいですか？",
+      "askTopic": "どのトピックのことですか？",
+      "card": {
+        "agree": "変更を適用する",
+        "decline": "このままにする"
+      },
+      "follow": {
+        "follow": "ストーリーをフォローする",
+        "other": "ほかのことを聞く"
+      },
+      "persona": {
+        "chat": "ただおしゃべりする",
+        "correct": "保存したファクトを更新する",
+        "remove": "保存したファクトを削除する",
+        "share": "これを新しいファクトとして追加する"
+      },
+      "reply": {
+        "ack": "どういたしまして。",
+        "alreadyKnown": "その内容は、すでにプロフィールにあります。",
+        "applied": "完了しました。",
+        "cancelled": "わかりました、そのままにしておきました。",
+        "changeCard": "カードをタップして、変更を確定してください。",
+        "chat": "すみません、この電話ではその質問に答えられませんでした。別の聞き方で試してください。",
+        "followFailed": "どのストーリーをフォローしますか？",
+        "notFound": "その内容は、プロフィールには見つかりませんでした。",
+        "pickOnCard": "カードで選びたいものをタップしてください。",
+        "removeCard": "確定するには「削除」をタップし、そのままにするには「残す」をタップしてください。",
+        "saveFailed": "聞き取れませんでした。別の言い方で話してもらえますか？"
+      }
+    },
+    "meraProtocol": {
+      "builtInReady": "この電話で利用可能",
+      "builtInRequirement": "この電話の{{name}}",
+      "cancelDownloadAction": "ダウンロードをキャンセル",
+      "cellularBody": "ダウンロードには{{size}}のデータ通信量が使われます。",
+      "cellularConfirm": "ダウンロード",
+      "cellularTitle": "モバイルデータでダウンロードしますか？",
+      "cellularWait": "Wi-Fiを待つ",
+      "deleteFailedDescription": "モデルは削除されていません。もう一度試してください。",
+      "deleteModelTitle": "{{name}}を削除しますか？",
+      "downloadAction": "ダウンロード（{{size}}）",
+      "downloadingOf": "{{done}}/{{total}} GB をダウンロード中",
+      "errorFile": "ダウンロードの一部が正しく届きませんでした。もう一度試してください。",
+      "errorFinish": "ダウンロードが完了しませんでした。もう一度試してください。",
+      "errorSpace": "空き容量が足りません。{{size}}の空き容量を確保して、もう一度試してください。",
+      "freeUpToDownload": "ダウンロードするには{{size}}の空き容量を確保してください。",
+      "modelLicenseLink": "ライセンス: Apache 2.0",
+      "modelQueued": "ダウンロード待ち",
+      "modelRowReady": "{{name}}、{{size}}、ダウンロード済み",
+      "nativeDeviceLanguage": "{{name}}はこの電話の言語にまだ対応していません。",
+      "nativeDeviceNotEligible": "この電話は{{name}}に対応していません。",
+      "nativeNeedsUpdate": "{{name}}にはシステムアップデートが必要です。スマホの設定でアップデートを確認してください。",
+      "nativeNotEnabled": "{{name}}を使うには、スマホの設定でオンにしてください。",
+      "nativeNotReady": "{{name}}はまだ準備中です。後でもう一度試してください。",
+      "nativeOsTooOld": "{{name}}には、この電話のソフトウェアの新しいバージョンが必要です。",
+      "nativeUnknown": "{{name}}は現在利用できません。",
+      "speedLoad": "読み込み時間: {{seconds}} 秒",
+      "speedRanking": "ランキング: 記事1件あたり {{seconds}} 秒",
+      "speedRefused_other": "{{name}} が {{count}} 件のリクエストを拒否しました",
+      "tryAgain": "もう一度試す"
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactNewsStopped": "ある関心分野のニュースを停止",
+        "setFactPlaces": "ニュースの提供元を変更"
+      },
+      "summary": {
+        "newsStopped": "{{name}}のニュースを停止",
+        "placesSet": "{{name}}のニュースの提供元を変更"
+      }
+    },
+    "you": {
+      "fact": {
+        "places": {
+          "about": "場所",
+          "addCountry": "国を追加",
+          "anywhere": "どこでも",
+          "blocs": {
+            "Africa": "アフリカ",
+            "Antarctica": "南極",
+            "Asia": "アジア",
+            "EEA": "欧州経済領域",
+            "EFTA": "欧州自由貿易連合",
+            "EU": "欧州連合",
+            "Europe": "ヨーロッパ",
+            "North America": "北アメリカ",
+            "Oceania": "オセアニア",
+            "South America": "南アメリカ",
+            "UK": "英国"
+          },
+          "noCountry": "国が見つかりません",
+          "notSet": "まだ設定されていません",
+          "remove": "{{place}}を削除",
+          "search": "国を検索"
+        }
+      }
+    }
+  },
+  "ko": {
+    "askChoice": {
+      "somethingElse": "다른 것"
+    },
+    "chat": {
+      "onDeviceBetaNote": "이 휴대폰에 쓰는 방식은 베타라서 답변이 느리거나 덜 정확할 수 있어요."
+    },
+    "download": {
+      "betaTitle": "{{title}} (베타)",
+      "failedSpace": "이 휴대폰에 저장 공간이 부족해요. 공간을 확보한 뒤 다시 시도해 주세요."
+    },
+    "kevChat": {
+      "article": {
+        "answer": "질문에 답하기",
+        "follow": "이 스토리 팔로우하기",
+        "less": "이런 내용 덜 보기",
+        "more": "이런 내용 더 보기"
+      },
+      "askFact": "어떤 사실을 말하는 건가요?",
+      "askIntent": "무엇을 하고 싶으세요?",
+      "askTopic": "어떤 토픽을 말하는 건가요?",
+      "card": {
+        "agree": "변경 적용하기",
+        "decline": "그대로 두기"
+      },
+      "follow": {
+        "follow": "스토리 팔로우하기",
+        "other": "다른 것 묻기"
+      },
+      "persona": {
+        "chat": "그냥 대화하기",
+        "correct": "저장된 사실 수정하기",
+        "remove": "저장된 사실 삭제하기",
+        "share": "이것을 새 사실로 추가하기"
+      },
+      "reply": {
+        "ack": "언제든지요.",
+        "alreadyKnown": "그건 이미 프로필에 있어요.",
+        "applied": "완료했어요.",
+        "cancelled": "알겠어요, 그대로 두었어요.",
+        "changeCard": "카드를 눌러 변경을 확인해 주세요.",
+        "chat": "죄송해요, 이 휴대폰에서는 그 질문에 답할 수 없어요. 다른 방식으로 물어봐 주세요.",
+        "followFailed": "어떤 스토리를 팔로우하고 싶으세요?",
+        "notFound": "프로필에서 그것을 찾을 수 없어요.",
+        "pickOnCard": "카드에서 원하는 것을 눌러 주세요.",
+        "removeCard": "확인하려면 삭제를 누르고, 그대로 두려면 유지를 눌러 주세요.",
+        "saveFailed": "잘 알아듣지 못했어요. 다르게 말씀해 주시겠어요?"
+      }
+    },
+    "meraProtocol": {
+      "builtInReady": "이 휴대폰에서 준비 완료",
+      "builtInRequirement": "이 휴대폰의 {{name}}",
+      "cancelDownloadAction": "다운로드 취소",
+      "cellularBody": "다운로드하면 모바일 데이터가 {{size}} 사용돼요.",
+      "cellularConfirm": "다운로드",
+      "cellularTitle": "모바일 데이터로 다운로드할까요?",
+      "cellularWait": "Wi-Fi 기다리기",
+      "deleteFailedDescription": "모델이 삭제되지 않았어요. 다시 시도해 주세요.",
+      "deleteModelTitle": "{{name}} 삭제할까요?",
+      "downloadAction": "다운로드 ({{size}})",
+      "downloadingOf": "{{done}}/{{total}} GB 다운로드 중",
+      "errorFile": "다운로드 일부가 제대로 도착하지 않았어요. 다시 시도해 주세요.",
+      "errorFinish": "다운로드가 완료되지 않았어요. 다시 시도해 주세요.",
+      "errorSpace": "저장 공간이 부족해요. {{size}} 공간을 확보한 뒤 다시 시도해 주세요.",
+      "freeUpToDownload": "다운로드하려면 {{size}} 공간을 확보해 주세요.",
+      "modelLicenseLink": "라이선스: Apache 2.0",
+      "modelQueued": "다운로드 대기 중",
+      "modelRowReady": "{{name}}, {{size}}, 다운로드됨",
+      "nativeDeviceLanguage": "이 휴대폰의 언어는 {{name}}에서 아직 지원하지 않아요.",
+      "nativeDeviceNotEligible": "이 휴대폰에서는 {{name}} 기능을 지원하지 않아요.",
+      "nativeNeedsUpdate": "{{name}}에 시스템 업데이트가 필요해요. 휴대폰 설정에서 업데이트를 확인해 주세요.",
+      "nativeNotEnabled": "{{name}} 기능을 사용하려면 휴대폰 설정에서 켜 주세요.",
+      "nativeNotReady": "{{name}} 기능이 아직 준비 중이에요. 나중에 다시 시도해 주세요.",
+      "nativeOsTooOld": "{{name}}에 이 휴대폰 소프트웨어의 더 새로운 버전이 필요해요.",
+      "nativeUnknown": "지금은 {{name}} 기능을 사용할 수 없어요.",
+      "speedLoad": "로드 시간: {{seconds}}초",
+      "speedRanking": "순위 매기기: 기사 하나당 {{seconds}}초",
+      "speedRefused_other": "{{name}} 기능이 요청 {{count}}건을 거부했어요",
+      "tryAgain": "다시 시도"
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactNewsStopped": "관심사의 뉴스 중단됨",
+        "setFactPlaces": "뉴스 출처 변경됨"
+      },
+      "summary": {
+        "newsStopped": "{{name}} 뉴스 중단됨",
+        "placesSet": "{{name}} 뉴스 출처 변경됨"
+      }
+    },
+    "you": {
+      "fact": {
+        "places": {
+          "about": "장소",
+          "addCountry": "국가 추가",
+          "anywhere": "어디든",
+          "blocs": {
+            "Africa": "아프리카",
+            "Antarctica": "남극",
+            "Asia": "아시아",
+            "EEA": "유럽경제지역",
+            "EFTA": "유럽자유무역연합",
+            "EU": "유럽연합",
+            "Europe": "유럽",
+            "North America": "북아메리카",
+            "Oceania": "오세아니아",
+            "South America": "남아메리카",
+            "UK": "영국"
+          },
+          "noCountry": "국가를 찾을 수 없음",
+          "notSet": "아직 설정되지 않음",
+          "remove": "{{place}} 삭제",
+          "search": "국가 검색"
+        }
+      }
+    }
+  },
+  "nl": {
+    "askChoice": {
+      "somethingElse": "Iets anders"
+    },
+    "chat": {
+      "onDeviceBetaNote": "Op deze telefoon is in Beta, dus antwoorden kunnen trager zijn of minder nauwkeurig."
+    },
+    "download": {
+      "failedSpace": "Niet genoeg ruimte op deze telefoon. Maak ruimte vrij en probeer het opnieuw.",
+      "modelDownloading": "Mera-modellen downloaden",
+      "onDeviceReady": "Mera draait nu op deze telefoon.",
+      "relevanceDone": "Het Mera-relevantiemodel staat op deze telefoon."
+    },
+    "kevChat": {
+      "article": {
+        "answer": "Beantwoord een vraag",
+        "follow": "Volg dit verhaal",
+        "less": "Toon minder van dit soort",
+        "more": "Toon meer van dit soort"
+      },
+      "askFact": "Welk feit bedoel je?",
+      "askIntent": "Wat wil je doen?",
+      "askTopic": "Welk onderwerp bedoel je?",
+      "card": {
+        "agree": "Pas de wijziging toe",
+        "decline": "Laat het zoals het is"
+      },
+      "follow": {
+        "follow": "Volg een verhaal",
+        "other": "Vraag iets anders"
+      },
+      "persona": {
+        "chat": "Gewoon even praten",
+        "correct": "Werk een opgeslagen feit bij",
+        "remove": "Verwijder een opgeslagen feit",
+        "share": "Voeg dit toe als nieuw feit"
+      },
+      "reply": {
+        "ack": "Graag gedaan.",
+        "alreadyKnown": "Dat heb ik al in je profiel.",
+        "applied": "Klaar.",
+        "cancelled": "Oké, ik heb het laten zoals het was.",
+        "changeCard": "Tik op de kaart om de wijziging te bevestigen.",
+        "chat": "Sorry, dat kan ik op deze telefoon niet beantwoorden. Probeer het op een andere manier te vragen.",
+        "followFailed": "Welk verhaal wil je volgen?",
+        "notFound": "Dat kan ik niet vinden in je profiel.",
+        "pickOnCard": "Tik op degene die je wilt op de kaart.",
+        "removeCard": "Tik op Verwijderen om te bevestigen, of op Houden om het te laten staan.",
+        "saveFailed": "Ik begreep dat niet. Kun je het anders zeggen?"
+      }
+    },
+    "meraProtocol": {
+      "attestationScopeNotice": "Dit controleert de cloud-AI die Mera nu gebruikt. Een geslaagde controle hier dekt niet elk verzoek dat Mera doet.",
+      "builtInReady": "Klaar op deze telefoon",
+      "builtInRequirement": "{{name}} op deze telefoon",
+      "cancelDownloadAction": "Download annuleren",
+      "cellularBody": "Downloaden gebruikt {{size}} mobiele data.",
+      "cellularConfirm": "Downloaden",
+      "cellularTitle": "Downloaden via mobiele data?",
+      "cellularWait": "Wacht op Wi-Fi",
+      "deleteFailedDescription": "Het model is niet verwijderd. Probeer het opnieuw.",
+      "deleteModelTitle": "{{name}} verwijderen?",
+      "deleteRelevanceBody": "Dit verwijdert het model ({{size}}) van deze telefoon. Mera gebruikt daarna Privécloud.",
+      "downloadAction": "Downloaden ({{size}})",
+      "downloadingOf": "Downloaden: {{done}} van {{total}} GB",
+      "errorFile": "Een deel van de download is niet goed aangekomen. Probeer het opnieuw.",
+      "errorFinish": "De download is niet voltooid. Probeer het opnieuw.",
+      "errorSpace": "Niet genoeg ruimte. Maak {{size}} vrij en probeer het opnieuw.",
+      "freeUpToDownload": "Maak {{size}} vrij om te downloaden.",
+      "modelLicenseLink": "Licentie: Apache 2.0",
+      "modelQueued": "Wachten op download",
+      "modelRowReady": "{{name}}, {{size}}, gedownload",
+      "modelsWaitingNative": "Mera gebruikt Privécloud totdat {{name}} klaar is.",
+      "nativeAppLanguage": "{{name}} ondersteunt de taal die de Mera News-app gebruikt nog niet.",
+      "nativeDeviceLanguage": "{{name}} ondersteunt de taal van deze telefoon nog niet.",
+      "nativeDeviceNotEligible": "Deze telefoon ondersteunt {{name}} niet.",
+      "nativeNeedsUpdate": "{{name}} heeft een systeemupdate nodig. Controleer op updates in de instellingen van je telefoon.",
+      "nativeNotEnabled": "Zet {{name}} aan in de instellingen van je telefoon om het te gebruiken.",
+      "nativeNotReady": "{{name}} wordt nog voorbereid. Probeer het later opnieuw.",
+      "nativeOsTooOld": "{{name}} heeft een nieuwere versie van de software van deze telefoon nodig.",
+      "nativeUnknown": "{{name}} is op dit moment niet beschikbaar.",
+      "relevanceTitle": "Mera-relevantiemodel",
+      "speedLoad": "Laadtijd: {{seconds}} s",
+      "speedRanking": "Rangschikking: {{seconds}} s per artikel",
+      "speedRefused_one": "{{name}} heeft {{count}} verzoek geweigerd",
+      "speedRefused_other": "{{name}} heeft {{count}} verzoeken geweigerd",
+      "tryAgain": "Opnieuw proberen"
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactNewsStopped": "Nieuws gestopt voor een interesse",
+        "setFactPlaces": "Herkomst van het nieuws gewijzigd"
+      },
+      "summary": {
+        "newsStopped": "Nieuws gestopt voor {{name}}",
+        "placesSet": "Herkomst van het nieuws voor {{name}} gewijzigd"
+      }
+    },
+    "you": {
+      "fact": {
+        "places": {
+          "about": "Plaatsen",
+          "addCountry": "Voeg een land toe",
+          "anywhere": "Overal",
+          "blocs": {
+            "Africa": "Afrika",
+            "Asia": "Azië",
+            "EEA": "Europese Economische Ruimte",
+            "EFTA": "Europese Vrijhandelsassociatie",
+            "EU": "Europese Unie",
+            "Europe": "Europa",
+            "North America": "Noord-Amerika",
+            "Oceania": "Oceanië",
+            "South America": "Zuid-Amerika",
+            "UK": "Verenigd Koninkrijk"
+          },
+          "noCountry": "Geen land gevonden",
+          "notSet": "Nog niet ingesteld",
+          "remove": "Verwijder {{place}}",
+          "search": "Zoek landen"
+        }
+      }
+    }
+  },
+  "pl": {
+    "askChoice": {
+      "somethingElse": "Coś innego"
+    },
+    "chat": {
+      "onDeviceBetaNote": "Tryb Na tym telefonie jest w wersji Beta, więc odpowiedzi mogą być wolniejsze lub mniej dokładne."
+    },
+    "download": {
+      "failedSpace": "Na tym telefonie brakuje miejsca. Zwolnij miejsce i spróbuj ponownie.",
+      "modelDownloading": "Pobieranie modeli Mera",
+      "onDeviceReady": "Mera działa teraz na tym telefonie.",
+      "relevanceDone": "Model trafności Mera jest na tym telefonie."
+    },
+    "kevChat": {
+      "article": {
+        "answer": "Odpowiedz na pytanie",
+        "follow": "Śledź tę historię",
+        "less": "Pokaż mniej takich treści",
+        "more": "Pokaż więcej takich treści"
+      },
+      "askFact": "Który fakt masz na myśli?",
+      "askIntent": "Co chcesz zrobić?",
+      "askTopic": "Który temat masz na myśli?",
+      "card": {
+        "agree": "Zastosuj zmianę",
+        "decline": "Zostaw bez zmian"
+      },
+      "follow": {
+        "follow": "Śledź historię",
+        "other": "Zapytaj o coś innego"
+      },
+      "persona": {
+        "chat": "Tylko rozmawiam",
+        "correct": "Zaktualizuj zapisany fakt",
+        "remove": "Usuń zapisany fakt",
+        "share": "Dodaj to jako nowy fakt"
+      },
+      "reply": {
+        "ack": "Zawsze chętnie.",
+        "alreadyKnown": "Mam to już w twoim profilu.",
+        "applied": "Gotowe.",
+        "cancelled": "Dobrze, zostawiam bez zmian.",
+        "changeCard": "Dotknij karty, aby potwierdzić zmianę.",
+        "chat": "Przepraszam, na tym telefonie nie udało mi się na to odpowiedzieć. Spróbuj zapytać inaczej.",
+        "followFailed": "Którą historię chcesz śledzić?",
+        "notFound": "Nie udało mi się tego znaleźć w twoim profilu.",
+        "pickOnCard": "Dotknij wybranej opcji na karcie.",
+        "removeCard": "Dotknij Usuń, aby potwierdzić, lub Zachowaj, aby nie zmieniać.",
+        "saveFailed": "Nie udało mi się tego zrozumieć. Czy możesz to powiedzieć inaczej?"
+      }
+    },
+    "meraProtocol": {
+      "attestationScopeNotice": "To sprawdza chmurową AI, z której Mera korzysta teraz. Zaliczenie tego sprawdzenia nie obejmuje każdego żądania, które wysyła Mera.",
+      "builtInReady": "Gotowe na tym telefonie",
+      "builtInRequirement": "{{name}} na tym telefonie",
+      "cancelDownloadAction": "Anuluj pobieranie",
+      "cellularBody": "Pobieranie zużyje {{size}} danych komórkowych.",
+      "cellularConfirm": "Pobierz",
+      "cellularTitle": "Pobrać przez dane komórkowe?",
+      "cellularWait": "Poczekaj na Wi-Fi",
+      "deleteFailedDescription": "Model nie został usunięty. Spróbuj ponownie.",
+      "deleteModelTitle": "Usunąć {{name}}?",
+      "deleteRelevanceBody": "To usuwa model ({{size}}) z tego telefonu. Mera będzie korzystać z Prywatnej chmury.",
+      "downloadAction": "Pobierz ({{size}})",
+      "downloadingOf": "Pobieranie {{done}} z {{total}} GB",
+      "errorFile": "Część pobierania nie dotarła prawidłowo. Spróbuj ponownie.",
+      "errorFinish": "Pobieranie się nie zakończyło. Spróbuj ponownie.",
+      "errorSpace": "Brakuje miejsca. Zwolnij {{size}} i spróbuj ponownie.",
+      "freeUpToDownload": "Zwolnij {{size}}, aby pobrać.",
+      "modelLicenseLink": "Licencja: Apache 2.0",
+      "modelQueued": "Czeka na pobranie",
+      "modelRowReady": "{{name}}, {{size}}, pobrano",
+      "modelsWaitingNative": "Do czasu gotowości {{name}} Mera korzysta z Prywatnej chmury.",
+      "nativeAppLanguage": "{{name}} nie obsługuje jeszcze języka ustawionego w aplikacji Mera News.",
+      "nativeDeviceLanguage": "{{name}} nie obsługuje jeszcze języka tego telefonu.",
+      "nativeDeviceNotEligible": "Ten telefon nie obsługuje {{name}}.",
+      "nativeNeedsUpdate": "{{name}} wymaga aktualizacji systemu. Sprawdź aktualizacje w ustawieniach telefonu.",
+      "nativeNotEnabled": "Włącz {{name}} w ustawieniach telefonu, aby z tego korzystać.",
+      "nativeNotReady": "{{name}} wciąż się przygotowuje. Spróbuj ponownie później.",
+      "nativeOsTooOld": "{{name}} wymaga nowszej wersji oprogramowania systemowego tego telefonu.",
+      "nativeUnknown": "Brak dostępu do {{name}} w tej chwili.",
+      "relevanceTitle": "Model trafności Mera",
+      "speedLoad": "Czas ładowania: {{seconds}} s",
+      "speedRanking": "Ranking: {{seconds}} s na artykuł",
+      "speedRefused_one": "Żądania odrzucone przez {{name}}: {{count}}",
+      "speedRefused_other": "Żądania odrzucone przez {{name}}: {{count}}",
+      "tryAgain": "Spróbuj ponownie",
+      "speedRefused_few": "Żądania odrzucone przez {{name}}: {{count}}",
+      "speedRefused_many": "Żądania odrzucone przez {{name}}: {{count}}"
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactNewsStopped": "Wyłączono wiadomości dla jednego z zainteresowań",
+        "setFactPlaces": "Zmieniono, skąd pochodzą wiadomości"
+      },
+      "summary": {
+        "newsStopped": "Wyłączono wiadomości dla {{name}}",
+        "placesSet": "Zmieniono, skąd pochodzą wiadomości dla {{name}}"
+      }
+    },
+    "you": {
+      "fact": {
+        "places": {
+          "about": "Miejsca",
+          "addCountry": "Dodaj kraj",
+          "anywhere": "Wszędzie",
+          "blocs": {
+            "Africa": "Afryka",
+            "Antarctica": "Antarktyda",
+            "Asia": "Azja",
+            "EEA": "Europejski Obszar Gospodarczy",
+            "EFTA": "Europejskie Stowarzyszenie Wolnego Handlu",
+            "EU": "Unia Europejska",
+            "Europe": "Europa",
+            "North America": "Ameryka Północna",
+            "South America": "Ameryka Południowa",
+            "UK": "Wielka Brytania"
+          },
+          "noCountry": "Nie znaleziono kraju",
+          "notSet": "Jeszcze nie ustawiono",
+          "remove": "Usuń {{place}}",
+          "search": "Szukaj krajów"
+        }
+      }
+    }
+  },
+  "pt-BR": {
+    "askChoice": {
+      "somethingElse": "Outra coisa"
+    },
+    "chat": {
+      "onDeviceBetaNote": "O modo Neste celular está em Beta, então as respostas podem ser mais lentas ou menos precisas."
+    },
+    "download": {
+      "failedSpace": "Não há espaço suficiente neste celular. Libere espaço e tente novamente.",
+      "modelDownloading": "Baixando modelos Mera",
+      "onDeviceReady": "A Mera agora funciona neste celular.",
+      "relevanceDone": "O modelo de relevância Mera já está neste celular."
+    },
+    "kevChat": {
+      "article": {
+        "answer": "Responder a uma pergunta",
+        "follow": "Seguir esta história",
+        "less": "Mostrar menos assim",
+        "more": "Mostrar mais assim"
+      },
+      "askFact": "Qual fato você quer dizer?",
+      "askIntent": "O que você gostaria de fazer?",
+      "askTopic": "Qual tema você quer dizer?",
+      "card": {
+        "agree": "Aplicar a alteração",
+        "decline": "Deixar como está"
+      },
+      "follow": {
+        "follow": "Seguir uma história",
+        "other": "Perguntar outra coisa"
+      },
+      "persona": {
+        "chat": "Só conversando",
+        "correct": "Atualizar um fato salvo",
+        "remove": "Remover um fato salvo",
+        "share": "Adicionar isto como um novo fato"
+      },
+      "reply": {
+        "ack": "Sempre que precisar.",
+        "alreadyKnown": "Eu já tenho isso no seu perfil.",
+        "applied": "Pronto.",
+        "cancelled": "Tudo bem, deixei como está.",
+        "changeCard": "Toque no cartão para confirmar a alteração.",
+        "chat": "Desculpe, não consegui responder isso neste celular. Tente perguntar de outro jeito.",
+        "followFailed": "Qual história você quer seguir?",
+        "notFound": "Não encontrei isso no seu perfil.",
+        "pickOnCard": "Toque na opção desejada no cartão.",
+        "removeCard": "Toque em Remover para confirmar ou em Manter para deixar como está.",
+        "saveFailed": "Não consegui entender. Você pode dizer de outro jeito?"
+      }
+    },
+    "meraProtocol": {
+      "attestationScopeNotice": "Esta verificação analisa a IA na nuvem que a Mera usa agora. A aprovação nesta verificação não cobre todas as solicitações que a Mera faz.",
+      "builtInReady": "Pronto neste celular",
+      "builtInRequirement": "{{name}} neste celular",
+      "cancelDownloadAction": "Cancelar download",
+      "cellularBody": "O download usa {{size}} de dados móveis.",
+      "cellularConfirm": "Baixar",
+      "cellularTitle": "Baixar usando dados móveis?",
+      "cellularWait": "Aguardar Wi-Fi",
+      "deleteFailedDescription": "O modelo não foi excluído. Tente novamente.",
+      "deleteModelTitle": "Excluir {{name}}?",
+      "deleteRelevanceBody": "Isso remove o modelo ({{size}}) deste celular. A Mera vai usar a Nuvem privada.",
+      "downloadAction": "Baixar ({{size}})",
+      "downloadingOf": "Baixando {{done}} de {{total}} GB",
+      "errorFile": "Uma parte do arquivo não chegou corretamente. Tente novamente.",
+      "errorFinish": "O arquivo não terminou de ser baixado. Tente novamente.",
+      "errorSpace": "Não há espaço suficiente. Libere {{size}} e tente novamente.",
+      "freeUpToDownload": "Libere {{size}} para baixar.",
+      "modelLicenseLink": "Licença: Apache 2.0",
+      "modelQueued": "Aguardando para baixar",
+      "modelRowReady": "{{name}}, {{size}}, baixado",
+      "modelsWaitingNative": "Até que {{name}} esteja disponível, a Mera usa a Nuvem privada.",
+      "nativeAppLanguage": "{{name}} ainda não oferece suporte ao idioma definido no app Mera News.",
+      "nativeDeviceLanguage": "{{name}} ainda não oferece suporte ao idioma do próprio celular.",
+      "nativeDeviceNotEligible": "Este celular não é compatível com {{name}}.",
+      "nativeNeedsUpdate": "{{name}} precisa de uma atualização do sistema. Verifique atualizações nas configurações do celular.",
+      "nativeNotEnabled": "Ative {{name}} nas configurações do celular para usar.",
+      "nativeNotReady": "{{name}} ainda está se preparando. Tente novamente mais tarde.",
+      "nativeOsTooOld": "{{name}} precisa de uma versão mais recente do software deste celular.",
+      "nativeUnknown": "{{name}} não está disponível agora.",
+      "relevanceTitle": "Modelo de relevância Mera",
+      "speedLoad": "Tempo de carregamento: {{seconds}} s",
+      "speedRanking": "Ranking: {{seconds}} s por artigo",
+      "speedRefused_one": "{{name}} recusou {{count}} solicitação",
+      "speedRefused_other": "{{name}} recusou {{count}} solicitações",
+      "tryAgain": "Tentar novamente"
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactNewsStopped": "Notícias interrompidas para um dos interesses",
+        "setFactPlaces": "Origem das notícias alterada"
+      },
+      "summary": {
+        "newsStopped": "Notícias interrompidas para {{name}}",
+        "placesSet": "Origem das notícias de {{name}} alterada"
+      }
+    },
+    "you": {
+      "fact": {
+        "places": {
+          "about": "Lugares",
+          "addCountry": "Adicionar um país",
+          "anywhere": "Qualquer lugar",
+          "blocs": {
+            "Africa": "África",
+            "Antarctica": "Antártida",
+            "Asia": "Ásia",
+            "EEA": "Espaço Econômico Europeu",
+            "EFTA": "Associação Europeia de Livre Comércio",
+            "EU": "União Europeia",
+            "Europe": "Europa",
+            "North America": "América do Norte",
+            "South America": "América do Sul",
+            "UK": "Reino Unido"
+          },
+          "noCountry": "Nenhum país encontrado",
+          "notSet": "Ainda não definido",
+          "remove": "Remover {{place}}",
+          "search": "Buscar países"
+        }
+      }
+    }
+  },
+  "ru": {
+    "askChoice": {
+      "somethingElse": "Другое"
+    },
+    "chat": {
+      "onDeviceBetaNote": "Режим «На этом телефоне» находится в статусе Бета, поэтому ответы могут быть медленнее или менее точными."
+    },
+    "download": {
+      "betaTitle": "{{title}} (Бета)",
+      "failedSpace": "Недостаточно места на этом телефоне. Освободите место и попробуйте снова."
+    },
+    "kevChat": {
+      "article": {
+        "answer": "Ответить на вопрос",
+        "follow": "Отслеживать эту историю",
+        "less": "Показывать меньше похожего",
+        "more": "Показывать больше похожего"
+      },
+      "askFact": "Какой факт вы имеете в виду?",
+      "askIntent": "Что вы хотите сделать?",
+      "askTopic": "Какую тему вы имеете в виду?",
+      "card": {
+        "agree": "Применить изменение",
+        "decline": "Оставить как есть"
+      },
+      "follow": {
+        "follow": "Отслеживать историю",
+        "other": "Спросить о другом"
+      },
+      "persona": {
+        "chat": "Просто поболтать",
+        "correct": "Обновить сохранённый факт",
+        "remove": "Удалить сохранённый факт",
+        "share": "Добавить это как новый факт"
+      },
+      "reply": {
+        "ack": "Всегда пожалуйста.",
+        "alreadyKnown": "У меня это уже есть в вашем профиле.",
+        "applied": "Готово.",
+        "cancelled": "Хорошо, оставляю без изменений.",
+        "changeCard": "Нажмите на карточку, чтобы подтвердить изменение.",
+        "chat": "Извините, на этом телефоне мне не удалось на это ответить. Попробуйте спросить по-другому.",
+        "followFailed": "Какую историю вы хотите отслеживать?",
+        "notFound": "Мне не удалось найти это в вашем профиле.",
+        "pickOnCard": "Нажмите на нужный вариант на карточке.",
+        "removeCard": "Нажмите Удалить, чтобы подтвердить, или Оставить, чтобы не менять.",
+        "saveFailed": "Мне не удалось разобрать, что вы сказали. Не могли бы вы сказать иначе?"
+      }
+    },
+    "meraProtocol": {
+      "builtInReady": "Готово на этом телефоне",
+      "builtInRequirement": "{{name}} на этом телефоне",
+      "cancelDownloadAction": "Отменить загрузку",
+      "cellularBody": "Загрузка использует {{size}} мобильных данных.",
+      "cellularConfirm": "Загрузить",
+      "cellularTitle": "Загрузить через мобильную сеть?",
+      "cellularWait": "Дождаться Wi-Fi",
+      "deleteFailedDescription": "Модель не удалена. Попробуйте снова.",
+      "deleteModelTitle": "Удалить {{name}}?",
+      "downloadAction": "Загрузить ({{size}})",
+      "downloadingOf": "Загружено {{done}} из {{total}} ГБ",
+      "errorFile": "Часть загрузки не была получена корректно. Попробуйте снова.",
+      "errorFinish": "Загрузка не завершилась. Попробуйте снова.",
+      "errorSpace": "Недостаточно места. Освободите {{size}} и попробуйте снова.",
+      "freeUpToDownload": "Освободите {{size}}, чтобы загрузить.",
+      "modelLicenseLink": "Лицензия: Apache 2.0",
+      "modelQueued": "Ожидает загрузки",
+      "modelRowReady": "{{name}}, {{size}}, загружено",
+      "nativeDeviceLanguage": "{{name}} пока не поддерживает язык этого телефона.",
+      "nativeDeviceNotEligible": "Этот телефон не поддерживает {{name}}.",
+      "nativeNeedsUpdate": "{{name}} требует обновления системы. Проверьте обновления в настройках телефона.",
+      "nativeNotEnabled": "Включите {{name}} в настройках телефона, чтобы использовать.",
+      "nativeNotReady": "{{name}} ещё готовится. Попробуйте позже.",
+      "nativeOsTooOld": "{{name}} требует более новой версии системного ПО этого телефона.",
+      "nativeUnknown": "Сейчас нет доступа к {{name}}.",
+      "speedLoad": "Время загрузки: {{seconds}} с",
+      "speedRanking": "Ранжирование: {{seconds}} с на статью",
+      "speedRefused_one": "Запросов, отклонённых {{name}}: {{count}}",
+      "speedRefused_other": "Запросов, отклонённых {{name}}: {{count}}",
+      "tryAgain": "Повторить",
+      "speedRefused_few": "Запросов, отклонённых {{name}}: {{count}}",
+      "speedRefused_many": "Запросов, отклонённых {{name}}: {{count}}"
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactNewsStopped": "Новости по одному из интересов остановлены",
+        "setFactPlaces": "Изменено, откуда приходят новости"
+      },
+      "summary": {
+        "newsStopped": "Новости по {{name}} остановлены",
+        "placesSet": "Изменено, откуда приходят новости по {{name}}"
+      }
+    },
+    "you": {
+      "fact": {
+        "places": {
+          "about": "Места",
+          "addCountry": "Добавить страну",
+          "anywhere": "Где угодно",
+          "blocs": {
+            "Africa": "Африка",
+            "Antarctica": "Антарктида",
+            "Asia": "Азия",
+            "EEA": "Европейская экономическая зона",
+            "EFTA": "Европейская ассоциация свободной торговли",
+            "EU": "Европейский союз",
+            "Europe": "Европа",
+            "North America": "Северная Америка",
+            "Oceania": "Океания",
+            "South America": "Южная Америка",
+            "UK": "Великобритания"
+          },
+          "noCountry": "Страна не найдена",
+          "notSet": "Пока не выбрано",
+          "remove": "Удалить {{place}}",
+          "search": "Поиск стран"
+        }
+      }
+    }
+  },
+  "th": {
+    "askChoice": {
+      "somethingElse": "อย่างอื่น"
+    },
+    "chat": {
+      "onDeviceBetaNote": "โหมดบนโทรศัพท์เครื่องนี้อยู่ในเบตาจึงอาจตอบช้าลงหรือแม่นยำน้อยลง"
+    },
+    "download": {
+      "betaTitle": "{{title}} (เบตา)",
+      "failedSpace": "บนโทรศัพท์เครื่องนี้มีพื้นที่ไม่เพียงพอ คืนพื้นที่ว่างแล้วลองอีกครั้ง"
+    },
+    "kevChat": {
+      "article": {
+        "answer": "ตอบคำถาม",
+        "follow": "ติดตามเรื่องนี้",
+        "less": "แสดงเรื่องแบบนี้น้อยลง",
+        "more": "แสดงเรื่องแบบนี้มากขึ้น"
+      },
+      "askFact": "คุณหมายถึงข้อเท็จจริงไหน",
+      "askIntent": "คุณอยากทำอะไร",
+      "askTopic": "คุณหมายถึงหัวข้อไหน",
+      "card": {
+        "agree": "นำการเปลี่ยนแปลงไปใช้",
+        "decline": "คงไว้ตามเดิม"
+      },
+      "follow": {
+        "follow": "ติดตามเรื่องข่าว",
+        "other": "ถามเรื่องอื่น"
+      },
+      "persona": {
+        "chat": "คุยเล่นเฉย ๆ",
+        "correct": "อัปเดตข้อเท็จจริงที่บันทึกไว้",
+        "remove": "ลบข้อเท็จจริงที่บันทึกไว้",
+        "share": "เพิ่มเป็นข้อเท็จจริงใหม่"
+      },
+      "reply": {
+        "ack": "ยินดีเสมอ",
+        "alreadyKnown": "ฉันมีข้อมูลนั้นอยู่ในโปรไฟล์ของคุณแล้ว",
+        "applied": "เรียบร้อย",
+        "cancelled": "คงไว้ตามเดิมโดยไม่มีอะไรเปลี่ยน",
+        "changeCard": "แตะการ์ดเพื่อยืนยันการเปลี่ยนแปลง",
+        "chat": "ขอโทษที่บนโทรศัพท์เครื่องนี้ฉันตอบเรื่องนั้นไม่ได้ ลองถามด้วยวิธีอื่น",
+        "followFailed": "คุณอยากติดตามเรื่องไหน",
+        "notFound": "ฉันหาเรื่องนั้นในโปรไฟล์ของคุณไม่เจอ",
+        "pickOnCard": "แตะตัวเลือกที่ต้องการบนการ์ด",
+        "removeCard": "แตะลบเพื่อยืนยันหรือแตะเก็บไว้เพื่อคงข้อเท็จจริงไว้ตามเดิม",
+        "saveFailed": "ฉันจับความที่คุณพูดไม่ได้ ช่วยพูดอีกแบบได้ไหม"
+      }
+    },
+    "meraProtocol": {
+      "builtInReady": "พร้อมใช้งานบนโทรศัพท์เครื่องนี้",
+      "builtInRequirement": "{{name}} บนโทรศัพท์เครื่องนี้",
+      "cancelDownloadAction": "ยกเลิกการดาวน์โหลด",
+      "cellularBody": "การดาวน์โหลดใช้ข้อมูลมือถือ {{size}}",
+      "cellularConfirm": "ดาวน์โหลด",
+      "cellularTitle": "ดาวน์โหลดด้วยข้อมูลมือถือไหม",
+      "cellularWait": "รอ Wi-Fi",
+      "deleteFailedDescription": "ยังไม่ได้ลบโมเดล ลองอีกครั้ง",
+      "deleteModelTitle": "ลบ {{name}} ไหม",
+      "downloadAction": "ดาวน์โหลด ({{size}})",
+      "downloadingOf": "กำลังดาวน์โหลด {{done}} จาก {{total}} GB",
+      "errorFile": "บางส่วนของการดาวน์โหลดไม่ได้รับอย่างถูกต้อง ลองอีกครั้ง",
+      "errorFinish": "การดาวน์โหลดไม่เสร็จ ลองอีกครั้ง",
+      "errorSpace": "พื้นที่ไม่เพียงพอ คืนพื้นที่ {{size}} แล้วลองอีกครั้ง",
+      "freeUpToDownload": "คืนพื้นที่ {{size}} เพื่อดาวน์โหลด",
+      "modelLicenseLink": "ใบอนุญาต: Apache 2.0",
+      "modelQueued": "กำลังรอดาวน์โหลด",
+      "modelRowReady": "{{name}}, {{size}}, ดาวน์โหลดแล้ว",
+      "nativeDeviceLanguage": "{{name}} ยังไม่รองรับภาษาของโทรศัพท์เครื่องนี้",
+      "nativeDeviceNotEligible": "โทรศัพท์เครื่องนี้ไม่รองรับ {{name}}",
+      "nativeNeedsUpdate": "{{name}} ต้องอัปเดตระบบ ตรวจสอบการอัปเดตได้ที่การตั้งค่าโทรศัพท์",
+      "nativeNotEnabled": "เปิด {{name}} ในการตั้งค่าโทรศัพท์เพื่อใช้งาน",
+      "nativeNotReady": "{{name}} ยังเตรียมความพร้อมอยู่ ลองอีกครั้งภายหลัง",
+      "nativeOsTooOld": "{{name}} ต้องใช้ซอฟต์แวร์ระบบเวอร์ชันใหม่กว่าของโทรศัพท์เครื่องนี้",
+      "nativeUnknown": "ตอนนี้ใช้ {{name}} ไม่ได้",
+      "speedLoad": "เวลาโหลด: {{seconds}} วินาที",
+      "speedRanking": "การจัดอันดับ: {{seconds}} วินาทีต่อบทความ",
+      "speedRefused_other": "{{name}} ปฏิเสธ {{count}} คำขอ",
+      "tryAgain": "ลองอีกครั้ง"
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactNewsStopped": "หยุดข่าวของความสนใจหนึ่งรายการ",
+        "setFactPlaces": "เปลี่ยนแหล่งที่มาของข่าว"
+      },
+      "summary": {
+        "newsStopped": "หยุดข่าวสำหรับ {{name}}",
+        "placesSet": "เปลี่ยนแหล่งที่มาของข่าวสำหรับ {{name}}"
+      }
+    },
+    "you": {
+      "fact": {
+        "places": {
+          "about": "สถานที่",
+          "addCountry": "เพิ่มประเทศ",
+          "anywhere": "ที่ไหนก็ได้",
+          "blocs": {
+            "Africa": "แอฟริกา",
+            "Antarctica": "แอนตาร์กติกา",
+            "Asia": "เอเชีย",
+            "EEA": "เขตเศรษฐกิจยุโรป",
+            "EFTA": "สมาคมการค้าเสรียุโรป",
+            "EU": "สหภาพยุโรป",
+            "Europe": "ยุโรป",
+            "North America": "อเมริกาเหนือ",
+            "Oceania": "โอเชียเนีย",
+            "South America": "อเมริกาใต้",
+            "UK": "สหราชอาณาจักร"
+          },
+          "noCountry": "ไม่พบประเทศ",
+          "notSet": "ยังไม่ได้ตั้งค่า",
+          "remove": "ลบ {{place}}",
+          "search": "ค้นหาประเทศ"
+        }
+      }
+    }
+  },
+  "tr": {
+    "askChoice": {
+      "somethingElse": "Başka bir şey"
+    },
+    "chat": {
+      "onDeviceBetaNote": "Bu telefonda modu Beta aşamasında olduğu için yanıtlar daha yavaş veya daha az doğru olabilir."
+    },
+    "download": {
+      "failedSpace": "Bu telefonda yeterli alan yok. Alan açıp tekrar dene.",
+      "modelDownloading": "Mera modelleri indiriliyor",
+      "onDeviceReady": "Mera artık bu telefonda çalışıyor.",
+      "relevanceDone": "Mera alaka düzeyi modeli artık bu telefonda."
+    },
+    "kevChat": {
+      "article": {
+        "answer": "Bir soruyu yanıtla",
+        "follow": "Bu haberi takip et",
+        "less": "Buna benzerleri daha az göster",
+        "more": "Buna benzerleri daha fazla göster"
+      },
+      "askFact": "Hangi gerçeği kastediyorsun?",
+      "askIntent": "Ne yapmak istersin?",
+      "askTopic": "Hangi konuyu kastediyorsun?",
+      "card": {
+        "agree": "Değişikliği uygula",
+        "decline": "Olduğu gibi bırak"
+      },
+      "follow": {
+        "follow": "Bir haberi takip et",
+        "other": "Başka bir şey sor"
+      },
+      "persona": {
+        "chat": "Sadece sohbet",
+        "correct": "Kayıtlı bir gerçeği güncelle",
+        "remove": "Kayıtlı bir gerçeği kaldır",
+        "share": "Bunu yeni bir gerçek olarak ekle"
+      },
+      "reply": {
+        "ack": "Rica ederim.",
+        "alreadyKnown": "Bu zaten profilinde var.",
+        "applied": "Yapıldı.",
+        "cancelled": "Tamam, olduğu gibi bıraktım, hiçbir şey değişmedi.",
+        "changeCard": "Değişikliği onaylamak için karta dokun.",
+        "chat": "Üzgünüm, bunu bu telefonda yanıtlayamadım. Başka bir şekilde sormayı dene.",
+        "followFailed": "Hangi haberi takip etmek istersin?",
+        "notFound": "Bunu profilinde bulamadım.",
+        "pickOnCard": "Kartta istediğine dokun.",
+        "removeCard": "Onaylamak için Kaldır'a, olduğu gibi bırakmak için Tut'a dokun.",
+        "saveFailed": "Ne dediğini anlayamadım. Bunu başka bir şekilde söyler misin?"
+      }
+    },
+    "meraProtocol": {
+      "attestationScopeNotice": "Bu, Mera'nın şu anda kullandığı bulut yapay zekâyı kontrol eder. Bu kontrolden geçmek, Mera'nın yaptığı her isteği kapsamaz.",
+      "builtInReady": "Bu telefonda hazır",
+      "builtInRequirement": "{{name}} bu telefonda",
+      "cancelDownloadAction": "İndirmeyi iptal et",
+      "cellularBody": "İndirme {{size}} mobil veri kullanır.",
+      "cellularConfirm": "İndir",
+      "cellularTitle": "Mobil veriyle indirilsin mi?",
+      "cellularWait": "Wi-Fi'yi bekle",
+      "deleteFailedDescription": "Model silinmedi. Tekrar dene.",
+      "deleteModelTitle": "{{name}} silinsin mi?",
+      "deleteRelevanceBody": "Bu, modeli ({{size}}) bu telefondan kaldırır. Mera bundan sonra Özel bulut kullanır.",
+      "downloadAction": "İndir ({{size}})",
+      "downloadingOf": "{{done}} / {{total}} GB indiriliyor",
+      "errorFile": "İndirmenin bir kısmı doğru gelmedi. Tekrar dene.",
+      "errorFinish": "İndirme tamamlanamadı. Tekrar dene.",
+      "errorSpace": "Yeterli alan yok. {{size}} yer aç ve tekrar dene.",
+      "freeUpToDownload": "İndirmek için {{size}} yer aç.",
+      "modelLicenseLink": "Lisans: Apache 2.0",
+      "modelQueued": "İndirme için bekleniyor",
+      "modelRowReady": "{{name}}, {{size}}, indirildi",
+      "modelsWaitingNative": "{{name}} hazır olana kadar Mera Özel bulut kullanır.",
+      "nativeAppLanguage": "{{name}}, Mera News uygulamasının seçili dilini henüz desteklemiyor.",
+      "nativeDeviceLanguage": "{{name}}, telefonun kendi dilini henüz desteklemiyor.",
+      "nativeDeviceNotEligible": "Bu telefon {{name}} özelliğini desteklemiyor.",
+      "nativeNeedsUpdate": "{{name}} için sistem güncellemesi gerekiyor. Telefonun Ayarlar uygulamasından güncellemeleri kontrol et.",
+      "nativeNotEnabled": "{{name}} özelliğini kullanmak için telefonun Ayarlar uygulamasından aç.",
+      "nativeNotReady": "{{name}} hâlâ hazırlanıyor. Daha sonra tekrar dene.",
+      "nativeOsTooOld": "{{name}} için bu telefonun sistem yazılımının daha yeni bir sürümü gerekiyor.",
+      "nativeUnknown": "{{name}} şu anda kullanılamıyor.",
+      "relevanceTitle": "Mera alaka düzeyi modeli",
+      "speedLoad": "Yüklenme süresi: {{seconds}} sn",
+      "speedRanking": "Sıralama: makale başına {{seconds}} sn",
+      "speedRefused_one": "{{name}}, {{count}} isteği reddetti",
+      "speedRefused_other": "{{name}}, {{count}} isteği reddetti",
+      "tryAgain": "Tekrar dene"
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactNewsStopped": "İlgi alanlarından biri için haberler durduruldu",
+        "setFactPlaces": "Haberlerin nereden geldiği değiştirildi"
+      },
+      "summary": {
+        "newsStopped": "{{name}} için haberler durduruldu",
+        "placesSet": "{{name}} için haberlerin nereden geldiği değiştirildi"
+      }
+    },
+    "you": {
+      "fact": {
+        "places": {
+          "about": "Yerler",
+          "addCountry": "Ülke ekle",
+          "anywhere": "Herhangi bir yer",
+          "blocs": {
+            "Africa": "Afrika",
+            "Antarctica": "Antarktika",
+            "Asia": "Asya",
+            "EEA": "Avrupa Ekonomik Alanı",
+            "EFTA": "Avrupa Serbest Ticaret Birliği",
+            "EU": "Avrupa Birliği",
+            "Europe": "Avrupa",
+            "North America": "Kuzey Amerika",
+            "Oceania": "Okyanusya",
+            "South America": "Güney Amerika",
+            "UK": "Birleşik Krallık"
+          },
+          "noCountry": "Ülke bulunamadı",
+          "notSet": "Henüz ayarlanmadı",
+          "remove": "{{place}} kaldır",
+          "search": "Ülkelerde ara"
+        }
+      }
+    },
+    "factCheck": {
+      "actionCheckClaim": "İddiayı kontrol et",
+      "noCheckedBy": "Bu haber hakkında yayımlanmış bir doğruluk kontrolü bulamadık. Bu, haberin yanlış olduğu anlamına gelmez. Çoğu haber hiçbir zaman doğruluk kontrolünden geçmez.",
+      "verdict": {
+        "disputed": {
+          "detail": "Arama, bu haberin bazı kısımlarıyla çelişen kaynaklar buldu. Onları oku ve kendin karar ver."
+        },
+        "unknown": {
+          "detail": "Arama, özetleyebileceğimiz bir sonuca varmadan bitti. Aşağıdaki kaynaklar aramanın baktığı yerler."
+        },
+        "unsupported": {
+          "detail": "Arama bunu destekleyen bir şey bulamadı. Bu sadece haberin yeni ya da niş olduğunu gösterebilir, yanlış olduğunu değil."
+        },
+        "unverifiable": {
+          "detail": "Arama bu haberi doğrulamak ya da çürütmek için yeterli bilgi bulamadı. Bu, haberin yanlış olduğuna dair bir bulgu değil."
+        },
+        "mixed": {
+          "detail": "Bazı kısımlar aramanın bulduklarıyla uyuşuyor, bazıları uyuşmuyor. Hangilerinin uyuştuğunu iddia iddia notlar gösteriyor."
+        }
+      },
+      "actionA11yDone": "Doğruluk kontrolü hazır. Sonuç aşağıda gösteriliyor.",
+      "actionA11yPending": "Doğruluk kontrolü istendi. Sonuç için tekrar bak.",
+      "checkedByRelatedNote": "Bunlar bir anahtar sözcük aramasından gelir ve başka bir haberle ilgili olabilir. Kontrol etmek için birini aç.",
+      "checkedByUnavailable": "Bir doğruluk kontrolü kuruluşunun bu haber hakkında bir şey yayımlayıp yayımlamadığını kontrol edemedik. Bu, hiç kimsenin yayımlamadığı anlamına gelmez. Daha geniş aramanın bulduklarını aşağıda görebilirsin.",
+      "dashboard": {
+        "articleGone": "Makalenin süresi doldu, bu yüzden açılamıyor. Bulduğumuz doğruluk kontrolü burada saklanıyor.",
+        "couldNotCheck": "Bu konuda kimin bir şey yayımladığını kontrol edemedik. Aramanın ne bulduğunu görmek için dokun.",
+        "noneFound": "Yayımlanmış doğruluk kontrolü bulunamadı"
+      },
+      "disclaimer": "Bu, Mera'nın bir web aramasını kendi okuyuşudur ve yapay zeka tarafından yazılmıştır. Hatalı veya eksik olabilir, bu yüzden güvenmeden önce kaynakları oku.",
+      "noCitations": "Bu kontrol belirli hiçbir sayfayı kaynak göstermedi. Bu başarısız bir arama değil, ama özete daha dikkatli yaklaş.",
+      "organisationA11y": "{{organisation}} tarafından yapılan ve {{rating}} olarak değerlendirilen doğruluk kontrolünü uygulama içi tarayıcıda aç",
+      "queued": "Bu kontrol arka planda çalışmaya devam ediyor. Makaleden çıkabilirsin.",
+      "queuedHint": "Sonuç hazır olduğunda Panondaki Doğruluk kontrolleri bölümünde görünür.",
+      "quickArticleRequested": "İstek gönderildi. Mera tüm makaleyi kontrol edecek ve sonuç Panondaki Doğruluk kontrolleri bölümünde görünecek.",
+      "quickDisclaimer": "Bu hızlı bir web araması, doğruluk kontrolü kuruluşlarının yaptığı bir kontrol değil ve kaydedilmiyor. Adları belirtilen kaynaklarla kapsamlı bir kontrol için \"Tüm makale\" seçeneğini seç.",
+      "stillChecking": "Bu normalden uzun sürüyor. Arka planda hâlâ çalışıyor, sonra Panondaki Doğruluk kontrolleri bölümüne tekrar bak.",
+      "quickNothingFound": "Arama bununla ilgili bir şey bulamadı. Bu, yanlış olduğu anlamına gelmez. Sadece yeni, niş ya da internette pek yer almayan bir konu olabilir."
+    }
+  },
+  "uk": {
+    "askChoice": {
+      "somethingElse": "Щось інше"
+    },
+    "chat": {
+      "onDeviceBetaNote": "Режим «На цьому телефоні» на етапі Бета, тому відповіді можуть бути повільнішими або менш точними."
+    },
+    "download": {
+      "betaTitle": "{{title}} (Бета)",
+      "failedSpace": "Недостатньо місця на цьому телефоні. Звільніть місце й спробуйте ще раз."
+    },
+    "kevChat": {
+      "article": {
+        "answer": "Відповісти на запитання",
+        "follow": "Відстежувати цю історію",
+        "less": "Показувати менше такого",
+        "more": "Показувати більше такого"
+      },
+      "askFact": "Про який факт ідеться?",
+      "askIntent": "Що б ви хотіли зробити?",
+      "askTopic": "Про яку тему ідеться?",
+      "card": {
+        "agree": "Застосувати зміну",
+        "decline": "Залишити як є"
+      },
+      "follow": {
+        "follow": "Відстежувати історію",
+        "other": "Запитати про щось інше"
+      },
+      "persona": {
+        "chat": "Просто розмова",
+        "correct": "Оновити збережений факт",
+        "remove": "Видалити збережений факт",
+        "share": "Додати це як новий факт"
+      },
+      "reply": {
+        "ack": "Завжди радо.",
+        "alreadyKnown": "Я вже маю це у вашому профілі.",
+        "applied": "Готово.",
+        "cancelled": "Гаразд, я залишаю все як є.",
+        "changeCard": "Натисніть на картку, щоб підтвердити зміну.",
+        "chat": "Вибачте, на цьому телефоні я не змогла відповісти на це. Спробуйте запитати інакше.",
+        "followFailed": "Яку історію ви хочете відстежувати?",
+        "notFound": "Я не змогла знайти це у вашому профілі.",
+        "pickOnCard": "Натисніть потрібний варіант на картці.",
+        "removeCard": "Натисніть Видалити, щоб підтвердити, або Залишити, щоб факт лишився як є.",
+        "saveFailed": "Я не розчула, що ви сказали. Не могли б ви сказати це інакше?"
+      }
+    },
+    "meraProtocol": {
+      "builtInReady": "Готово на цьому телефоні",
+      "builtInRequirement": "{{name}} на цьому телефоні",
+      "cancelDownloadAction": "Скасувати завантаження",
+      "cellularBody": "Завантаження використовує {{size}} мобільного інтернету.",
+      "cellularConfirm": "Завантажити",
+      "cellularTitle": "Завантажити через мобільний інтернет?",
+      "cellularWait": "Чекати на Wi-Fi",
+      "deleteFailedDescription": "Модель не видалено. Спробуйте ще раз.",
+      "deleteModelTitle": "Видалити {{name}}?",
+      "downloadAction": "Завантажити ({{size}})",
+      "downloadingOf": "Завантаження {{done}} з {{total}} ГБ",
+      "errorFile": "Частину завантаження отримано некоректно. Спробуйте ще раз.",
+      "errorFinish": "Завантаження не завершилося. Спробуйте ще раз.",
+      "errorSpace": "Недостатньо місця. Звільніть {{size}} і спробуйте ще раз.",
+      "freeUpToDownload": "Звільніть {{size}}, щоб завантажити.",
+      "modelLicenseLink": "Ліцензія: Apache 2.0",
+      "modelQueued": "Очікує на завантаження",
+      "modelRowReady": "{{name}}, {{size}}, завантажено",
+      "nativeDeviceLanguage": "{{name}} ще не підтримує мову цього телефону.",
+      "nativeDeviceNotEligible": "Цей телефон не підтримує {{name}}.",
+      "nativeNeedsUpdate": "{{name}} потребує оновлення системи. Перевірте наявність оновлень у налаштуваннях телефона.",
+      "nativeNotEnabled": "Увімкніть {{name}} у налаштуваннях телефона, щоб використовувати цю функцію.",
+      "nativeNotReady": "{{name}} ще готується. Спробуйте пізніше.",
+      "nativeOsTooOld": "{{name}} потребує новішої версії програмного забезпечення цього телефону.",
+      "nativeUnknown": "Функція {{name}} зараз недоступна.",
+      "speedLoad": "Час завантаження: {{seconds}} с",
+      "speedRanking": "Ранжування: {{seconds}} с на статтю",
+      "speedRefused_one": "{{name}}: відхилених запитів {{count}}",
+      "speedRefused_other": "{{name}}: відхилених запитів {{count}}",
+      "tryAgain": "Повторити",
+      "speedRefused_few": "{{name}}: відхилених запитів {{count}}",
+      "speedRefused_many": "{{name}}: відхилених запитів {{count}}"
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactNewsStopped": "Припинено показ новин для інтересу",
+        "setFactPlaces": "Змінено, звідки надходять новини"
+      },
+      "summary": {
+        "newsStopped": "Припинено показ новин для {{name}}",
+        "placesSet": "Змінено, звідки надходять новини для {{name}}"
+      }
+    },
+    "you": {
+      "fact": {
+        "places": {
+          "about": "Місця",
+          "addCountry": "Додати країну",
+          "anywhere": "Будь-де",
+          "blocs": {
+            "Africa": "Африка",
+            "Antarctica": "Антарктида",
+            "Asia": "Азія",
+            "EEA": "Європейська економічна зона",
+            "EFTA": "Європейська асоціація вільної торгівлі",
+            "EU": "Європейський Союз",
+            "Europe": "Європа",
+            "North America": "Північна Америка",
+            "Oceania": "Океанія",
+            "South America": "Південна Америка",
+            "UK": "Велика Британія"
+          },
+          "noCountry": "Країну не знайдено",
+          "notSet": "Ще не вказано",
+          "remove": "Видалити {{place}}",
+          "search": "Пошук країн"
+        }
+      }
+    }
+  },
+  "vi": {
+    "askChoice": {
+      "somethingElse": "Điều khác"
+    },
+    "chat": {
+      "onDeviceBetaNote": "Chế độ “Trên điện thoại này” đang ở bản Beta, nên câu trả lời có thể chậm hơn hoặc kém chính xác hơn."
+    },
+    "download": {
+      "failedSpace": "Không đủ dung lượng trên điện thoại này. Hãy giải phóng dung lượng rồi thử lại.",
+      "modelDownloading": "Đang tải các mô hình Mera",
+      "onDeviceReady": "Mera đã chạy trên điện thoại này.",
+      "relevanceDone": "Mô hình độ liên quan của Mera đã có trên điện thoại này."
+    },
+    "kevChat": {
+      "article": {
+        "answer": "Trả lời một câu hỏi",
+        "follow": "Theo dõi câu chuyện này",
+        "less": "Hiện ít hơn kiểu này",
+        "more": "Hiện thêm kiểu này"
+      },
+      "askFact": "Bạn muốn nói đến thông tin nào?",
+      "askIntent": "Bạn muốn làm gì?",
+      "askTopic": "Bạn muốn nói đến chủ đề nào?",
+      "card": {
+        "agree": "Áp dụng thay đổi",
+        "decline": "Giữ nguyên"
+      },
+      "follow": {
+        "follow": "Theo dõi một câu chuyện",
+        "other": "Hỏi điều khác"
+      },
+      "persona": {
+        "chat": "Chỉ trò chuyện",
+        "correct": "Cập nhật một thông tin đã lưu",
+        "remove": "Xóa một thông tin đã lưu",
+        "share": "Thêm điều này như một thông tin mới"
+      },
+      "reply": {
+        "ack": "Luôn sẵn lòng.",
+        "alreadyKnown": "Tôi đã có điều đó trong hồ sơ của bạn.",
+        "applied": "Xong.",
+        "cancelled": "Được, tôi để nguyên như cũ.",
+        "changeCard": "Chạm vào thẻ để xác nhận thay đổi.",
+        "chat": "Xin lỗi, tôi không thể trả lời điều đó trên điện thoại này. Hãy thử hỏi theo cách khác.",
+        "followFailed": "Bạn muốn theo dõi câu chuyện nào?",
+        "notFound": "Tôi không tìm thấy điều đó trong hồ sơ của bạn.",
+        "pickOnCard": "Chạm vào mục bạn muốn trên thẻ.",
+        "removeCard": "Chạm Xóa để xác nhận, hoặc Giữ lại để giữ nguyên.",
+        "saveFailed": "Tôi chưa nghe rõ điều bạn nói. Bạn có thể nói cách khác không?"
+      }
+    },
+    "meraProtocol": {
+      "attestationScopeNotice": "Kiểm tra này xác minh AI trên đám mây mà Mera đang dùng. Kết quả đạt không bao gồm mọi yêu cầu mà Mera thực hiện.",
+      "builtInReady": "Sẵn sàng trên điện thoại này",
+      "builtInRequirement": "{{name}} trên điện thoại này",
+      "cancelDownloadAction": "Hủy tải xuống",
+      "cellularBody": "Tải xuống sẽ dùng {{size}} dữ liệu di động.",
+      "cellularConfirm": "Tải xuống",
+      "cellularTitle": "Tải xuống bằng dữ liệu di động?",
+      "cellularWait": "Chờ Wi-Fi",
+      "deleteFailedDescription": "Mô hình chưa được xóa. Hãy thử lại.",
+      "deleteModelTitle": "Xóa {{name}}?",
+      "deleteRelevanceBody": "Thao tác này xóa mô hình ({{size}}) khỏi điện thoại này. Sau đó Mera sẽ dùng Đám mây riêng.",
+      "downloadAction": "Tải xuống ({{size}})",
+      "downloadingOf": "Đang tải {{done}} trên {{total}} GB",
+      "errorFile": "Một phần của bản tải xuống chưa được nhận đúng. Hãy thử lại.",
+      "errorFinish": "Bản tải xuống chưa hoàn tất. Hãy thử lại.",
+      "errorSpace": "Không đủ dung lượng. Hãy giải phóng {{size}} rồi thử lại.",
+      "freeUpToDownload": "Giải phóng {{size}} để tải xuống.",
+      "modelLicenseLink": "Giấy phép: Apache 2.0",
+      "modelQueued": "Đang chờ tải xuống",
+      "modelRowReady": "{{name}}, {{size}}, đã tải xuống",
+      "modelsWaitingNative": "Mera dùng Đám mây riêng cho đến khi {{name}} sẵn sàng.",
+      "nativeAppLanguage": "{{name}} chưa hỗ trợ ngôn ngữ hiện tại của ứng dụng Mera News.",
+      "nativeDeviceLanguage": "{{name}} chưa hỗ trợ ngôn ngữ của điện thoại này.",
+      "nativeDeviceNotEligible": "Điện thoại này không hỗ trợ {{name}}.",
+      "nativeNeedsUpdate": "{{name}} cần được cập nhật hệ thống. Hãy kiểm tra bản cập nhật trong phần cài đặt điện thoại.",
+      "nativeNotEnabled": "Bật {{name}} trong phần cài đặt điện thoại để sử dụng.",
+      "nativeNotReady": "{{name}} vẫn đang được chuẩn bị. Hãy thử lại sau.",
+      "nativeOsTooOld": "{{name}} cần phiên bản phần mềm mới hơn của điện thoại này.",
+      "nativeUnknown": "{{name}} hiện không khả dụng.",
+      "relevanceTitle": "Mô hình độ liên quan của Mera",
+      "speedLoad": "Thời gian tải: {{seconds}} giây",
+      "speedRanking": "Xếp hạng: {{seconds}} giây mỗi bài viết",
+      "speedRefused_other": "{{name}} đã từ chối {{count}} yêu cầu",
+      "tryAgain": "Thử lại"
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactNewsStopped": "Đã dừng tin tức cho một mối quan tâm",
+        "setFactPlaces": "Đã thay đổi nguồn tin tức"
+      },
+      "summary": {
+        "newsStopped": "Đã dừng tin tức cho {{name}}",
+        "placesSet": "Đã thay đổi nguồn tin tức cho {{name}}"
+      }
+    },
+    "you": {
+      "fact": {
+        "places": {
+          "about": "Địa điểm",
+          "addCountry": "Thêm quốc gia",
+          "anywhere": "Bất kỳ đâu",
+          "blocs": {
+            "Africa": "Châu Phi",
+            "Antarctica": "Châu Nam Cực",
+            "Asia": "Châu Á",
+            "EEA": "Khu vực Kinh tế Châu Âu",
+            "EFTA": "Hiệp hội Thương mại Tự do Châu Âu",
+            "EU": "Liên minh Châu Âu",
+            "Europe": "Châu Âu",
+            "North America": "Bắc Mỹ",
+            "Oceania": "Châu Đại Dương",
+            "South America": "Nam Mỹ",
+            "UK": "Vương quốc Anh"
+          },
+          "noCountry": "Không tìm thấy quốc gia nào",
+          "notSet": "Chưa thiết lập",
+          "remove": "Xóa {{place}}",
+          "search": "Tìm quốc gia"
+        }
+      }
+    }
+  },
+  "zh-CN": {
+    "askChoice": {
+      "somethingElse": "其他"
+    },
+    "chat": {
+      "onDeviceBetaNote": "“在这部手机上”模式目前为测试版，因此回复可能更慢或更不准确。"
+    },
+    "download": {
+      "betaTitle": "{{title}}（测试版）",
+      "failedSpace": "这部手机的存储空间不足。请释放一些空间，然后重试。"
+    },
+    "kevChat": {
+      "article": {
+        "answer": "回答问题",
+        "follow": "关注这则报道",
+        "less": "少看这类内容",
+        "more": "多看这类内容"
+      },
+      "askFact": "你说的是哪条事实？",
+      "askIntent": "你想做什么？",
+      "askTopic": "你指的是哪个主题？",
+      "card": {
+        "agree": "应用更改",
+        "decline": "保持原样"
+      },
+      "follow": {
+        "follow": "关注一则报道",
+        "other": "问点别的"
+      },
+      "persona": {
+        "chat": "随便聊聊",
+        "correct": "更新一条已保存的事实",
+        "remove": "移除一条已保存的事实",
+        "share": "将此添加为新事实"
+      },
+      "reply": {
+        "ack": "不客气。",
+        "alreadyKnown": "这项内容我已经在“我的”里记下了。",
+        "applied": "完成。",
+        "cancelled": "好的，我没有做任何更改，保持原样。",
+        "changeCard": "点击卡片以确认更改。",
+        "chat": "抱歉，我无法在这部手机上回答这个问题。请换个方式再问。",
+        "followFailed": "你想关注哪则报道？",
+        "notFound": "我在“我的”里找不到这项内容。",
+        "pickOnCard": "点击卡片上你想要的选项。",
+        "removeCard": "点击移除以确认，或点击保留以保持原样。",
+        "saveFailed": "我没有听清你说的话。能换个方式再说一遍吗？"
+      }
+    },
+    "meraProtocol": {
+      "builtInReady": "在这部手机上已就绪",
+      "builtInRequirement": "{{name}} 在这部手机上",
+      "cancelDownloadAction": "取消下载",
+      "cellularBody": "下载会使用 {{size}} 的移动数据。",
+      "cellularConfirm": "下载",
+      "cellularTitle": "使用移动数据下载？",
+      "cellularWait": "等待 Wi-Fi",
+      "deleteFailedDescription": "模型未被删除。请重试。",
+      "deleteModelTitle": "删除 {{name}}？",
+      "downloadAction": "下载（{{size}}）",
+      "downloadingOf": "正在下载：{{done}} / {{total}} GB",
+      "errorFile": "部分下载内容未能正确接收。请重试。",
+      "errorFinish": "下载未完成。请重试。",
+      "errorSpace": "空间不足。请释放 {{size}} 后重试。",
+      "freeUpToDownload": "释放 {{size}} 空间后即可下载。",
+      "modelLicenseLink": "许可证：Apache 2.0",
+      "modelQueued": "等待下载",
+      "modelRowReady": "{{name}}，{{size}}，已下载",
+      "nativeDeviceLanguage": "{{name}} 暂不支持这部手机的语言。",
+      "nativeDeviceNotEligible": "这部手机不支持 {{name}}。",
+      "nativeNeedsUpdate": "{{name}} 需要系统更新。请在手机设置中检查更新。",
+      "nativeNotEnabled": "在手机设置中开启 {{name}} 才能使用。",
+      "nativeNotReady": "{{name}} 仍在准备中。请稍后再试。",
+      "nativeOsTooOld": "{{name}} 需要更高版本的手机系统软件。",
+      "nativeUnknown": "{{name}} 目前不可用。",
+      "speedLoad": "加载时间：{{seconds}} 秒",
+      "speedRanking": "排序：每篇文章 {{seconds}} 秒",
+      "speedRefused_other": "{{name}} 拒绝了 {{count}} 次请求",
+      "tryAgain": "重试"
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactNewsStopped": "已停止某项兴趣的新闻",
+        "setFactPlaces": "已更改某项兴趣的新闻来源"
+      },
+      "summary": {
+        "newsStopped": "已停止 {{name}} 的新闻",
+        "placesSet": "已更改 {{name}} 的新闻来源"
+      }
+    },
+    "you": {
+      "fact": {
+        "places": {
+          "about": "地点",
+          "addCountry": "添加国家或地区",
+          "anywhere": "任何地方",
+          "blocs": {
+            "Africa": "非洲",
+            "Antarctica": "南极洲",
+            "Asia": "亚洲",
+            "EEA": "欧洲经济区",
+            "EFTA": "欧洲自由贸易联盟",
+            "EU": "欧盟",
+            "Europe": "欧洲",
+            "North America": "北美洲",
+            "Oceania": "大洋洲",
+            "South America": "南美洲",
+            "UK": "英国"
+          },
+          "noCountry": "未找到国家或地区",
+          "notSet": "尚未设置",
+          "remove": "移除 {{place}}",
+          "search": "搜索国家或地区"
+        }
+      }
+    }
+  },
+  "zh-TW": {
+    "askChoice": {
+      "somethingElse": "其他"
+    },
+    "chat": {
+      "onDeviceBetaNote": "「在這支手機上」模式目前為測試版，因此回覆可能較慢或較不準確。"
+    },
+    "download": {
+      "betaTitle": "{{title}}（測試版）",
+      "failedSpace": "這支手機的儲存空間不足。請釋放一些空間，然後再試一次。"
+    },
+    "kevChat": {
+      "article": {
+        "answer": "回答問題",
+        "follow": "追蹤這則報導",
+        "less": "少看這類內容",
+        "more": "多看這類內容"
+      },
+      "askFact": "你指的是哪一項事實？",
+      "askIntent": "你想做什麼？",
+      "askTopic": "你指的是哪個主題？",
+      "card": {
+        "agree": "套用變更",
+        "decline": "維持原樣"
+      },
+      "follow": {
+        "follow": "追蹤一則報導",
+        "other": "問點別的"
+      },
+      "persona": {
+        "chat": "隨便聊聊",
+        "correct": "更新一則已儲存的事實",
+        "remove": "移除一則已儲存的事實",
+        "share": "將此新增為新事實"
+      },
+      "reply": {
+        "ack": "不客氣。",
+        "alreadyKnown": "這項內容我已經在「我的」裡記下了。",
+        "applied": "完成。",
+        "cancelled": "好的，我沒有做任何變更，維持原樣。",
+        "changeCard": "點選卡片以確認變更。",
+        "chat": "抱歉，我無法在這支手機上回答這個問題。請換個方式再問。",
+        "followFailed": "你想追蹤哪一則報導？",
+        "notFound": "我在「我的」裡找不到這項內容。",
+        "pickOnCard": "點選卡片上你想要的選項。",
+        "removeCard": "點選移除以確認，或點選保留以維持原樣。",
+        "saveFailed": "我沒有聽清楚你說的話。能換個方式再說一次嗎？"
+      }
+    },
+    "meraProtocol": {
+      "builtInReady": "在這支手機上已就緒",
+      "builtInRequirement": "{{name}} 在這支手機上",
+      "cancelDownloadAction": "取消下載",
+      "cellularBody": "下載會使用 {{size}} 的行動數據。",
+      "cellularConfirm": "下載",
+      "cellularTitle": "使用行動數據下載？",
+      "cellularWait": "等待 Wi-Fi",
+      "deleteFailedDescription": "模型未被刪除。請再試一次。",
+      "deleteModelTitle": "刪除 {{name}}？",
+      "downloadAction": "下載（{{size}}）",
+      "downloadingOf": "正在下載：{{done}} / {{total}} GB",
+      "errorFile": "部分下載內容未能正確接收。請再試一次。",
+      "errorFinish": "下載未完成。請再試一次。",
+      "errorSpace": "空間不足。請釋放 {{size}} 後再試一次。",
+      "freeUpToDownload": "釋放 {{size}} 空間後即可下載。",
+      "modelLicenseLink": "授權條款：Apache 2.0",
+      "modelQueued": "等待下載",
+      "modelRowReady": "{{name}}，{{size}}，已下載",
+      "nativeDeviceLanguage": "{{name}} 尚未支援這支手機的語言。",
+      "nativeDeviceNotEligible": "這支手機不支援 {{name}}。",
+      "nativeNeedsUpdate": "{{name}} 需要系統更新。請在手機設定中檢查更新。",
+      "nativeNotEnabled": "在手機設定中開啟 {{name}} 才能使用。",
+      "nativeNotReady": "{{name}} 仍在準備中。請稍後再試。",
+      "nativeOsTooOld": "{{name}} 需要較新版本的手機系統軟體。",
+      "nativeUnknown": "{{name}} 目前無法使用。",
+      "speedLoad": "載入時間：{{seconds}} 秒",
+      "speedRanking": "排序：每篇文章 {{seconds}} 秒",
+      "speedRefused_other": "{{name}} 拒絕了 {{count}} 次請求",
+      "tryAgain": "再試一次"
+    },
+    "personaAudit": {
+      "actionLabels": {
+        "setFactNewsStopped": "已停止某項興趣的新聞",
+        "setFactPlaces": "已變更某項興趣的新聞來源"
+      },
+      "summary": {
+        "newsStopped": "已停止 {{name}} 的新聞",
+        "placesSet": "已變更 {{name}} 的新聞來源"
+      }
+    },
+    "you": {
+      "fact": {
+        "places": {
+          "about": "地點",
+          "addCountry": "新增國家或地區",
+          "anywhere": "任何地方",
+          "blocs": {
+            "Africa": "非洲",
+            "Antarctica": "南極洲",
+            "Asia": "亞洲",
+            "EEA": "歐洲經濟區",
+            "EFTA": "歐洲自由貿易聯盟",
+            "EU": "歐盟",
+            "Europe": "歐洲",
+            "North America": "北美洲",
+            "Oceania": "大洋洲",
+            "South America": "南美洲",
+            "UK": "英國"
+          },
+          "noCountry": "找不到國家或地區",
+          "notSet": "尚未設定",
+          "remove": "移除 {{place}}",
+          "search": "搜尋國家或地區"
+        }
+      }
+    }
+  }
+}
