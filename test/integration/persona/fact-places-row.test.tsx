@@ -23,6 +23,12 @@ beforeAll(initI18nEn);
 beforeEach(() => jest.mocked(setFactPlaces).mockClear());
 
 describe('FactPlacesRow', () => {
+    it('heads the chips Places: the places the news for this fact comes from', async () => {
+        const screen = await mount(['IN']);
+        expect(screen.getByText('Places')).toBeTruthy();
+        expect(screen.queryByText('About')).toBeNull();
+    });
+
     it('shows one chip per place, labelled with the place name', async () => {
         await mount(['IN|Madhya Pradesh|Bhopal']);
         expect(screen.getByText('Bhopal')).toBeTruthy();
