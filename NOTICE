@@ -10,8 +10,8 @@ mera-news-client
 
 The app's logic (data, scoring, chat and the model harnesses) comes from
 mera-news-client, Copyright 2025-2026 Mera Labs B.V., published under the
-GNU Affero General Public License, version 3 only (AGPL-3.0-only). Its source
-is at https://github.com/Mera-News/mera-news-client. Mera Labs B.V. holds the
+PolyForm Shield License 1.0.0. Its source is at
+https://github.com/Mera-News/mera-news-client. Mera Labs B.V. holds the
 copyright in it and includes it in this app under this app's license.
 
 ------------------------------------------------------------------------------
