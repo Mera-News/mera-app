@@ -108,7 +108,10 @@ describe('a wake', () => {
     await serveFresh(3);
     await ownAiState.hydrate();
 
-    await advanceUntilDone(runBackgroundWake());
+    // 1 ms of fake time per real turn, not the default 50: the wake has a 60 s deadline, and the
+    // fetch and hydrate between the id read and the submit wait on real turns (MSW, the database).
+    // At 50 ms a turn, a loaded machine moved the fake clock past the deadline before the hydrate.
+    await advanceUntilDone(runBackgroundWake(), 120_000, 1);
 
     expect(gatewayCalls('job').length).toBeGreaterThan(0);
   });

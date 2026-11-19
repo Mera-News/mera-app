@@ -110,10 +110,15 @@ afterEach(async () => {
 // Loading the root layout holds the splash with a capped timer; release it so no timer outlives the file.
 afterAll(() => require('@/lib/splash-hold').releaseSplash('test'));
 
+// The root layout pulls in the whole app; load it once, outside any one test's time budget.
+let RootLayout: React.ComponentType;
+beforeAll(() => {
+    RootLayout = require('@/app/_layout').default;
+}, 60_000);
+
 async function launchIn(state: string) {
     appStateModule.currentState = state as never;
     resetForegroundGateForTests();
-    const RootLayout = require('@/app/_layout').default;
     view = await render(<RootLayout />);
     await act(async () => {});
     return view;
