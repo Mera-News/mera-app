@@ -52,6 +52,7 @@ export const ALL_JOB_TYPES = Object.keys(JOB_TYPES) as InferenceJobType[];
 const HASHES_KEY = 'pod_sync_hashes';
 const LOCAL = { schemaVersion: appSchema.version, registry: COMMAND_REGISTRY_VERSION };
 const PRUNE_EVERY_MS = 24 * 60 * 60 * 1000;
+const WAKE_GUARD_MS = 60_000;
 const NOTIFICATION_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 
 type Session = ReturnType<typeof createSyncSession>;
@@ -62,6 +63,8 @@ let tickTimer: ReturnType<typeof setInterval> | null = null;
 let appStateSub: NativeEventSubscription | null = null;
 let halted: PodError | null = null;
 let lastPruneAt = 0;
+let syncsRunning = 0;
+let lastSyncEndedAt = 0;
 
 const target = () => {
   const cfg = podConfig();
@@ -254,14 +257,34 @@ async function pruneNotifications(): Promise<void> {
   }
 }
 
-async function syncWith(s: Session): Promise<void> {
+// Counted from the first synchronous step, so two pushes that arrive together cannot both pass the guard.
+async function tracked<T>(run: () => Promise<T>): Promise<T> {
+  syncsRunning += 1;
   try {
-    await s.syncNow();
-  } catch (e) {
-    throw (await describeFailure(e)) ?? e;
+    return await run();
+  } finally {
+    syncsRunning -= 1;
+    lastSyncEndedAt = Date.now();
   }
-  recordPodOk();
-  await saveHashes(s);
+}
+
+const syncWith = (s: Session): Promise<void> =>
+  tracked(async () => {
+    try {
+      await s.syncNow();
+    } catch (e) {
+      throw (await describeFailure(e)) ?? e;
+    }
+    recordPodOk();
+    await saveHashes(s);
+  });
+
+/** False while a sync runs and for 60 s after the last one: a push in that time has nothing to add. */
+export const podSyncSettled = (): boolean => syncsRunning === 0 && Date.now() - lastSyncEndedAt >= WAKE_GUARD_MS;
+
+export function resetPodSyncGuard(): void {
+  syncsRunning = 0;
+  lastSyncEndedAt = 0;
 }
 
 export async function syncPod(): Promise<void> {
@@ -271,16 +294,17 @@ export async function syncPod(): Promise<void> {
 }
 
 /** The OS wake: a sync with the server and nothing else; no sink is set for a session made only for it. */
-export async function syncPodInWake(): Promise<void> {
-  if (session) return syncPod();
-  if (!podPaired()) throw new PodError('failed');
-  const s = makeSession(await readHashes());
-  try {
-    await syncWith(s);
-  } finally {
-    s.stop();
-  }
-}
+export const syncPodInWake = (): Promise<void> =>
+  tracked(async () => {
+    if (session) return syncPod();
+    if (!podPaired()) throw new PodError('failed');
+    const s = makeSession(await readHashes());
+    try {
+      await syncWith(s);
+    } finally {
+      s.stop();
+    }
+  });
 
 /** Clear feed cache while paired: forget what the phone holds, ask the server to read, and pull every table again. */
 export async function refreshFromPod(): Promise<void> {

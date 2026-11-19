@@ -16,6 +16,8 @@ export type PodPairing = {
   state: 'pending' | 'active';
   /** When a pending item was stored, to tell whether the erase marker is from this pairing. */
   pendingAt?: number;
+  /** The person's choice to let the server wake the phone with a push. Off unless true. */
+  wakeups?: boolean;
 };
 
 export const podState = createServiceState<PodPairing>({
@@ -38,6 +40,7 @@ export const podState = createServiceState<PodPairing>({
       confirmed,
       state: r.state,
       ...(typeof r.pendingAt === 'number' ? { pendingAt: r.pendingAt } : {}),
+      ...(r.wakeups === true ? { wakeups: true } : {}),
     };
   },
   secrets(v) {

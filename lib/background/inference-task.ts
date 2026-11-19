@@ -108,12 +108,18 @@ export function defineInferenceTask(): void {
       } catch {
         return;
       }
+      const data = extractPushData(body);
+      // A paired phone returns below, so a push from its own server is handled first.
+      if (data?.type === 'pod-sync') {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        await (require('@/lib/own-services/wakeups') as typeof import('@/lib/own-services/wakeups')).syncFromPodPush();
+        return;
+      }
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       if (!(require('@/lib/llm/cloudComplete') as typeof import('@/lib/llm/cloudComplete')).usesGateway()) return;
       // expo-notifications registerTaskAsync delivers the push payload in
       // body.data.notification.request.content.data. Fall back to 'silent-push'
       // if the shape is anything else.
-      const data = extractPushData(body);
       const reason = reasonForPushType(data?.type);
       // The gateway attaches the completed job's requestId; pass it through so
       // handlePush advances that exact batch (≤1 GET + ≤1 POST per wake).
