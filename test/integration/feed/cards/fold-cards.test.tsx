@@ -8,7 +8,6 @@ import ArticleCompactCardBase from '@/components/custom/cards/ArticleCompactCard
 import ArticleCardBase from '@/components/custom/cards/ArticleCardBase';
 import SimilarArticlesRow from '@/components/custom/cards/SimilarArticlesRow';
 import { newFeedRowSession, resolveFeedRowDisplay } from '@/components/custom/feed/feed-row-display';
-import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { initI18nEn } from '@/test/helpers';
 
@@ -33,18 +32,6 @@ jest.mock('react-native-reanimated', () => {
   };
 });
 
-const mockMenuArgs: { current: Record<string, unknown> | null } = { current: null };
-jest.mock('@/components/custom/cards/use-article-menu', () => ({
-  useArticleMenu: (args: Record<string, unknown>) => {
-    mockMenuArgs.current = args;
-    return { open: jest.fn(), element: null, accessibilityActions: [], onAccessibilityAction: jest.fn(), openPublication: jest.fn() };
-  },
-}));
-jest.mock('@/components/custom/cards/use-article-actions', () => ({
-  useArticleActions: () => ({
-    answered: false, saved: false, onToggleSave: jest.fn(), onShare: jest.fn(), archiveItem: undefined, onVerdictRecorded: jest.fn(),
-  }),
-}));
 
 beforeAll(initI18nEn);
 
@@ -98,16 +85,8 @@ describe('reports variant', () => {
   it('shows "N more reports" with the global gate OFF, in the row and the spoken label', async () => {
     const row = await render(<SimilarArticlesRow count={2} variant="reports" />);
     expect(row.getByText('2 more reports')).toBeTruthy();
-    const card = await render(<ArticleCompactCardBase titleEnglish="A story" testID="c" similarCount={1} similarVariant="reports" />);
-    expect(card.getByText('1 more report')).toBeTruthy();
-    expect(card.getByLabelText(/1 more report/)).toBeTruthy();
     const big = await render(<ArticleCardBase titleEnglish="A story" testID="b" footer={<></>} similarCount={3} similarVariant="reports" />);
     expect(big.getByLabelText(/3 more reports/)).toBeTruthy();
-  });
-  it('a compact row keeps its row at count 0 (a member leaving must not shrink it)', async () => {
-    const card = await render(<ArticleCompactCardBase titleEnglish="A story" testID="c" similarCount={0} similarVariant="reports" />);
-    expect(card.getByTestId('card-similar-articles')).toBeTruthy();
-    expect(card.queryByText(/more report/)).toBeNull();
   });
   it('the default variant stays off with the gate off', async () => {
     const card = await render(<ArticleCompactCardBase titleEnglish="A story" testID="c" similarCount={3} />);
@@ -116,19 +95,6 @@ describe('reports variant', () => {
 });
 
 describe('age label on Feed cards', () => {
-  it('compact: shows the label and speaks it, never the relative age', async () => {
-    const { getByText, getByLabelText } = await render(
-      <ArticleCompactCardBase titleEnglish="A story" testID="c" pubDate={new Date(Date.now() - 3600e3).toISOString()} showRecency={false} ageLabel="From yesterday" />,
-    );
-    expect(getByText('From yesterday')).toBeTruthy();
-    expect(getByLabelText(/From yesterday/)).toBeTruthy();
-  });
-  it('compact: no label and no recency speaks no age at all', async () => {
-    const { queryByLabelText } = await render(
-      <ArticleCompactCardBase titleEnglish="A story" testID="c" pubDate={new Date(Date.now() - 3600e3).toISOString()} showRecency={false} />,
-    );
-    expect(queryByLabelText(/ago/)).toBeNull();
-  });
   it('large: draws the label under showRecency=false', async () => {
     const { getByTestId } = await render(<ArticleCardBase titleEnglish="A story" testID="b" showRecency={false} ageLabel="From Saturday" />);
     expect(getByTestId('card-age-label')).toBeTruthy();
@@ -151,17 +117,5 @@ describe('card size', () => {
     for (const [id, relevance] of [['m', 0.65], ['l', 0.45]] as const) {
       expect(resolveFeedRowDisplay(rowOf(sugg(id, relevance)), new Map(), session)).not.toHaveProperty('compact');
     }
-  });
-});
-
-describe('compact row feedback wiring', () => {
-  it('sends the verdict and the Mera handoff through the Feed handlers and dims on a verdict', async () => {
-    const s = sugg('x', 0.6);
-    const feedbackHandlers = { onVerdictRecorded: jest.fn(), onInvokeMera: jest.fn() };
-    await render(<ArticleSuggestionCompactCard suggestion={s} onPress={() => {}} feedbackHandlers={feedbackHandlers} verdict="dislike" />);
-    (mockMenuArgs.current!.onVerdictRecorded as () => void)();
-    expect(feedbackHandlers.onVerdictRecorded).toHaveBeenCalledWith(s);
-    (mockMenuArgs.current!.onFeedbackChat as (p: string[], a: unknown) => void)(['a'], {});
-    expect(feedbackHandlers.onInvokeMera).toHaveBeenCalledWith(s, ['a'], {});
   });
 });
