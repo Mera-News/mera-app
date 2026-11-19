@@ -128,21 +128,6 @@ query<'articleIdsForPersona'>('GetArticleIdsForPersona', (c) => {
     };
 });
 
-query<'articleIdsForTopics'>('GetArticleIdsForTopics', (c) => {
-    const topics: { topicText: string }[] = c.variables.topics ?? [];
-    return {
-        articleIdsForTopics: {
-            __typename: 'ArticleIdsForTopicsResponse',
-            results: topics.map((t, ti) => ({
-                __typename: 'TopicArticleIdsResult' as const,
-                topicText: t.topicText,
-                articleIds: isEmpty(c) ? [] : ARTICLE_IDS.filter((_, i) => i % topics.length === ti),
-                hasNextPage: false,
-                nextCursor: null,
-            })),
-        },
-    };
-});
 
 // Never truncates: every requested article that exists is delivered.
 query<'articlesForTopicsByIds'>('GetArticlesForTopicsByIds', (c) => ({

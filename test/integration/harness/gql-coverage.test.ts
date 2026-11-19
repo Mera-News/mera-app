@@ -122,7 +122,6 @@ const USER = '66e2e0000000000000000001';
 const VARIABLES: Record<string, Record<string, unknown>> = {
   GetArticleById: { id: ARTICLE_IDS[0] },
   GetArticleIdsForPersona: { query: PERSONA_QUERY },
-  GetArticleIdsForTopics: { topics: [{ topicText: 'bridges' }] },
   GetArticlesForTopicsByIds: { articleIds: [...ARTICLE_IDS] },
   GetArticlesForStories: { articleIds: [...ARTICLE_IDS] },
   GetArticlesForTopicsByIdsLegacy: { articleIds: [...ARTICLE_IDS] },

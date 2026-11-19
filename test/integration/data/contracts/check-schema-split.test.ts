@@ -92,9 +92,9 @@ describe('check:schema split', () => {
         expect(failures).toEqual([]);
         expect(counts.public + counts.private).toBe(real.documents.length);
         // A floor so a scanner that silently drops documents goes red. Raise it when documents are added.
-        if (real.documents.length < 57) {
+        if (real.documents.length < 56) {
             throw new Error(
-                `check:schema found ${real.documents.length} documents, under the floor of 57: the scanner may be dropping some. ` +
+                `check:schema found ${real.documents.length} documents, under the floor of 56: the scanner may be dropping some. ` +
                     'Raise this floor when documents are added.',
             );
         }
