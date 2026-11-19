@@ -145,16 +145,12 @@ function sugg(id: string, relevance: number): ForYouSuggestion {
 }
 const rowOf = (s: ForYouSuggestion) => ({ id: s._id, suggestion: s, memberCount: 1, memberIds: [s._id], breaking: false, score: 1 });
 
-describe('card size freeze', () => {
-  it('High is large, Medium and Low compact, and a rescore does not change it this session', () => {
+describe('card size', () => {
+  it('every Feed row renders the full card: no row resolves with a compact flag', () => {
     const session = newFeedRowSession();
-    const med = sugg('m', 0.65);
-    expect(resolveFeedRowDisplay(rowOf(sugg('h', 0.85)), new Map(), session).compact).toBe(false);
-    expect(resolveFeedRowDisplay(rowOf(med), new Map(), session).compact).toBe(true);
-    expect(resolveFeedRowDisplay(rowOf(sugg('l', 0.45)), new Map(), session).compact).toBe(true);
-    const rescored = sugg('m', 0.9);
-    expect(resolveFeedRowDisplay(rowOf(rescored), new Map([['m', rescored]]), session).compact).toBe(true);
-    expect(resolveFeedRowDisplay(rowOf(rescored), new Map(), newFeedRowSession()).compact).toBe(false);
+    for (const [id, relevance] of [['m', 0.65], ['l', 0.45]] as const) {
+      expect(resolveFeedRowDisplay(rowOf(sugg(id, relevance)), new Map(), session)).not.toHaveProperty('compact');
+    }
   });
 });
 
