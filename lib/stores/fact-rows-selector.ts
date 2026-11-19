@@ -221,13 +221,6 @@ export function effectiveRenderGate(): number {
 
 const BREAKING_EVENT_TYPES = new Set(['disaster', 'weather', 'conflict']);
 
-/** One breaking-strip entry (representative + collapsed members). Consumed by
- *  `BreakingStrip`. */
-export interface BreakingCardData {
-  data: ForYouSuggestion;
-  members: ForYouSuggestion[];
-}
-
 /** One story-group card in a fact row (a collapsed multi-source story). */
 export interface FactRowGroup {
   /** The fronting suggestion (newest member of the story). */
@@ -247,6 +240,8 @@ export interface FactRowGroup {
    *  OR one of the representative's matched topics is flagged `highPriority` in
    *  the persona snapshots. Drives section ordering + the unread-HP-first rule. */
   highPriority: boolean;
+  /** A member is over the emergency cutoff (`isEmergency`): the card leads its section. */
+  emergency: boolean;
 }
 
 /**
@@ -347,7 +342,6 @@ export type EmptySectionReason = 'awaiting-first-run' | 'no-match-yet';
 export const NEW_INTEREST_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 export interface FactRowsResult {
-  breaking: BreakingCardData[];
   rows: FactRow[];
 }
 
@@ -544,9 +538,11 @@ function countryLocationWeight(
 // the Dashboard as it got more important. Election is a presentation choice;
 // it must not move the story.
 
-/** Card (story-group) ordering within a Dashboard section: the group's freshest
- *  `createdAt` (suggestion-creation time) descending, then id. */
+/** Card (story-group) ordering within a Dashboard section: an emergency first,
+ *  then the group's freshest `createdAt` (suggestion-creation time) descending,
+ *  then id. */
 function cardCompare(a: FactRowGroup, b: FactRowGroup): number {
+  if (a.emergency !== b.emergency) return a.emergency ? -1 : 1;
   if (a.createdAtMs !== b.createdAtMs) return b.createdAtMs - a.createdAtMs;
   return a.data._id < b.data._id ? -1 : a.data._id > b.data._id ? 1 : 0;
 }
@@ -566,7 +562,7 @@ function cardCompare(a: FactRowGroup, b: FactRowGroup): number {
  * @param userCtx     the user's geo/language context (home/other countries +
  *                    app language) — makes representative ELECTION tier-aware
  *                    (see `makeRepCompare`). `null` (default) preserves the
- *                    legacy geo/language-blind pick. Card order, breaking
+ *                    legacy geo/language-blind pick. Card order
  *                    sort, and section sort are unaffected.
  */
 export function buildFactRows(
@@ -639,7 +635,6 @@ export function buildFactRows(
   );
   if (visible.length === 0) {
     return {
-      breaking: [],
       rows: sortRows(emptyFactRows(new Set(), snapshots, nowMs, lastProcessingRunFinishedAt), snapshots),
     };
   }
@@ -648,7 +643,6 @@ export function buildFactRows(
   const groups = buildStoryGroups(visible.map(groupableOf), DISPLAY_GROUPING_OPTIONS);
 
   // 3. Per group: pick a representative (newest member) + collapse members.
-  const breaking: BreakingCardData[] = [];
   const assignable: { rep: ForYouSuggestion; group: FactRowGroup }[] = [];
 
   for (const g of groups) {
@@ -659,14 +653,12 @@ export function buildFactRows(
     const addedMs = all.reduce((mx, m) => Math.max(mx, addedMsOf(m)), 0);
 
     // EMERGENCY band only — see `isEmergency`. Deliberately NOT `isBreaking`,
-    // which is the (looser) "never bury this" predicate.
+    // which is the (looser) "never bury this" predicate. The group stays in its
+    // section and leads it (`cardCompare`); no screen draws a separate strip.
     // Evaluated over the whole group, like `pubDateMs`/`addedMs` above: the
     // representative is elected oldest-first for provenance, so asking only the
     // rep would miss an emergency that broke in later coverage of the same story.
-    if (all.some((m) => isEmergency(m, config))) {
-      breaking.push({ data: rep, members });
-      continue;
-    }
+    const emergency = all.some((m) => isEmergency(m, config));
     const bucket = bucketOf(rep.relevance, config);
     // High-priority: display bucket HIGH+ OR a matched persona topic flagged
     // highPriority. (bucketRank ≥ HIGH also captures the EMERGENCY tier, which
@@ -692,19 +684,10 @@ export function buildFactRows(
         // day would drift down instead of up.
         createdAtMs: all.reduce((mx, m) => Math.max(mx, parseMs(m.createdAt)), 0),
         highPriority,
+        emergency,
       },
     });
   }
-
-  breaking.sort((a, b) => {
-    const ra = a.data.rawScore ?? Number.NEGATIVE_INFINITY;
-    const rb = b.data.rawScore ?? Number.NEGATIVE_INFINITY;
-    if (ra !== rb) return rb - ra;
-    const pa = parseMs(a.data.firstPubDate);
-    const pb = parseMs(b.data.firstPubDate);
-    if (pa !== pb) return pb - pa;
-    return a.data._id < b.data._id ? -1 : 1;
-  });
 
   // 4. Assign each remaining group to a fact section. A story folds into the
   //    fact it matched even at ZERO signal (lenient ownership), so low-priority
@@ -845,7 +828,7 @@ export function buildFactRows(
   // GLOBAL 0.35; see `headlineSectionWeight`) — then unread count desc (a
   // fully-read section sinks below any section with at least one unread story),
   // then by group count desc, ties broken by factId asc for determinism.
-  return { breaking, rows: sortRows(rows, snapshots) };
+  return { rows: sortRows(rows, snapshots) };
 }
 
 /**
