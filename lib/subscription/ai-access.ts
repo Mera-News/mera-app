@@ -1,8 +1,8 @@
 // The single place the app decides whether Mera's AI layer is available.
 //
-// "AI layer" means the four server queries behind `SubscriptionGuard`
-// (articleIdsForTopics / articleIdsForPersona / articlesForTopicsByIds /
-// articlesForStories), Mera chat, and starting a new tracked story. It does NOT
+// "AI layer" means the three server queries behind `SubscriptionGuard` the
+// app sends (articleIdsForPersona / articlesForTopicsByIds / articlesForStories),
+// Mera chat, and starting a new tracked story. It does NOT
 // mean the user's own data: saved articles, tracked-story history, reading
 // history, persona facts and settings stay readable in every state.
 //

@@ -128,22 +128,6 @@ query<'articleIdsForPersona'>('GetArticleIdsForPersona', (c) => {
     };
 });
 
-query<'articleIdsForTopics'>('GetArticleIdsForTopics', (c) => {
-    const topics: { topicText: string }[] = c.variables.topics ?? [];
-    return {
-        articleIdsForTopics: {
-            __typename: 'ArticleIdsForTopicsResponse',
-            results: topics.map((t, ti) => ({
-                __typename: 'TopicArticleIdsResult' as const,
-                topicText: t.topicText,
-                articleIds: isEmpty(c) ? [] : ARTICLE_IDS.filter((_, i) => i % topics.length === ti),
-                hasNextPage: false,
-                nextCursor: null,
-            })),
-        },
-    };
-});
-
 // Never truncates: every requested article that exists is delivered.
 query<'articlesForTopicsByIds'>('GetArticlesForTopicsByIds', (c) => ({
     articlesForTopicsByIds: {
@@ -285,25 +269,6 @@ query<'articlesForPublisher'>('GetArticlesForPublisherNoOrder', publisherPage);
 
 // ---- clusters -----------------------------------------------------------------------
 
-const clustersPage = (c: Ctx, list: readonly FixtureArticle[]) => {
-    const page = pageOf(isEmpty(c) ? [] : storyLeaders(list), c.variables.first, c.variables.after);
-    return {
-        __typename: 'NewsClustersResponse' as const,
-        newsClusters: page.items.map((a) => newsCluster(a, c, 1)),
-        pageInfo: page.pageInfo,
-    };
-};
-query<'newsClusters'>('GetNewsClusters', (c) => {
-    const codes: string[] | null = c.variables.countryCodes ?? null;
-    const list =
-        codes && codes.length > 0 && !codes.includes('GLOBAL')
-            ? articles.filter((a) => codes.includes(publications[a.publicationIndex].countryCode))
-            : articles;
-    return { newsClusters: clustersPage(c, list) };
-});
-query<'newsClustersForTopicText'>('GetNewsClustersForTopicText', (c) => ({
-    newsClustersForTopicText: clustersPage(c, articles),
-}));
 query<'newsClusterForArticle'>('GetNewsClusterForArticle', (c) => {
     const a = articleById(c.variables.articleId);
     return { newsClusterForArticle: a ? newsCluster(a, c, c.variables.first ?? 10) : null };
@@ -391,6 +356,23 @@ query<'searchNews'>('SearchNews', (c) => ({
     searchNews: isEmpty(c) ? [] : searchHits(c, c.variables.limit),
 }));
 query<'placeSearch'>('PlaceSearch', () => ({ placeSearch: places }));
+// A news server's own status. Mera's API does not serve it, so it is not in schema.gql: pushed untyped.
+ops.push({
+    kind: 'query',
+    name: 'NewsServerStatus',
+    resolve: () => ({
+        newsServerStatus: {
+            __typename: 'NewsServerStatus',
+            placesSeeded: true,
+            lastArticleAt: null,
+            lastClusteringAt: null,
+            lastTopicLinkAt: null,
+            headlineEditionsBuilt: true,
+            vectorIndexState: null,
+            embeddingModel: null,
+        },
+    }),
+});
 query<'allCountries'>('AllCountries', () => ({ allCountries: countries }));
 
 // ---- fact check ---------------------------------------------------------------------

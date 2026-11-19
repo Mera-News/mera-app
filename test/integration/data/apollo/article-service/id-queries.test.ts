@@ -3,7 +3,7 @@
 // (quota-charged and quota-exempt), chunked at 50 ids.
 import ArticleService from '@/lib/article-service';
 import { useForYouStore } from '@/lib/stores/for-you-store';
-import type { PersonaQueryInput, TopicPaginationInput } from '@/lib/generated/graphql-types';
+import type { PersonaQueryInput } from '@/lib/generated/graphql-types';
 import { advanceUntilDone, mockGql, mockGqlError, server, useFakeClock } from '@/test/helpers';
 import {
     ARTICLE_IDS,
@@ -51,24 +51,6 @@ describe('getRecentArticleCount', () => {
         await expect(advanceUntilDone(ArticleService.getRecentArticleCount())).resolves.toBeNull();
         expect(crumbOf(logs.crumb, 'getRecentArticleCount failed')).toBeDefined();
         expectNoServiceCapture(logs.capture);
-    });
-});
-
-const topic = (topicText: string): TopicPaginationInput => ({ topicText });
-
-describe('getArticleIdsForTopics', () => {
-
-    it('rethrows with a breadcrumb and no capture of its own', async () => {
-        const logs = spyLogger();
-        server.use(mockGqlError('GetArticleIdsForTopics', 'INTERNAL_SERVER_ERROR', { message: 'ids failed' }));
-        await expect(ArticleService.getArticleIdsForTopics([topic('AI')])).rejects.toThrow('ids failed');
-        expectNoServiceCapture(logs.capture);
-        expect(logs.crumb).toHaveBeenCalledWith(
-            expect.stringContaining('getArticleIdsForTopics FAILED'),
-            'article-service',
-            expect.objectContaining({ topicCount: 1, method: 'getArticleIdsForTopics' }),
-            'warning',
-        );
     });
 });
 
