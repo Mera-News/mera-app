@@ -8,11 +8,11 @@
 
 ## What is Mera?
 
-Mera is a personalized news app for iOS and Android. It scores article relevance with an LLM that runs **either fully on-device** (Qwen3.5 4B via llama.rn) **or in a confidential cloud TEE**, with the inference path chosen per the user's settings. Both paths uphold the **Mera Protocol**: no personal data leaves the device in readable form, and inference is only ever performed locally or inside an encrypted environment. News is fetched and personalized in real time against the Mera backend.
+Mera is a personalized news app for iOS and Android. It scores article relevance with an LLM that runs **either fully on-device** (Qwen3.5 4B via llama.rn) **or in a confidential cloud TEE**, with the inference path chosen per the user's settings. Both paths uphold the **Mera Protocol**: your profile and reading history stay on the device, and inference is only ever performed locally or inside an encrypted environment. News is fetched and personalized in real time against the Mera backend.
 
 This repository is **source-available, not open source**, published under the [Mera Source-Available License](LICENSE.md), which grants the right to read, compile, and run the software for study, security review, and evaluation, and does not grant production or commercial use. Copyright © 2025-2026 Mera Labs B.V. (KVK 42077437).
 
-> **The backend is being made source-available too (target: before September 2026).** Today you can verify what the app *sends*; you cannot yet read what happens next. That gap is being closed. See [Backend source-availability](#backend-source-availability-in-progress) for the architecture, what opens, and what stays closed.
+> **Most of the app's logic and the news side of the backend are public.** The app's non-UI logic lives in [`mera-news-client`](https://github.com/Mera-News/mera-news-client), and the news server in [`mera-news-data-server`](https://github.com/Mera-News/mera-news-data-server), both source-available under PolyForm Shield 1.0.0. Anyone can run the news side themselves. Sign-in, accounts, billing and notifications stay private. See [What is public and what is private](#what-is-public-and-what-is-private).
 
 ## Architecture Overview
 
@@ -21,15 +21,19 @@ Mera is built on **Expo SDK 54 / React Native 0.81** with **React 19**. Key laye
 - **Apollo Client** (GraphQL, no-cache policy) fetches article suggestion IDs and content from a NestJS backend.
 - **WatermelonDB** caches article suggestions locally for offline scoring and diffing.
 - **Inference (on-device or confidential cloud)**: Relevance scoring, topic generation, and personalization reasons are produced by an LLM running either on-device (llama.rn running Qwen3.5 4B) or in a cloud TEE. The user chooses the path; the on-device path needs no network call.
-- **Mera Protocol**: the privacy ruleset enforced across both paths: no personal data leaves the device in readable form, and inference is performed only locally or inside an encrypted environment. What leaves the device is the real topic phrases, carrying no user identifier; the decoy / noise-injection layer (Protocol Rules 2, 3 and 5) is **in development and does not ship today**, so nothing currently pads the outbound topic list.
+- **Mera Protocol**: personal data stays on the device, and inference is performed only locally or inside an encrypted environment. What leaves the device for news is the real topic phrases. They travel with your session, because the server checks your plan and counts the day's reading, so the server sees your account and your topics together while it answers. No stored record links an account to a topic. There is no decoy or padding layer, so nothing hides the topic list from Mera's server.
 - **E2EE cloud inference (TEE)**: when the cloud path is used, payloads are end-to-end encrypted (XChaCha20-Poly1305 + X25519 ECDH) to a NEAR AI Cloud v2 gateway, so inference runs inside a trusted execution environment the operator cannot inspect. The client fetches the enclave's attestation report from `/api/attestation/report` and encrypts to the signing key it publishes.
 
-  **Quote verification (`lib/algorithms/attestation-verify.ts`)**: the client parses the Intel TDX quote and verifies, in pure JS (no WebCrypto, no native modules, so it ships over the air) — the quote signature, the quoting-enclave report signature, the attestation-key binding, and the PCK certificate chain up to a **pinned** Intel SGX Root CA hash. Critically it also checks that the `signing_public_key` the app encrypts toward is the key committed in the quote's `report_data`; without that check a genuine quote served alongside a substituted key would pass, which defeats the purpose. Freshness is proven with a client-generated nonce that NEAR echoes into `report_data`. The same check follows NEAR's deployment log (`lib/algorithms/deployed-software.ts`) to the compose file that pins the proxy image, which shows the image NEAR says it installed, not what that software does. Users can run all of this from Settings → Mera Protocol → Verify attestation.
+  **Quote verification (`lib/algorithms/attestation-verify.ts`)**: the client parses the Intel TDX quote and verifies, in pure JS (no WebCrypto, no native modules, so it ships over the air): the quote signature, the quoting-enclave report signature, the attestation-key binding, and the PCK certificate chain up to a **pinned** Intel SGX Root CA hash. Critically it also checks that the `signing_public_key` the app encrypts toward is the key committed in the quote's `report_data`; without that check a genuine quote served alongside a substituted key would pass, which defeats the purpose. Every cloud call runs this check without a nonce. The Verify attestation screen adds a client-generated nonce that NEAR echoes into `report_data`, which proves that report is fresh. The same check follows NEAR's deployment log (`lib/algorithms/deployed-software.ts`) to the compose file that pins the proxy image, which shows the image NEAR says it installed, not what that software does. Users can run all of this from Settings → Mera Protocol → Verify attestation.
 
-  ⚠️ **Remaining gaps, stated plainly:** platform TCB currency and QE identity are **not** checked (that needs Intel PCS collateral the app does not fetch), enclave measurements are **not** compared against published expected values, and NVIDIA's signed GPU result is read only on the Verify attestation tap, only when the gateway relays it, and it does **not** show those GPUs are attached to the enclave. Verification is also **fail-open**: results are displayed but a failure does not block inference, because there are no published expected measurements to pin against yet and a collateral hiccup would otherwise brick cloud mode. So do not describe this path as "hardware-proven". Fail-closed enforcement is planned once field data shows the pass rate is stable.
-- **Better Auth** with email OTP handles authentication; tokens are stored in expo-secure-store.
-- **Configurable backend**: all three service endpoints are set via environment variables, so the app can be pointed at any backend satisfying the contracts below. Note the caveat in [Backend Requirements](#backend-requirements-byo-backend): the inference endpoint currently still requires a Mera Labs deployment. Removing that dependency is part of the backend source-availability work.
-- **`mera-inference-gateway`**: the E2EE inference relay, already published at [github.com/Mera-News](https://github.com/Mera-News) under the same source-available terms.
+  **What blocks and what does not.** Before the app encrypts anything, it checks that the quote chains to the pinned Intel root and commits the key it is about to use. If that fails, the key is refused: nothing is encrypted to it or sent, and the request moves to the next model or fails. No setting turns this off. It covers cloud chat, scoring jobs and batch calls.
+
+  ⚠️ **Not enforced, stated plainly:** freshness on normal calls (a nonce is used only on the Verify attestation screen), platform TCB currency and QE identity (that needs Intel PCS collateral the app does not fetch), enclave measurements against published values (none are published), and that the GPUs belong to the enclave. NVIDIA's signed GPU result is read only on the Verify attestation tap, and it does **not** show those GPUs are attached to the enclave. The check proves a genuine Intel TDX machine holds the key, not which software it runs, so do not describe this path as "hardware-proven". The Mera gateway only relays: it does not itself run in a TEE and refuses no request over attestation.
+
+  **Not end-to-end encrypted:** web search and fact-check search. The query text goes to Mera's server over a normal secure connection.
+- **Better Auth** handles accounts. You sign in with the phone itself (App Attest on iOS, Play Integrity on Android). There is no email, password, Apple or Google sign-in: each account is anonymous, with a placeholder address the server makes up. The server refuses to create an account with, or add, a real address; an email-code sign-in still exists only for accounts that held an address from before. On Android the server stores only a keyed hash of the device id. Session tokens are kept in expo-secure-store. Google sign-in is used only to connect Google Drive for backups.
+- **Configurable backend**: all three service endpoints are set via environment variables, so the app can be pointed at any backend satisfying the contracts below. Note the caveat in [Backend Requirements](#backend-requirements-byo-backend): the auth and GraphQL endpoints need a Mera Labs deployment or your own implementation, because those services are private.
+- **`mera-inference-gateway`**: the E2EE inference relay, published as [`mera-inference-gateway`](https://github.com/Mera-News/mera-inference-gateway), source-available under PolyForm Shield 1.0.0.
 
 ## Prerequisites
 
@@ -70,16 +74,15 @@ You must supply your own backend. The app reads three required endpoint variable
 
 | Variable | Description | Required |
 |---|---|---|
-| `EXPO_PUBLIC_AUTH_ENDPOINT` | Base URL of the Better Auth service. Must expose `/api/auth/` routes including OTP and JWKS (`/api/auth/jwks`). | Yes: hard crash if absent |
+| `EXPO_PUBLIC_AUTH_ENDPOINT` | Base URL of the Better Auth service. Must expose `/api/auth/` routes including the device sign-in routes and JWKS (`/api/auth/jwks`). | Yes: hard crash if absent |
 | `EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT` | Base URL of the NestJS GraphQL API. Apollo appends `/graphql`. | Yes: hard crash if absent |
 | `EXPO_PUBLIC_INFERENCE_ENDPOINT` | Base URL of the inference gateway. Must expose: `/v1/inference/jobs`, `/v1/chat/completions`, `/v1/chat/completions/batch`, `/api/attestation/report` (NEAR AI Cloud v2 attestation contract for E2EE cloud inference). | Yes: hard crash if absent |
 
-> **Backend availability, as of today.** `mera-inference-gateway` **is published** at
-> [github.com/Mera-News](https://github.com/Mera-News), so you can read, build, and deploy the inference
-> relay yourself. The auth service and the GraphQL API (`mera-server`) are **not yet published**:
-> `EXPO_PUBLIC_AUTH_ENDPOINT` and `EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT` currently require either a Mera
-> Labs deployment or your own implementation of the contracts above. Both are being made source-available;
-> see [Backend source-availability](#backend-source-availability-in-progress).
+> **Backend availability, as of today.** The inference relay (`mera-inference-gateway`) and the news
+> server (`mera-news-data-server`) are published, so you can read, build and run them yourself. The
+> auth service and the app's GraphQL API are **private**: `EXPO_PUBLIC_AUTH_ENDPOINT` and
+> `EXPO_PUBLIC_GRAPHQL_SERVER_ENDPOINT` need a Mera Labs deployment or your own implementation of the
+> contracts above. See [What is public and what is private](#what-is-public-and-what-is-private).
 
 Additionally, the following external service dependencies must be configured before the app is fully functional:
 
@@ -119,97 +122,59 @@ OTA updates apply to JS/TS/styling/GraphQL changes only. Native builds are requi
 
 The AI logic that builds the personalized feed (topic generation, relevance scoring, and the chat agents) lives in `lib/news-harness/`, a React Native-free, ports-and-adapters module that the app runs in production and that can also be exercised standalone from the command line via `harness-local/`. To understand or iterate on feed quality (prompts, scoring, topic generation), see [NEWS_HARNESS.md](NEWS_HARNESS.md).
 
-## Backend source-availability (in progress)
+## What is public and what is private
 
-**Target: before September 2026.**
+Publishing the client shows what the app *sends*. The news side of the backend is public too, so you
+can also read how news is fetched, clustered and served. The parts that know who you are stay private.
 
-Publishing the client proves what the app *sends*. It proves nothing about what happens next. And every
-byte the app sends about *you* (your topics, your persona record, your push token, your session, your
-subscription) currently lands in a closed service. That is the gap this work closes.
+**Public, source-available under PolyForm Shield 1.0.0** (free to self-host, not open source):
 
-### The problem
-
-The code that handles user data and the code that runs the news pipeline live in one codebase today.
-Making the repository public is therefore not an option: it would publish the ingestion pipeline,
-clustering, and ranking along with it. Separating the two properly is most of the work.
-
-### The shape
-
-A new source-available repository containing four deployable services, which together become the only
-thing the app talks to:
-
-| Service | Responsibility |
+| Repository | What it is |
 |---|---|
-| `api` | The GraphQL API the app queries. User persona records, quota enforcement, config |
-| `auth` | Better Auth: email OTP, sessions, account records, JWKS signing keys |
-| `inference` | The E2EE inference relay (today's `mera-inference-gateway`) |
-| `worker` | Background jobs: notification scheduling and delivery |
+| [`mera-news-client`](https://github.com/Mera-News/mera-news-client) | The app's non-UI logic: database, stores, scheduler, scoring, chat, encryption |
+| [`mera-news-data-server`](https://github.com/Mera-News/mera-news-data-server) | The news server: ingest worker and news API |
+| [`mera-news-clustering`](https://github.com/Mera-News/mera-news-clustering) | Story clustering |
+| [`mera-news-pod`](https://github.com/Mera-News/mera-news-pod) and [`mera-news-pod-plugins`](https://github.com/Mera-News/mera-news-pod-plugins) | A self-hosted host that runs the client for one person |
+| [`mera-inference-gateway`](https://github.com/Mera-News/mera-inference-gateway) | The encrypted inference relay |
 
-Everything that knows who you are moves here. The news backend stays closed and becomes a pure article
-service.
+This repository is source-available under its own licence (see below).
 
-### The invariant this buys
+**Private:** sign-in, the app's GraphQL API that wraps the news server, billing, push notifications,
+account purge and the admin board. Mera's production runs the public news server's code inside these
+private services: ingest inside Mera's worker, retrieval inside the app API.
 
-> ⚠️ **Everything in this subsection is the design being built, not the system running today.** It is
-> written in the future tense deliberately. Do not cite it as a description of current behaviour.
+**Self-hosting.** Anyone can run the news side themselves, as Mera News Self-Hosted on the Mera News
+Engine. The Mera News app cannot connect to a self-run server today.
 
-The closed news service will receive topic phrases with **no identifier of any kind**: no user ID, no
-session, no device ID, no client IP. The intent is that this is structural rather than a promise:
+**What no database stores:** a link between an account and a topic. Topics are stored by their text
+alone, with no owner field, and a test scans every collection for such a link. While a news request is
+being answered, the server does see your account and your topics together (see Known gaps). Request
+bodies are not logged.
 
-- Outbound headers will be a **fixed allowlist built once at adapter construction**, with no per-request
-  header parameter through which anything could be smuggled.
-- A **test asserting set equality** against that allowlist, so adding a header fails the build.
-- Typed DTOs only: no `context` / `headers` / `extra` escape hatch. No cookie jar, no
-  `x-forwarded-for` propagation, no per-user connection pinning.
-- The two systems will run on **separate databases with separate credentials and no cross-system
-  database access**, so the closed side cannot read a user record even by mistake.
-
-One thing here *is* already true and can be checked today: **no collection in any database links a user
-to a topic.** Topics live in a shared cache keyed by the topic text itself, with no owner field, swept
-14 days after anyone last requested them. What the migration adds is that identity stops travelling
-alongside the topic text in the same request, and that the separation becomes externally checkable
-rather than something you take on trust.
-
-### Running it yourself
-
-Two ports make "download it and run it" real rather than theoretical:
-
-| Port | Default for self-hosters | What it does |
-|---|---|---|
-| `NewsDataProvider` | Reference adapter over a public search API | Supplies articles, so you need none of Mera's pipeline |
-| `EntitlementProvider` | `unlimited` | No billing account, no API key, no quota |
-
-**What you get:** topic-driven discovery, per-country and per-publisher browsing, article detail,
-related articles, and the entire on-device persona / scoring / feedback loop. A working, genuinely
-private news reader.
-
-**What you don't:** semantic retrieval, story clustering and everything built on it (dedup, story
-following, popularity), breadth-ranked global headlines, and entity/geo/event enrichment. Keyword search
-instead of meaning-based matching.
-
-### What stays closed, and why
-
-Ingestion, clustering, ranking, and billing internals. The idea is copyable; the infrastructure and the
-cost engineering behind it are what the subscription pays for. The line we think is honest: **you should
-be able to verify what happens to your data, not necessarily rebuild the product from our source.**
-
-### Known gaps this does *not* close
+### Known gaps
 
 Stated here rather than omitted:
 
-- **Attestation is fetched but not verified** (see Architecture Overview above). Fail-closed quote
-  verification in the client is the next wave. It lives entirely in this repository and costs no
-  commercial secrecy.
-- **No reproducible builds or signed release hashes yet.** You can read this source; you cannot yet prove
-  the binary on your phone was built from it. Reproducible builds and `cosign`-signed image digests are
-  planned.
+- **Your topics are not masked.** The real topic phrases are sent; there is no decoy or padding layer.
+- **Identity travels with topics.** Each news request carries your session, because the server checks
+  your plan and counts the day's reading. Platform logs keep the path, status and IP address of failed
+  requests for 30 days.
+- **Attestation proves the key, not the software.** The quote check blocks, but freshness on normal
+  calls, TCB currency, enclave measurements and GPU binding are not enforced (see Architecture
+  Overview).
+- **No reproducible builds or signed release hashes.** You can read this source; you cannot yet prove
+  the binary on your phone, or the code on Mera's servers, was built from it. No signed image,
+  published digest or deployed commit exists yet.
 - **Source code cannot prove which code a server runs.** This is true of every service that publishes a
-  backend: Signal's server is published and unverified too; its guarantee comes from the protocol, not
-  from the server source. A transparency report is planned so conduct under legal requests is at least on
-  the record.
-- **Account deletion does not yet cascade every collection** in a single pass.
-- **Some retention windows are unbounded**: submitted unblock-request transcripts and per-day usage
-  counts in particular.
+  backend: its guarantee has to come from the protocol, not from the server source.
+- **Some records have no time limit.** Deleting an account signs it out on every device at once and
+  removes its device keys and push token; after 30 days its profile settings, feedback, unblock
+  requests, daily usage, sessions and sign-in links are deleted. An anonymised stub of the account, the
+  billing record and the payment provider's raw billing event log are kept with no time limit. Other
+  periods: sessions 1 year, daily article counts 90 days, feedback 365 days, unblock-request
+  transcripts 90 or 180 days, the email log 30 days, the push log 14 days (with no account id). On the
+  phone, deletion wipes the database, stores, keychain and files; backups already in your own iCloud or
+  Google Drive stay there.
 - **Prompt-injection hardening** in AI-processed content is ongoing.
 
 ## License & Trademark
