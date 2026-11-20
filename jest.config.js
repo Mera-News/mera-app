@@ -46,6 +46,8 @@ const base = {
   modulePathIgnorePatterns: IGNORED_DIRS,
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   moduleNameMapper: {
+    // The app's stand-in, as in metro.config.js: the binary has no expo-network.
+    '^expo-network$': '<rootDir>/lib/stubs/expo-network.ts',
     [CLIENT_LIB[0]]: CLIENT_LIB[1],
     '^@/(.*)$': '<rootDir>/$1',
   },
@@ -129,6 +131,7 @@ module.exports = {
       },
       moduleNameMapper: {
         '^expo/fetch$': '<rootDir>/test/helpers/node-fetch.ts',
+        '^expo-network$': '<rootDir>/lib/stubs/expo-network.ts',
         [CLIENT_LIB[0]]: CLIENT_LIB[1],
         '^@/(.*)$': '<rootDir>/$1',
       },
