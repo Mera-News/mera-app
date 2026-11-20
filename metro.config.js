@@ -20,6 +20,9 @@ config.watchFolders.push(path.resolve(__dirname, 'assets'));
 // Fix for tslib error with Apollo Client
 const ALIASES = {
     'tslib': require.resolve('tslib/tslib.es6.js'),
+    // better-auth's Expo client imports expo-network optionally; the binary has no such module, and a
+    // missing module in a native bundle throws synchronously from the import (Sentry MERA-APP-A7).
+    'expo-network': path.resolve(__dirname, 'lib/stubs/expo-network.ts'),
 };
 
 // mera-news-client holds the app's logic. `@/lib/*` resolves to it first and to the app's own lib/

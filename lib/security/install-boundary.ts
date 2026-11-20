@@ -119,12 +119,19 @@ export async function enforceInstallBoundary(): Promise<void> {
     // now-authoritative keychain: the quarantined first /get-session went out
     // cookie-less and answered null, and without this poke a normal launch
     // would sit signed-out-looking until some auth route happened to notify.
+    //
+    // The auth client is loaded BEFORE the release, as a foreground start loads it: a first load
+    // after the release seeds the session atom from the keychain while the module is still loading
+    // (a background wake reaches this line first, and that path once threw, Sentry MERA-APP-A7).
+    let authClient: { $store?: { notify?: (signal: string) => void } } | undefined;
+    try {
+      authClient = (require('@/lib/auth-client') as { authClient: typeof authClient }).authClient;
+    } catch {
+      // Never block launch on the poke.
+    }
     releaseAuthReadQuarantine();
     try {
-      const { authClient } = require('@/lib/auth-client') as {
-        authClient: { $store?: { notify?: (signal: string) => void } };
-      };
-      authClient.$store?.notify?.('$sessionSignal');
+      authClient?.$store?.notify?.('$sessionSignal');
     } catch {
       // Never block launch on the poke.
     }
