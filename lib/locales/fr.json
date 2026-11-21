@@ -618,7 +618,6 @@
     "keeps": {
       "title": "Ce que Mera conserve sur vous",
       "plan": "Votre forfait. Les données de facturation de l'App Store ou de Google Play sont conservées aussi longtemps que la loi l'exige.",
-      "emailIfAdded": "Votre forfait. Mera ne demande jamais d'e-mail, et tout e-mail ajouté auparavant est supprimé le 30 octobre 2026. Les données de facturation de l'App Store ou de Google Play sont conservées aussi longtemps que la loi l'exige.",
       "signInRecordIos": "Une trace de connexion pour ce téléphone, supprimée avec votre compte. La vérification d'Apple indiquant qu'il s'agit de la vraie app n'est pas conservée.",
       "signInRecordAndroid": "Une trace de connexion pour ce téléphone, pas l'identifiant de votre téléphone, supprimée avec votre compte. La vérification de Google indiquant qu'il s'agit de la vraie app n'est pas conservée.",
       "signInRecordGeneric": "Une trace de connexion pour ce téléphone, supprimée avec votre compte. La vérification d'Apple ou de Google indiquant qu'il s'agit de la vraie app n'est pas conservée.",

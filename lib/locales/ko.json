@@ -598,7 +598,6 @@
     "keeps": {
       "title": "메라가 보관하는 내 정보",
       "plan": "요금제. App Store 또는 Google Play의 결제 기록은 법이 요구하는 기간 동안 보관합니다.",
-      "emailIfAdded": "요금제. 메라는 이메일을 요구하지 않으며, 이전에 추가한 이메일은 2026년 10월 30일에 삭제됩니다. App Store 또는 Google Play의 결제 기록은 법이 요구하는 기간 동안 보관합니다.",
       "signInRecordIos": "이 휴대폰의 로그인 기록이며, 계정과 함께 삭제됩니다. 진짜 앱인지 확인하는 Apple의 검사 결과는 보관하지 않습니다.",
       "signInRecordAndroid": "휴대폰 ID가 아닌 이 휴대폰의 로그인 기록이며, 계정과 함께 삭제됩니다. 진짜 앱인지 확인하는 Google의 검사 결과는 보관하지 않습니다.",
       "signInRecordGeneric": "이 휴대폰의 로그인 기록이며, 계정과 함께 삭제됩니다. 진짜 앱인지 확인하는 Apple 또는 Google의 검사 결과는 보관하지 않습니다.",

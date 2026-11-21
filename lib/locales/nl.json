@@ -611,7 +611,6 @@
     "keeps": {
       "title": "Wat Mera over je bewaart",
       "plan": "Je abonnement. Factuurgegevens van de App Store of Google Play bewaren we zo lang als de wet vereist.",
-      "emailIfAdded": "Je abonnement. Mera vraagt nooit om een e-mailadres, en een e-mailadres van vroeger wordt op 30 oktober 2026 verwijderd. Factuurgegevens van de App Store of Google Play bewaren we zo lang als de wet vereist.",
       "signInRecordIos": "Een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De controle van Apple dat dit de echte app is, bewaren we niet.",
       "signInRecordAndroid": "Een inlogregistratie voor deze telefoon, niet de ID van je telefoon, die met je account wordt verwijderd. De controle van Google dat dit de echte app is, bewaren we niet.",
       "signInRecordGeneric": "Een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De controle van Apple of Google dat dit de echte app is, bewaren we niet.",

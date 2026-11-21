@@ -613,7 +613,6 @@
     "keeps": {
       "title": "Qué guarda Mera sobre ti",
       "plan": "Tu plan. Los registros de facturación de App Store o Google Play se guardan el tiempo que exige la ley.",
-      "emailIfAdded": "Tu plan. Mera nunca pide un correo, y cualquier correo de antes se elimina el 30 de octubre de 2026. Los registros de facturación de App Store o Google Play se guardan el tiempo que exige la ley.",
       "signInRecordIos": "Un registro de inicio de sesión de este teléfono, que se borra con tu cuenta. La comprobación de Apple de que es la app real no se guarda.",
       "signInRecordAndroid": "Un registro de inicio de sesión de este teléfono, no el ID de tu teléfono, que se borra con tu cuenta. La comprobación de Google de que es la app real no se guarda.",
       "signInRecordGeneric": "Un registro de inicio de sesión de este teléfono, que se borra con tu cuenta. La comprobación de Apple o Google de que es la app real no se guarda.",

@@ -663,7 +663,6 @@
     "keeps": {
       "title": "Co Mera przechowuje o Tobie",
       "plan": "Twój plan. Dane rozliczeniowe z App Store lub Google Play przechowujemy tak długo, jak wymaga prawo.",
-      "emailIfAdded": "Twój plan. Mera nigdy nie prosi o e-mail, a każdy stary e-mail zostanie usunięty 30 października 2026. Dane rozliczeniowe z App Store lub Google Play przechowujemy tak długo, jak wymaga prawo.",
       "signInRecordIos": "Zapis logowania dla tego telefonu, usuwany razem z kontem. Nie przechowujemy sprawdzenia Apple, że to prawdziwa aplikacja.",
       "signInRecordAndroid": "Zapis logowania dla tego telefonu, a nie identyfikator telefonu, usuwany razem z kontem. Nie przechowujemy sprawdzenia Google, że to prawdziwa aplikacja.",
       "signInRecordGeneric": "Zapis logowania dla tego telefonu, usuwany razem z kontem. Nie przechowujemy sprawdzenia Apple lub Google, że to prawdziwa aplikacja.",

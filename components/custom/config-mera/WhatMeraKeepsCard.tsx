@@ -33,7 +33,6 @@ export function keepsAccountKind(sessionUser: SessionUserLike | null | undefined
 
 export type KeepsLineKey =
     | 'manageData.keeps.plan'
-    | 'manageData.keeps.emailIfAdded'
     | 'manageData.keeps.signInRecordIos'
     | 'manageData.keeps.signInRecordAndroid'
     | 'manageData.keeps.signInRecordGeneric'
@@ -56,7 +55,7 @@ export function keepsLineKeys(kind: KeepsAccountKind, platform: string): KeepsLi
             ];
         default:
             return [
-                'manageData.keeps.emailIfAdded',
+                'manageData.keeps.plan',
                 'manageData.keeps.signInRecordGeneric',
                 'manageData.keeps.usage',
                 'manageData.keeps.topics',

@@ -611,7 +611,6 @@
     "keeps": {
       "title": "Mera sizinle ilgili neleri saklar",
       "plan": "Planınız. App Store veya Google Play'den gelen fatura kayıtları yasanın gerektirdiği süre boyunca saklanır.",
-      "emailIfAdded": "Planınız. Mera hiçbir zaman e-posta istemez, önceden eklenmiş her e-posta 30 Ekim 2026'da silinir. App Store veya Google Play'den gelen fatura kayıtları yasanın gerektirdiği süre boyunca saklanır.",
       "signInRecordIos": "Bu telefon için hesabınızla birlikte silinen bir giriş kaydı. Apple'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz.",
       "signInRecordAndroid": "Bu telefon için telefonunuzun kimliği olmayan, hesabınızla birlikte silinen bir giriş kaydı. Google'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz.",
       "signInRecordGeneric": "Bu telefon için hesabınızla birlikte silinen bir giriş kaydı. Apple veya Google'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz.",

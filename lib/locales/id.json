@@ -598,7 +598,6 @@
     "keeps": {
       "title": "Yang disimpan Mera tentang Anda",
       "plan": "Paket Anda. Catatan tagihan dari App Store atau Google Play disimpan selama diwajibkan hukum.",
-      "emailIfAdded": "Paket Anda. Mera tidak pernah meminta email, dan email dari sebelumnya dihapus pada 30 Oktober 2026. Catatan tagihan dari App Store atau Google Play disimpan selama diwajibkan hukum.",
       "signInRecordIos": "Catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Pemeriksaan Apple bahwa ini aplikasi asli tidak disimpan.",
       "signInRecordAndroid": "Catatan masuk untuk ponsel ini, bukan ID ponsel Anda, dihapus bersama akun Anda. Pemeriksaan Google bahwa ini aplikasi asli tidak disimpan.",
       "signInRecordGeneric": "Catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Pemeriksaan Apple atau Google bahwa ini aplikasi asli tidak disimpan.",

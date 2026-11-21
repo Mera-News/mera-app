@@ -959,7 +959,6 @@
     "keeps": {
       "title": "What Mera keeps about you",
       "plan": "Your plan. Billing records from the App Store or Google Play are kept as long as the law requires.",
-      "emailIfAdded": "Your plan. Mera never asks for an email, and any email from before is deleted on 30 October 2026. Billing records from the App Store or Google Play are kept as long as the law requires.",
       "signInRecordIos": "A sign-in record for this phone, deleted with your account. Apple's check that this is the real app is not kept.",
       "signInRecordAndroid": "A sign-in record for this phone, not your phone's ID, deleted with your account. Google's check that this is the real app is not kept.",
       "signInRecordGeneric": "A sign-in record for this phone, deleted with your account. The Apple or Google check that this is the real app is not kept.",

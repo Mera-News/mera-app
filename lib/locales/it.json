@@ -613,7 +613,6 @@
     "keeps": {
       "title": "Cosa conserva Mera su di te",
       "plan": "Il tuo piano. I dati di fatturazione di App Store o Google Play sono conservati per il tempo richiesto dalla legge.",
-      "emailIfAdded": "Il tuo piano. Mera non chiede mai un'email, e ogni email di prima viene eliminata il 30 ottobre 2026. I dati di fatturazione di App Store o Google Play sono conservati per il tempo richiesto dalla legge.",
       "signInRecordIos": "Un record di accesso per questo telefono, eliminato con il tuo account. Il controllo di Apple che si tratta della vera app non viene conservato.",
       "signInRecordAndroid": "Un record di accesso per questo telefono, non l'ID del tuo telefono, eliminato con il tuo account. Il controllo di Google che si tratta della vera app non viene conservato.",
       "signInRecordGeneric": "Un record di accesso per questo telefono, eliminato con il tuo account. Il controllo di Apple o Google che si tratta della vera app non viene conservato.",

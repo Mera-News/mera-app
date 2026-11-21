@@ -611,7 +611,6 @@
     "keeps": {
       "title": "Was Mera über dich speichert",
       "plan": "Dein Tarif. Abrechnungsdaten aus dem App Store oder Google Play bewahren wir auf, solange das Gesetz es verlangt.",
-      "emailIfAdded": "Dein Tarif. Mera fragt nie nach einer E-Mail, und eine E-Mail von früher wird am 30. Oktober 2026 gelöscht. Abrechnungsdaten aus dem App Store oder Google Play bewahren wir auf, solange das Gesetz es verlangt.",
       "signInRecordIos": "Ein Anmeldeeintrag für dieses Telefon, der mit deinem Konto gelöscht wird. Apples Prüfung, ob dies die echte App ist, wird nicht gespeichert.",
       "signInRecordAndroid": "Ein Anmeldeeintrag für dieses Telefon, nicht die ID deines Telefons, der mit deinem Konto gelöscht wird. Googles Prüfung, ob dies die echte App ist, wird nicht gespeichert.",
       "signInRecordGeneric": "Ein Anmeldeeintrag für dieses Telefon, der mit deinem Konto gelöscht wird. Die Prüfung von Apple oder Google, ob dies die echte App ist, wird nicht gespeichert.",

@@ -613,7 +613,6 @@
     "keeps": {
       "title": "O que o Mera guarda sobre você",
       "plan": "Seu plano. Registros de cobrança da App Store ou do Google Play são guardados pelo tempo que a lei exige.",
-      "emailIfAdded": "Seu plano. A Mera nunca pede um e-mail, e qualquer e-mail de antes é apagado em 30 de outubro de 2026. Registros de cobrança da App Store ou do Google Play são guardados pelo tempo que a lei exige.",
       "signInRecordIos": "Um registro de acesso deste celular, apagado junto com sua conta. A verificação da Apple de que este é o app de verdade não é guardada.",
       "signInRecordAndroid": "Um registro de acesso deste celular, não o ID do seu celular, apagado junto com sua conta. A verificação do Google de que este é o app de verdade não é guardada.",
       "signInRecordGeneric": "Um registro de acesso deste celular, apagado junto com sua conta. A verificação da Apple ou do Google de que este é o app de verdade não é guardada.",

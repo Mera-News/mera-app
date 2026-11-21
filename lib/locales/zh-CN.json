@@ -598,7 +598,6 @@
     "keeps": {
       "title": "梅拉保留的关于你的信息",
       "plan": "你的套餐。来自 App Store 或 Google Play 的账单记录会按法律要求的期限保留。",
-      "emailIfAdded": "你的套餐。梅拉从不要求提供邮箱，之前留下的任何邮箱都会在2026年10月30日被删除。来自 App Store 或 Google Play 的账单记录会按法律要求的期限保留。",
       "signInRecordIos": "这部手机的一条登录记录，会随账号一起删除。Apple 确认正版应用的检查结果不会保留。",
       "signInRecordAndroid": "这部手机的一条登录记录，不是手机的 ID，会随账号一起删除。Google 确认正版应用的检查结果不会保留。",
       "signInRecordGeneric": "这部手机的一条登录记录，会随账号一起删除。Apple 或 Google 确认正版应用的检查结果不会保留。",

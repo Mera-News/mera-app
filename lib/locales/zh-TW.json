@@ -598,7 +598,6 @@
     "keeps": {
       "title": "梅拉為你保留的資料",
       "plan": "你的方案。來自 App Store 或 Google Play 的帳單紀錄會依法律要求的期限保留。",
-      "emailIfAdded": "你的方案。梅拉從不要求電子郵件，以前留下的任何電子郵件都會在 2026 年 10 月 30 日刪除。來自 App Store 或 Google Play 的帳單紀錄會依法律要求的期限保留。",
       "signInRecordIos": "這支手機的一筆登入紀錄，會隨帳號一起刪除。Apple 確認正版 App 的檢查結果不會保留。",
       "signInRecordAndroid": "這支手機的一筆登入紀錄，不是手機的 ID，會隨帳號一起刪除。Google 確認正版 App 的檢查結果不會保留。",
       "signInRecordGeneric": "這支手機的一筆登入紀錄，會隨帳號一起刪除。Apple 或 Google 確認正版 App 的檢查結果不會保留。",
