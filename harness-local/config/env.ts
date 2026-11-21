@@ -17,7 +17,6 @@ export interface HarnessEnv {
   /** E2EE inference gateway. Only the gateway lane needs it, so it stays
    *  optional: every runner that posts direct to NEAR works without it. */
   inferenceEndpoint?: string;
-  authEmail?: string;
   model?: string;
 }
 
@@ -135,15 +134,6 @@ export function loadHarnessEnv(opts: LoadHarnessEnvOptions = {}): HarnessEnv {
     process.env.NEWS_HARNESS_INFERENCE_ENDPOINT?.trim() ||
     (onStagingRail ? STAGING_DEFAULTS.inferenceEndpoint : undefined);
 
-  // The email-OTP flow is only one of two ways onto a non-local target; the
-  // staging dev bypass (POST /api/auth/device/sign-in/dev) needs no email at
-  // all. So this stays required only OFF the staging rail, where OTP is the
-  // only path a script has.
-  const authEmail = process.env.NEWS_HARNESS_AUTH_EMAIL?.trim();
-  if (target !== 'local' && !onStagingRail && !authEmail) {
-    throw missingVarError('NEWS_HARNESS_AUTH_EMAIL');
-  }
-
   const model = process.env.NEWS_HARNESS_MODEL?.trim() || undefined;
 
   return {
@@ -153,7 +143,6 @@ export function loadHarnessEnv(opts: LoadHarnessEnvOptions = {}): HarnessEnv {
     graphqlEndpoint,
     authEndpoint,
     inferenceEndpoint,
-    authEmail,
     model,
   };
 }

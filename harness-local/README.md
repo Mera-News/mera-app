@@ -149,12 +149,10 @@ Set `NEWS_HARNESS_TARGET` in `harness-local/.env.harness`:
 
 - `local` (default) — no auth needed. mera-server's GraphQL service runs as a
   dev-user bypass whenever `NODE_ENV !== 'production'`.
-- `staging` / `prod` — requires `NEWS_HARNESS_AUTH_ENDPOINT` and
-  `NEWS_HARNESS_AUTH_EMAIL`. Runs the real Better Auth email-OTP flow (same
-  one the app uses) on first run, prompts for the emailed OTP on the
-  terminal, and caches the resulting session in
-  `.local-test-data/.auth-cache.json` for ~6 days (Better Auth's default session
-  length is 7 days) so you aren't re-authenticating on every invocation.
+- `staging` / `prod` — requires `NEWS_HARNESS_AUTH_ENDPOINT`,
+  `NEWS_HARNESS_TEST_ACCOUNT_TOKEN` and `NEWS_HARNESS_TEST_ACCOUNT_HANDLE`. A
+  test account is the only sign-in the harness has there. The session is cached
+  per handle for 20 hours, so runs stay non-interactive.
 
 ## Daily-quota note
 
@@ -180,7 +178,8 @@ above).
 | `NEWS_HARNESS_GRAPHQL_ENDPOINT` | yes off the rail | On the staging rail an unset value takes the staging default. |
 | `NEWS_HARNESS_AUTH_ENDPOINT` | yes for staging/prod | Same. |
 | `NEWS_HARNESS_INFERENCE_ENDPOINT` | no | E2EE gateway. Only the gateway lane needs it. |
-| `NEWS_HARNESS_AUTH_EMAIL` | yes off the rail | Email-OTP identity. Not needed on the staging rail, which can use the dev bypass. |
+| `NEWS_HARNESS_TEST_ACCOUNT_TOKEN` | yes for staging/prod | The test-account token. Never printed. |
+| `NEWS_HARNESS_TEST_ACCOUNT_HANDLE` | yes for staging/prod | The test-account handle, `^[a-z0-9][a-z0-9-]{1,39}$`. |
 | `NEWS_HARNESS_MODEL` | no | Overrides the default cloud model. |
 | `NEWS_HARNESS_DEBUG` | no | Verbose logging. |
 

@@ -225,10 +225,11 @@ Set `NEWS_HARNESS_TARGET` in `.env.harness`:
 
 - `local` (default): no auth; mera-server's GraphQL runs a dev-user bypass when
   `NODE_ENV !== 'production'`.
-- `staging` / `prod`: requires `NEWS_HARNESS_AUTH_ENDPOINT` +
-  `NEWS_HARNESS_AUTH_EMAIL`; runs the real Better Auth email-OTP flow on first
-  run, prompts for the OTP, and caches the session in
-  `.local-test-data/.auth-cache.json`.
+- `staging` / `prod`: requires `NEWS_HARNESS_AUTH_ENDPOINT`,
+  `NEWS_HARNESS_TEST_ACCOUNT_TOKEN` and `NEWS_HARNESS_TEST_ACCOUNT_HANDLE`. A test
+  account is the only sign-in the harness has there: headless, no code to type.
+  The session is cached per handle in
+  `.local-test-data/.auth-cache.<target>.test-<handle>.json` for 20 hours.
 
 > **Quota warning:** on `staging`/`prod`, `getArticlesForTopicsByIds` is the
 > same delivery point that spends the user's **daily article cap** as the
@@ -246,7 +247,8 @@ instead of `local`.
 NEWS_HARNESS_TARGET=prod
 NEWS_HARNESS_GRAPHQL_ENDPOINT=https://graphql.mera.news/graphql
 NEWS_HARNESS_AUTH_ENDPOINT=https://auth.mera.news
-NEWS_HARNESS_AUTH_EMAIL=<test account email>
+NEWS_HARNESS_TEST_ACCOUNT_TOKEN=<the test-account token, never printed>
+NEWS_HARNESS_TEST_ACCOUNT_HANDLE=<a handle, for example harness-eval>
 ```
 
 Staging equivalents: `https://graphql.staging.mera.news/graphql` and
@@ -259,27 +261,13 @@ Staging equivalents: `https://graphql.staging.mera.news/graphql` and
 > env var must already include `/graphql`, or every request 404s with
 > `Cannot POST /`.
 
-Use a dedicated test account (e.g. `meratestNN@gmail.com`) rather than a
-personal one: every live fetch spends *that account's* daily article quota
-(see below).
+Use a dedicated test-account handle rather than a shared one: every live fetch spends *that
+account's* daily article quota (see below).
 
-**2. Auth.** Running a script against `staging`/`prod` interactively prompts
-`Enter OTP:` (code emailed via MailerSend) and then caches the session in
-`.local-test-data/.auth-cache.json` for ~6 days (`harness-local/adapters/auth.ts`,
-`SESSION_MAX_AGE_MS`): subsequent runs are non-interactive. When Claude is
-driving the flow and can't forward stdin to the OTP prompt, do the exchange
-manually and write the cache file directly:
-
-1. `curl -X POST {AUTH}/api/auth/email-otp/send-verification-otp -H 'content-type: application/json' -d '{"email":"<email>","type":"sign-in"}'`:
-   user relays the 6-digit code from their inbox.
-2. `curl -D - -X POST {AUTH}/api/auth/sign-in/email-otp -d '{"email":"<email>","otp":"<code>"}'`:
-   capture the `set-cookie` value (name=value only, before the first `;`).
-3. Write `.local-test-data/.auth-cache.json` as:
-   ```json
-   { "cookie": "<name=value>", "savedAt": "<ISO timestamp>" }
-   ```
-   This matches the `AuthCache` shape in `harness-local/adapters/auth.ts`.
-   **Never print or log the cookie value.**
+**2. Auth.** The harness signs in to the test account by its handle through
+`/api/auth/test-account/sign-in` (`harness-local/adapters/auth.ts`) and caches the session for 20
+hours, so runs are non-interactive. `harness-local/scripts/test-account.ts` lists, resets and deletes
+handles. **Never print or log the token or the session cookie.**
 
 **3. Quota behavior observed on prod.** `articlesForTopicsByIds` is the point
 that reserves the account's daily article quota; a single full run with

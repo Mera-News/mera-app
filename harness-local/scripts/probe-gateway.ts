@@ -1,11 +1,11 @@
 // harness-local - ONE probe call through the staging E2EE gateway.
 //
-//   NEWS_HARNESS_DEV_BYPASS_TOKEN=... npx tsx --tsconfig harness-local/tsconfig.json \
+//   NEWS_HARNESS_TEST_ACCOUNT_TOKEN=... NEWS_HARNESS_TEST_ACCOUNT_HANDLE=... npx tsx --tsconfig harness-local/tsconfig.json \
 //     harness-local/scripts/probe-gateway.ts --target staging \
 //       --auth-endpoint ... --inference-endpoint ... [--model <id>]
 //
 // Deliberately ONE completion, not a loop. It answers the questions a corpus
-// run cannot be started without: does the dev-bypass session mint a JWT, does
+// run cannot be started without: does the test-account session mint a JWT, does
 // the gateway serve this model's attestation, does the app's envelope decrypt a
 // real response, and is the GATEWAY's own key subject to the same spend limit
 // as the development key.
