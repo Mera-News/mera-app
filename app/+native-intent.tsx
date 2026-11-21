@@ -5,13 +5,13 @@
 // one-shot pending store (no page state in URLs); TabPages opens it on focus.
 // An "Add to Mera News" link (/add/<publisherId>) goes through the startup gate first.
 import { setPendingPage } from '@/components/custom/nav/navigate-to-page';
-import { addSourceIdFromPath, routeAddSourceLink } from '@/components/custom/publication-page/add-source-from-link';
+import { routeIncomingAddLink } from '@/components/custom/publication-page/add-source-from-link';
 import { normalizeLegacyHref } from '@/lib/algorithms/legacy-href';
 
 export function redirectSystemPath({ path }: { path: string; initial: boolean }): string {
   try {
-    const addId = addSourceIdFromPath(path);
-    if (addId) return routeAddSourceLink(addId);
+    const add = routeIncomingAddLink(path);
+    if (add !== undefined) return add;
     const target = normalizeLegacyHref(path);
     if (!target) return path;
     if (target.page) {

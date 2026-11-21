@@ -18,11 +18,22 @@ import { isStartupGatePassed } from '@/lib/stores/pending-notification-route';
 
 // The scheme and host are optional: the router hands over `meraapp://add/<id>`,
 // `https://mera.news/add/<id>` or the bare path. A publisher id is a Mongo ObjectId.
-const ADD_LINK = /^(?:[a-z][\w+.-]*:\/\/)?(?:(?:www\.)?mera\.news)?\/?add\/([0-9a-f]{24})\/?(?:[?#].*)?$/;
+const ADD_LINK = /^(?:[a-z][\w+.-]*:\/\/)?(?:(?:www\.)?mera\.news)?\/*add\/([0-9a-f]{24})\/?(?:[?#].*)?$/;
 
-/** The publisher id an incoming link adds, or null when it is not an add link. */
+// Any path under /add, valid or not: the app has no /add route, so a malformed one
+// must still be caught here or the router shows "Unmatched Route".
+const ANY_ADD_LINK = /^(?:[a-z][\w+.-]*:\/\/)?(?:(?:www\.)?mera\.news)?\/*add(?:[/?#]|$)/;
+
+/** The publisher id an incoming link adds, or null when it is not a valid add link. */
 export function addSourceIdFromPath(path: string): string | null {
     return ADD_LINK.exec(path)?.[1] ?? null;
+}
+
+/** +native-intent's whole call for an add link, valid or malformed; undefined for any other path. */
+export function routeIncomingAddLink(path: string): string | undefined {
+    if (!ANY_ADD_LINK.test(path)) return undefined;
+    const id = addSourceIdFromPath(path);
+    return id ? routeAddSourceLink(id) : '/';
 }
 
 let pending: string | null = null;

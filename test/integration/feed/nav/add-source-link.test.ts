@@ -51,7 +51,7 @@ afterEach(async () => {
 });
 
 it('reads the id from every form the router hands over, and nothing else', () => {
-    for (const path of [`https://mera.news/add/${ID}`, `meraapp://add/${ID}`, `/add/${ID}`, `https://www.mera.news/add/${ID}/?x=1`]) {
+    for (const path of [`https://mera.news/add/${ID}`, `meraapp://add/${ID}`, `meraapp:///add/${ID}`, `/add/${ID}`, `https://www.mera.news/add/${ID}/?x=1`]) {
         expect(addSourceIdFromPath(path)).toBe(ID);
     }
     for (const path of ['/add/abc', `/add/${ID}/more`, `https://evil.example/add/${ID}`, `/en/add/${ID}`, '/logged-in/app_container/feed']) {
@@ -88,6 +88,13 @@ it('with the gate open, acts at once and routes to the page', async () => {
     await settleWrites();
     expect(await kinds()).toEqual(['boost', 'boost']);
     expect(undoToast).toHaveBeenCalledTimes(1);
+});
+
+it('a malformed add link lands on the startup gate, never an unmatched route', () => {
+    for (const path of ['meraapp://add/nothex', 'meraapp:///add/nothex', '/add', `https://mera.news/add/${ID}/more`]) {
+        expect(redirectSystemPath({ path, initial: true })).toBe('/');
+    }
+    expect(redirectSystemPath({ path: '/logged-in/app_container/feed', initial: true })).toBe('/logged-in/app_container/feed');
 });
 
 it('under the PIN lock it still waits for the gate', async () => {
