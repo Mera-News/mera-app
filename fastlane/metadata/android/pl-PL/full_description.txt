@@ -33,11 +33,11 @@ PRYWATNOŚĆ I BEZPIECZEŃSTWO
 
 Spersonalizowane wiadomości nie powinny wymagać osobistej inwigilacji.
 
-• Twój profil wiadomości i historia czytania pozostają na Twoim telefonie, a nie na serwerach Mera
+• Twój profil wiadomości i historia czytania są przechowywane na Twoim telefonie, a nie na serwerach Mera
 • Mera nigdy nie prosi o adres e-mail. Logujesz się za pomocą telefonu
 • Ponieważ Mera nie ma tych informacji, nie może ich użyć do trenowania modeli AI ani sprzedać reklamodawcom i pośrednikom danych
-• Mera AI działa w formie zaszyfrowanej w „Prywatnej chmurze”, więc nawet Mera Labs nie może odczytać tego, co czyta dla Ciebie
-• Sprawdź w aplikacji atestację Trusted Execution Environment, by potwierdzić, że zabezpieczenia prywatności działają
+• Mera AI działa w formie zaszyfrowanej w „Prywatnej chmurze”, zaprojektowano tak, że Mera Labs nie może odczytać tego, co czyta dla Ciebie
+• Sprawdź w aplikacji atestację bezpiecznego sprzętu prywatnej chmury i zobacz, które testy przeszły
 • Zabezpiecz aplikację opcjonalnym kodem PIN
 • Uzasadnienia napisane przez AI są zawsze wyraźnie oznaczone
 • Asystent przedstawia się jako AI, a nie jako człowiek

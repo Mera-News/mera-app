@@ -33,11 +33,11 @@ PRIVACIDADE E SEGURANÇA
 
 Notícias personalizadas não deveriam exigir vigilância pessoal.
 
-• Seu perfil de notícias e seu histórico de leitura ficam no seu celular, não nos servidores do Mera
+• Seu perfil de notícias e seu histórico de leitura são guardados no seu celular, não nos servidores do Mera
 • O Mera nunca pede seu e-mail. Você entra com seu celular
 • Como o Mera não tem essas informações, não pode usá-las para treinar modelos de IA nem vendê-las a anunciantes e corretores de dados
-• O Mera AI funciona criptografado na Nuvem privada, para que nem a Mera Labs consiga ler o que ele lê para você
-• Verifique a atestação do Trusted Execution Environment no app para confirmar que as proteções estão ativas
+• O Mera AI funciona criptografado na Nuvem privada, feito para que a Mera Labs não consiga ler o que ele lê para você
+• Confira no app a atestação de hardware seguro da Nuvem privada e veja quais testes passaram
 • Proteja o app com um PIN opcional
 • Os motivos escritos por IA são sempre claramente identificados
 • O assistente se identifica como IA, não como uma pessoa

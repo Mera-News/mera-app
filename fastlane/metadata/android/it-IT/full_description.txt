@@ -33,11 +33,11 @@ PRIVACY E SICUREZZA
 
 Le notizie personalizzate non dovrebbero richiedere una sorveglianza personale.
 
-• Il tuo profilo di notizie e la tua cronologia di lettura restano sul tuo telefono, non sui server di Mera
+• Il tuo profilo di notizie e la tua cronologia di lettura sono memorizzati sul tuo telefono, non sui server di Mera
 • Mera non ti chiede mai l'email. Accedi con il tuo telefono
 • Mera non possiede queste informazioni, quindi non può usarle per addestrare modelli IA né venderle a inserzionisti e broker di dati
-• Mera AI funziona in forma crittografata nel Cloud privato, così nemmeno Mera Labs può leggere ciò che legge per te
-• Verifica nell'app l'attestazione del Trusted Execution Environment per confermare che le protezioni siano attive
+• Mera AI funziona in forma crittografata nel Cloud privato, pensato perché Mera Labs non possa leggere ciò che legge per te
+• Nell'app controlla l'attestazione dell'hardware sicuro del Cloud privato e vedi i test superati
 • Proteggi l'app con un PIN facoltativo
 • I motivi scritti dall'IA sono sempre chiaramente indicati
 • L'assistente si identifica come IA, non come persona

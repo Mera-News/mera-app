@@ -33,11 +33,11 @@ PRIVASI DAN KEAMANAN
 
 Berita yang dipersonalisasi seharusnya tidak memerlukan pengawasan atas diri Anda.
 
-• Profil berita dan riwayat bacaan Anda tetap berada di ponsel Anda, bukan di server Mera
+• Profil berita dan riwayat bacaan Anda disimpan di ponsel Anda, bukan di server Mera
 • Mera tidak pernah meminta email Anda. Anda masuk dengan ponsel
 • Karena Mera tidak memiliki informasi ini, Mera tidak dapat menggunakannya untuk melatih model AI atau menjualnya kepada pengiklan dan pialang data
-• Mera AI berjalan terenkripsi di Cloud pribadi, sehingga Mera Labs pun tidak bisa membaca apa yang dibacanya untuk Anda
-• Verifikasi atestasi Trusted Execution Environment di aplikasi untuk memastikan perlindungan privasi aktif
+• Mera AI berjalan terenkripsi di Cloud pribadi, dibuat agar Mera Labs tidak bisa membaca apa yang dibacanya untuk Anda
+• Periksa atestasi perangkat keras aman Cloud pribadi di aplikasi dan lihat tes mana yang lolos
 • Lindungi aplikasi dengan PIN opsional
 • Alasan yang ditulis AI selalu ditandai dengan jelas
 • Asisten mengidentifikasi dirinya sebagai AI, bukan manusia

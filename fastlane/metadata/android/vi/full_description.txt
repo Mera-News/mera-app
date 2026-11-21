@@ -33,11 +33,11 @@ QUYỀN RIÊNG TƯ VÀ AN TOÀN
 
 Cá nhân hóa tin tức không nên đòi hỏi phải giám sát đời tư.
 
-• Hồ sơ tin tức và lịch sử đọc của bạn nằm trên điện thoại, không nằm trên máy chủ của Mera
+• Hồ sơ tin tức và lịch sử đọc của bạn được lưu trên điện thoại, không nằm trên máy chủ của Mera
 • Mera không bao giờ hỏi email của bạn. Bạn đăng nhập bằng điện thoại
 • Vì Mera không giữ thông tin này, Mera không thể dùng nó để huấn luyện mô hình AI hay bán cho nhà quảng cáo và môi giới dữ liệu
-• Mera AI chạy ở dạng mã hóa trong Đám mây riêng, nên cả Mera Labs cũng không thể đọc những gì nó đọc cho bạn
-• Xác minh chứng thực Trusted Execution Environment trong ứng dụng để xác nhận các biện pháp bảo vệ quyền riêng tư đang hoạt động
+• Mera AI chạy ở dạng mã hóa trong Đám mây riêng, được thiết kế để Mera Labs không thể đọc những gì nó đọc cho bạn
+• Kiểm tra chứng thực phần cứng bảo mật của Đám mây riêng trong ứng dụng và xem những kiểm tra nào đã đạt
 • Bảo vệ ứng dụng bằng mã PIN tùy chọn
 • Lý do do AI viết luôn được đánh dấu rõ ràng
 • Trợ lý tự nhận là AI, không phải người

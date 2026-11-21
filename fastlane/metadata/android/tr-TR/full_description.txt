@@ -33,11 +33,11 @@ GİZLİLİK VE GÜVENLİK
 
 Kişiselleştirilmiş haberler kişisel gözetim gerektirmemelidir.
 
-• Haber profilin ve okuma geçmişin Mera'nın sunucularında değil, telefonunda kalır
+• Haber profilin ve okuma geçmişin Mera'nın sunucularında değil, telefonunda saklanır
 • Mera asla e-posta adresini istemez. Telefonunla giriş yaparsın
 • Mera bu bilgilere sahip olmadığı için bunları yapay zeka modellerini eğitmek ya da reklamcılara ve veri simsarlarına satmak için kullanamaz
-• Mera AI “Özel bulut”ta şifreli çalışır, böylece Mera Labs bile senin için okuduklarını okuyamaz
-• Gizlilik korumalarının etkin olduğunu doğrulamak için uygulama içinde Güvenilir Yürütme Ortamı (TEE) tasdikini kontrol et
+• Mera AI “Özel bulut”ta şifreli çalışır, Mera Labs senin için okuduklarını okuyamayacak şekilde tasarlandı
+• “Özel bulut”un güvenli donanım tasdikini uygulama içinde kontrol et ve hangi testlerin geçtiğini gör
 • Uygulamayı isteğe bağlı bir PIN ile koru
 • Yapay zekanın yazdığı nedenler her zaman açıkça belirtilir
 • Asistan kendini bir insan değil, yapay zeka olarak tanıtır

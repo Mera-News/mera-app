@@ -33,11 +33,11 @@ PRIVACY EN VEILIGHEID
 
 Gepersonaliseerd nieuws hoeft geen bewaking te vereisen.
 
-• Je nieuwsprofiel en je leesgeschiedenis blijven op je telefoon, niet op de servers van Mera
+• Je nieuwsprofiel en je leesgeschiedenis worden opgeslagen op je telefoon, niet op de servers van Mera
 • Mera vraagt nooit om je e-mailadres. Je logt in met je telefoon
 • Omdat Mera deze gegevens niet heeft, kan het ze niet gebruiken om AI-modellen te trainen of verkopen aan adverteerders en datahandelaars
-• Mera AI draait versleuteld in Privécloud, zodat zelfs Mera Labs niet kan lezen wat het voor je leest
-• Controleer in de app de Trusted Execution Environment-attestatie om te zien of de privacywaarborgen actief zijn
+• Mera AI draait versleuteld in Privécloud, zo ingericht dat Mera Labs niet kan lezen wat het voor je leest
+• Controleer in de app de attestatie van de beveiligde hardware van Privécloud en zie welke tests slaagden
 • Beveilig de app met een optionele pincode
 • Redenen die door AI zijn geschreven, zijn altijd duidelijk gemarkeerd
 • De assistent maakt duidelijk dat het AI is en geen mens

@@ -33,11 +33,11 @@ DATENSCHUTZ UND SICHERHEIT
 
 Personalisierte Nachrichten sollten keine persönliche Überwachung erfordern.
 
-• Dein Nachrichtenprofil und dein Leseverlauf bleiben auf deinem Telefon, nicht auf Meras Servern
+• Dein Nachrichtenprofil und dein Leseverlauf werden auf deinem Telefon gespeichert, nicht auf Meras Servern
 • Mera fragt nie nach deiner E-Mail-Adresse. Du meldest dich mit deinem Telefon an
 • Da Mera diese Daten nicht hat, kann Mera sie weder für KI-Training nutzen noch an Werbetreibende und Datenhändler verkaufen
-• Mera AI läuft verschlüsselt in der „Private Cloud“, sodass selbst Mera Labs nicht lesen kann, was Mera AI für dich liest
-• Prüfe in der App die Attestierung des Trusted Execution Environment, um zu sehen, dass der Schutz aktiv ist
+• Mera AI läuft verschlüsselt in der „Private Cloud“, so gebaut, dass Mera Labs nicht lesen kann, was Mera AI für dich liest
+• Prüfe in der App die Hardware-Attestierung der „Private Cloud“ und sieh die bestandenen Tests
 • Schütze die App mit einer optionalen PIN
 • Von KI geschriebene Gründe sind immer klar gekennzeichnet
 • Der Assistent gibt sich als KI zu erkennen, nicht als Person
