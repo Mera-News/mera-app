@@ -3053,7 +3053,9 @@
       "footnote": "Tap one to change it. \"Not preferred\" in an article's ••• menu lands here too.",
       "empty": "You haven't picked any sources yet. Search for a publication to prefer it or hide it from your feed. \"Not preferred\" in an article's ••• menu lands here too.",
       "countryCleared": "{{country}} is no longer preferred",
-      "saveError": "Couldn't save that. Try again."
+      "saveError": "Couldn't save that. Try again.",
+      "addedFromLink": "Added to your preferred sources",
+      "addFromLinkFailed": "Couldn't add that publication. Find it in Sources instead."
     },
     "settings": {
       "yourPlan": "Your plan",

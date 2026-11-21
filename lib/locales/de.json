@@ -3052,7 +3052,9 @@
       "footnote": "Tippe auf einen Eintrag, um ihn zu ändern. Auch „Nicht bevorzugt“ im •••-Menü eines Artikels landet hier.",
       "empty": "Du hast noch keine Quellen ausgewählt. Suche nach einer Veröffentlichung, um sie zu bevorzugen oder aus deinen Nachrichten auszublenden. Auch „Nicht bevorzugt“ im •••-Menü eines Artikels landet hier.",
       "countryCleared": "{{country}} ist nicht mehr bevorzugt",
-      "saveError": "Das konnte nicht gespeichert werden. Versuch es noch einmal."
+      "saveError": "Das konnte nicht gespeichert werden. Versuch es noch einmal.",
+      "addedFromLink": "Zu deinen bevorzugten Quellen hinzugefügt",
+      "addFromLinkFailed": "Diese Publikation konnte nicht hinzugefügt werden. Finde sie stattdessen unter „Quellen“."
     },
     "settings": {
       "yourPlan": "Dein Tarif",

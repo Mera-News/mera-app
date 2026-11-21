@@ -3031,7 +3031,9 @@
       "footnote": "Chạm vào một nguồn để thay đổi. \"Không hiển thị\" trong menu ••• của bài viết cũng hiển thị ở đây.",
       "empty": "Bạn chưa chọn nguồn nào. Tìm một nguồn để đặt là Ưu tiên hoặc ẩn khỏi Bảng tin. \"Không hiển thị\" trong menu ••• của bài viết cũng hiển thị ở đây.",
       "countryCleared": "{{country}} không còn được ưu tiên",
-      "saveError": "Không thể lưu. Hãy thử lại."
+      "saveError": "Không thể lưu. Hãy thử lại.",
+      "addedFromLink": "Đã thêm vào các nguồn ưu tiên của bạn",
+      "addFromLinkFailed": "Không thể thêm ấn phẩm đó. Hãy tìm nó trong Nguồn."
     },
     "settings": {
       "yourPlan": "Gói của bạn",

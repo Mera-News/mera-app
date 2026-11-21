@@ -3058,7 +3058,9 @@
       "footnote": "Toque em uma para mudar. \"Não preferida\" no menu ••• de um artigo também aparece aqui.",
       "empty": "Você ainda não escolheu fontes. Pesquise uma publicação para preferir ou ocultar do seu Feed. \"Não preferida\" no menu ••• de um artigo também aparece aqui.",
       "countryCleared": "{{country}} saiu das suas preferências",
-      "saveError": "Não foi possível salvar. Tente de novo."
+      "saveError": "Não foi possível salvar. Tente de novo.",
+      "addedFromLink": "Adicionada às suas fontes preferidas",
+      "addFromLinkFailed": "Não foi possível adicionar essa publicação. Encontre-a em Fontes."
     },
     "settings": {
       "yourPlan": "Seu plano",

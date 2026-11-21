@@ -3031,7 +3031,9 @@
       "footnote": "Ketuk salah satu untuk mengubahnya. \"Jangan tampilkan\" di menu ••• artikel juga muncul di sini.",
       "empty": "Anda belum memilih sumber apa pun. Cari publikasi untuk mengutamakannya atau menyembunyikannya dari umpan Anda. \"Jangan tampilkan\" di menu ••• artikel juga muncul di sini.",
       "countryCleared": "{{country}} tidak lagi diutamakan",
-      "saveError": "Tidak dapat menyimpan itu. Coba lagi."
+      "saveError": "Tidak dapat menyimpan itu. Coba lagi.",
+      "addedFromLink": "Ditambahkan ke sumber yang Anda utamakan",
+      "addFromLinkFailed": "Tidak dapat menambahkan publikasi itu. Cari di Sumber saja."
     },
     "settings": {
       "yourPlan": "Paket Anda",

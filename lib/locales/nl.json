@@ -3052,7 +3052,9 @@
       "footnote": "Tik op een item om het te wijzigen. \"Liever niet\" in het ••• menu van een artikel komt hier ook terecht.",
       "empty": "Je hebt nog geen bronnen gekozen. Zoek naar een publicatie om er een voorkeur aan te geven of haar uit je feed te verbergen. \"Liever niet\" in het ••• menu van een artikel komt hier ook terecht.",
       "countryCleared": "{{country}} staat niet meer bij je voorkeuren",
-      "saveError": "Dat kon niet worden opgeslagen. Probeer het opnieuw."
+      "saveError": "Dat kon niet worden opgeslagen. Probeer het opnieuw.",
+      "addedFromLink": "Toegevoegd aan uw voorkeursbronnen",
+      "addFromLinkFailed": "Die publicatie kon niet worden toegevoegd. Zoek haar in Bronnen."
     },
     "settings": {
       "yourPlan": "Jouw abonnement",

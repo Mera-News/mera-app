@@ -3054,7 +3054,9 @@
       "footnote": "Değiştirmek için birine dokunun. Bir makalenin ••• menüsündeki \"Tercih edilmeyen\" seçeneği de buraya eklenir.",
       "empty": "Henüz hiçbir kaynak seçmediniz. Bir yayını aratın ve tercih edin ya da Akışınızdan gizleyin. Bir makalenin ••• menüsündeki \"Tercih edilmeyen\" seçeneği de buraya eklenir.",
       "countryCleared": "{{country}} artık tercih edilen değil",
-      "saveError": "Bu kaydedilemedi. Lütfen tekrar deneyin."
+      "saveError": "Bu kaydedilemedi. Lütfen tekrar deneyin.",
+      "addedFromLink": "Tercih edilen kaynaklarınıza eklendi",
+      "addFromLinkFailed": "Bu yayın eklenemedi. Onu Kaynaklar'da bulun."
     },
     "settings": {
       "yourPlan": "Planınız",

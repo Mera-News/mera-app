@@ -1,0 +1,163 @@
+{
+  "_comment": "Add to Mera News link: the toast after a publisher link adds a preferred source.",
+  "ar": {
+    "you": {
+      "sources": {
+        "addedFromLink": "تمت الإضافة إلى مصادرك المفضلة",
+        "addFromLinkFailed": "تعذّرت إضافة هذه المنشورة. ابحث عنها في المصادر بدلًا من ذلك."
+      }
+    }
+  },
+  "de": {
+    "you": {
+      "sources": {
+        "addedFromLink": "Zu deinen bevorzugten Quellen hinzugefügt",
+        "addFromLinkFailed": "Diese Publikation konnte nicht hinzugefügt werden. Finde sie stattdessen unter „Quellen“."
+      }
+    }
+  },
+  "en": {
+    "you": {
+      "sources": {
+        "addedFromLink": "Added to your preferred sources",
+        "addFromLinkFailed": "Couldn't add that publication. Find it in Sources instead."
+      }
+    }
+  },
+  "es": {
+    "you": {
+      "sources": {
+        "addedFromLink": "Añadida a tus fuentes preferidas",
+        "addFromLinkFailed": "No se pudo añadir esa publicación. Búscala en Fuentes."
+      }
+    }
+  },
+  "fr": {
+    "you": {
+      "sources": {
+        "addedFromLink": "Ajoutée à vos sources préférées",
+        "addFromLinkFailed": "Impossible d'ajouter cette publication. Trouvez-la plutôt dans Sources."
+      }
+    }
+  },
+  "hi": {
+    "you": {
+      "sources": {
+        "addedFromLink": "आपके पसंदीदा स्रोतों में जोड़ दिया गया",
+        "addFromLinkFailed": "वह प्रकाशन जोड़ा नहीं जा सका। उसे स्रोत में खोजें।"
+      }
+    }
+  },
+  "id": {
+    "you": {
+      "sources": {
+        "addedFromLink": "Ditambahkan ke sumber yang Anda utamakan",
+        "addFromLinkFailed": "Tidak dapat menambahkan publikasi itu. Cari di Sumber saja."
+      }
+    }
+  },
+  "it": {
+    "you": {
+      "sources": {
+        "addedFromLink": "Aggiunta alle tue fonti preferite",
+        "addFromLinkFailed": "Non è stato possibile aggiungere quella pubblicazione. Trovala in Fonti."
+      }
+    }
+  },
+  "ja": {
+    "you": {
+      "sources": {
+        "addedFromLink": "優先ソースに追加しました",
+        "addFromLinkFailed": "その媒体を追加できませんでした。代わりに、ソースから探してください。"
+      }
+    }
+  },
+  "ko": {
+    "you": {
+      "sources": {
+        "addedFromLink": "선호 소스에 추가했어요",
+        "addFromLinkFailed": "그 매체를 추가하지 못했어요. 대신 소스에서 찾아보세요."
+      }
+    }
+  },
+  "nl": {
+    "you": {
+      "sources": {
+        "addedFromLink": "Toegevoegd aan uw voorkeursbronnen",
+        "addFromLinkFailed": "Die publicatie kon niet worden toegevoegd. Zoek haar in Bronnen."
+      }
+    }
+  },
+  "pl": {
+    "you": {
+      "sources": {
+        "addedFromLink": "Dodano do preferowanych źródeł",
+        "addFromLinkFailed": "Nie udało się dodać tej publikacji. Znajdź ją w Źródłach."
+      }
+    }
+  },
+  "pt-BR": {
+    "you": {
+      "sources": {
+        "addedFromLink": "Adicionada às suas fontes preferidas",
+        "addFromLinkFailed": "Não foi possível adicionar essa publicação. Encontre-a em Fontes."
+      }
+    }
+  },
+  "ru": {
+    "you": {
+      "sources": {
+        "addedFromLink": "Добавлено в приоритетные источники",
+        "addFromLinkFailed": "Не удалось добавить это издание. Найдите его в разделе «Источники»."
+      }
+    }
+  },
+  "th": {
+    "you": {
+      "sources": {
+        "addedFromLink": "เพิ่มในแหล่งข่าวโปรดของคุณแล้ว",
+        "addFromLinkFailed": "เพิ่มสำนักข่าวนั้นไม่ได้ ลองค้นหาในแหล่งข่าวแทน"
+      }
+    }
+  },
+  "tr": {
+    "you": {
+      "sources": {
+        "addedFromLink": "Tercih edilen kaynaklarınıza eklendi",
+        "addFromLinkFailed": "Bu yayın eklenemedi. Onu Kaynaklar'da bulun."
+      }
+    }
+  },
+  "uk": {
+    "you": {
+      "sources": {
+        "addedFromLink": "Додано до пріоритетних джерел",
+        "addFromLinkFailed": "Не вдалося додати це видання. Знайдіть його в розділі «Джерела»."
+      }
+    }
+  },
+  "vi": {
+    "you": {
+      "sources": {
+        "addedFromLink": "Đã thêm vào các nguồn ưu tiên của bạn",
+        "addFromLinkFailed": "Không thể thêm ấn phẩm đó. Hãy tìm nó trong Nguồn."
+      }
+    }
+  },
+  "zh-CN": {
+    "you": {
+      "sources": {
+        "addedFromLink": "已添加到你的优先来源",
+        "addFromLinkFailed": "无法添加这家出版物。请改为在来源中查找。"
+      }
+    }
+  },
+  "zh-TW": {
+    "you": {
+      "sources": {
+        "addedFromLink": "已新增到你的優先來源",
+        "addFromLinkFailed": "無法新增這家出版品。請改為在來源中尋找。"
+      }
+    }
+  }
+}

@@ -33,6 +33,7 @@ import {
 import {
     startEntitlementWarmup,
 } from "@/lib/subscription/onboarding-paywall";
+import { openPendingAddSource } from "@/components/custom/publication-page/add-source-from-link";
 import { router } from "expo-router";
 import { disableAutoReload, takeRestoreSpot } from "@/lib/app-restart";
 import { announceAppliedUpdate } from "@/lib/ota-notice";
@@ -58,6 +59,7 @@ function checkAccountAfterRoute(): void {
  * After the startup tab is in place: the gate is passed, so a notification tap
  * in this JS context may navigate directly from now on, and a tap that booted
  * (or reloaded) this process opens on top of the tab, so back returns there.
+ * A held "Add to Mera News" link opens after it, the same way.
  * The stash is keyed to the user, so it is consumed only past identity.
  */
 async function openPendingNotificationRoute(
@@ -67,6 +69,8 @@ async function openPendingNotificationRoute(
     markStartupGatePassed();
     const href = await consumePendingNotificationRoute(userId);
     if (href && !isCancelled()) router.push(href);
+    // An "Add to Mera News" link that opened or woke the app waits here too.
+    await openPendingAddSource(isCancelled);
 }
 
 /** The gate's cap on rebuilding the reader's spot; `restoreSpot` bounds itself under it. */

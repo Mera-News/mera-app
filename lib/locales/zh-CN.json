@@ -3031,7 +3031,9 @@
       "footnote": "点按一项即可更改。文章 ••• 菜单中的“不想看”也会出现在这里。",
       "empty": "你还没有选择任何来源。搜索媒体，即可将其设为优先，或在你的信息流中隐藏。文章 ••• 菜单中的“不想看”也会出现在这里。",
       "countryCleared": "{{country}} 已不再优先",
-      "saveError": "无法保存。请重试。"
+      "saveError": "无法保存。请重试。",
+      "addedFromLink": "已添加到你的优先来源",
+      "addFromLinkFailed": "无法添加这家出版物。请改为在来源中查找。"
     },
     "settings": {
       "yourPlan": "你的方案",

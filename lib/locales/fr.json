@@ -3064,7 +3064,9 @@
       "footnote": "Touchez-en une pour la modifier. « Non préférée » dans le menu ••• d'un article apparaît aussi ici.",
       "empty": "Vous n'avez encore choisi aucune source. Recherchez une publication à privilégier ou à masquer de votre fil d'actu. « Non préférée » dans le menu ••• d'un article apparaît aussi ici.",
       "countryCleared": "{{country}} ne fait plus partie de vos préférences",
-      "saveError": "Impossible d'enregistrer cela. Réessayez."
+      "saveError": "Impossible d'enregistrer cela. Réessayez.",
+      "addedFromLink": "Ajoutée à vos sources préférées",
+      "addFromLinkFailed": "Impossible d'ajouter cette publication. Trouvez-la plutôt dans Sources."
     },
     "settings": {
       "yourPlan": "Votre forfait",

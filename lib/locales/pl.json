@@ -3196,7 +3196,9 @@
       "footnote": "Dotknij wybranego, aby go zmienić. „Niepreferowany” z menu ••• przy artykule też trafia tutaj.",
       "empty": "Nie wybrano jeszcze żadnych źródeł. Wyszukaj wydawcę, aby go preferować albo ukryć w swoim Strumieniu. „Niepreferowany” z menu ••• przy artykule też trafia tutaj.",
       "countryCleared": "Cofnięto preferencję: {{country}}",
-      "saveError": "Nie udało się zapisać. Spróbuj ponownie."
+      "saveError": "Nie udało się zapisać. Spróbuj ponownie.",
+      "addedFromLink": "Dodano do preferowanych źródeł",
+      "addFromLinkFailed": "Nie udało się dodać tej publikacji. Znajdź ją w Źródłach."
     },
     "settings": {
       "yourPlan": "Twój plan",
