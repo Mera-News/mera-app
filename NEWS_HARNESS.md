@@ -226,8 +226,9 @@ Set `NEWS_HARNESS_TARGET` in `.env.harness`:
 - `local` (default): no auth; mera-server's GraphQL runs a dev-user bypass when
   `NODE_ENV !== 'production'`.
 - `staging` / `prod`: requires `NEWS_HARNESS_AUTH_ENDPOINT`,
-  `NEWS_HARNESS_TEST_ACCOUNT_TOKEN` and `NEWS_HARNESS_TEST_ACCOUNT_HANDLE`. A test
-  account is the only sign-in the harness has there: headless, no code to type.
+  `NEWS_HARNESS_TEST_ACCOUNT_TOKEN` and `NEWS_HARNESS_TEST_ACCOUNT_HANDLE`, or on
+  staging only `NEWS_HARNESS_DEV_BYPASS_TOKEN` (the device dev bypass). Both are
+  headless; there is no email-code sign-in.
   The session is cached per handle in
   `.local-test-data/.auth-cache.<target>.test-<handle>.json` for 20 hours.
 

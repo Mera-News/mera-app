@@ -2,16 +2,19 @@
 //
 // target 'local'  → mera-server's GraphQL service runs as a dev-user when
 //                    NODE_ENV !== 'production' (no auth headers needed).
-// target 'staging'/'prod' → a TEST account, the only way onto a non-local
-//                    target: NEWS_HARNESS_TEST_ACCOUNT_TOKEN and
-//                    NEWS_HARNESS_TEST_ACCOUNT_HANDLE (headless, both
-//                    environments). The session is cached per handle.
+// target 'staging'/'prod' → a TEST account when NEWS_HARNESS_TEST_ACCOUNT_TOKEN
+//                    and NEWS_HARNESS_TEST_ACCOUNT_HANDLE are set (headless,
+//                    both environments), else, on staging only, the device
+//                    dev bypass (NEWS_HARNESS_DEV_BYPASS_TOKEN). There is no
+//                    email-code sign-in.
 
+import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
 
 import type { HarnessEnv } from '../config/env';
 import { authCachePath } from '../config/local-data';
 
+const SESSION_MAX_AGE_MS = 6 * 24 * 60 * 60 * 1000; // 6 days
 /** Test-account sessions live 24h server side; reuse a cached one for less. */
 const TEST_SESSION_MAX_AGE_MS = 20 * 60 * 60 * 1000;
 
@@ -19,8 +22,9 @@ interface AuthCache {
   cookie?: string;
   bearer?: string;
   savedAt: string;
-  /** How the session was obtained; only test-account caches are reused. */
-  method?: 'test-account';
+  /** How the session was obtained, so a cache written by one path is not
+   *  silently reused by a run that asked for the other. */
+  method?: 'dev-bypass' | 'test-account';
   /** The test-account handle a 'test-account' cache belongs to. */
   handle?: string;
 }
@@ -87,6 +91,56 @@ async function signInWithTestAccount(
 }
 
 /**
+ * Headless staging sign-in: POST /device/sign-in/dev with the staging bypass
+ * token and a stable deviceId. The route exists ONLY where the auth service has
+ * DEVICE_ATTESTATION_DEV_BYPASS_TOKEN set and 404s everywhere else, so it is
+ * staging-only by construction, not by convention.
+ *
+ * It is headless, so an unattended staging run can use it.
+ *
+ * VERIFIED 2026-09-16 against auth.staging.mera.news: sign-in returned 200 with
+ * a session token, and GET /api/auth/token then returned a three-segment JWT.
+ * So a dev-bypass account is NOT refused a JWT, which is the fact the gateway
+ * lane depends on.
+ *
+ * The token must be the BARE value. A grep/sed that leaves a `key = "` prefix
+ * attached produces a 403 DEVICE_ATTESTATION_FAILED that looks exactly like a
+ * rotated secret.
+ */
+async function signInWithDevBypass(
+  authEndpoint: string,
+  token: string,
+  deviceId: string,
+): Promise<{ cookie?: string; bearer?: string }> {
+  const res = await fetch(`${authEndpoint}/api/auth/device/sign-in/dev`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, deviceId }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(
+      `harness-local: dev-bypass sign-in failed: ${res.status} ${res.statusText}. ` +
+        (res.status === 404
+          ? 'A 404 means this environment has no DEVICE_ATTESTATION_DEV_BYPASS_TOKEN set, so the route does not exist. Check you are pointed at staging.'
+          : `Check the token is the BARE value with no key = " prefix. Body: ${body.slice(0, 200)}`),
+    );
+  }
+  const cookie = extractSetCookie(res);
+  let bearer: string | undefined;
+  try {
+    const body = (await res.json()) as { token?: string; session?: { token?: string } };
+    bearer = body?.token ?? body?.session?.token;
+  } catch {
+    // A cookie alone is enough.
+  }
+  if (!cookie && !bearer) {
+    throw new Error('harness-local: dev-bypass sign-in returned neither a cookie nor a token.');
+  }
+  return { cookie, bearer };
+}
+
+/**
  * Mints a JWT from a session. The gateway wants this, not the session cookie
  * the GraphQL API accepts.
  */
@@ -120,7 +174,7 @@ function saveCache(cachePath: string, cache: AuthCache): void {
   fs.writeFileSync(cachePath, JSON.stringify(cache, null, 2) + '\n', 'utf-8');
 }
 
-function isCacheFresh(cache: AuthCache, maxAgeMs: number): boolean {
+function isCacheFresh(cache: AuthCache, maxAgeMs = SESSION_MAX_AGE_MS): boolean {
   const savedAt = Date.parse(cache.savedAt);
   if (Number.isNaN(savedAt)) return false;
   return Date.now() - savedAt < maxAgeMs;
@@ -146,24 +200,55 @@ export async function getAuthHeaders(env: HarnessEnv): Promise<Record<string, st
       'harness-local: NEWS_HARNESS_AUTH_ENDPOINT is required when NEWS_HARNESS_TARGET is staging/prod.',
     );
   }
-  // The only way onto a non-local target: headless, and it works on both
-  // staging and prod. Cached per handle in its own file.
+  // A test account first: headless, and the only path that works on BOTH
+  // staging and prod. Cached per handle in its own file, never over the bypass one.
   const testToken = process.env.NEWS_HARNESS_TEST_ACCOUNT_TOKEN?.trim();
   const testHandle = process.env.NEWS_HARNESS_TEST_ACCOUNT_HANDLE?.trim();
-  if (!testToken || !testHandle) {
+  if (testToken && testHandle) {
+    const testCachePath = authCachePath(env.target, testHandle);
+    const cachedTest = loadCache(testCachePath);
+    if (cachedTest && isCacheFresh(cachedTest, TEST_SESSION_MAX_AGE_MS) && cachedTest.method === 'test-account' && cachedTest.handle === testHandle) {
+      if (cachedTest.cookie) return { Cookie: cachedTest.cookie };
+      if (cachedTest.bearer) return { Authorization: `Bearer ${cachedTest.bearer}` };
+    }
+    const { cookie, bearer } = await signInWithTestAccount(env.authEndpoint, testToken, testHandle);
+    saveCache(testCachePath, { cookie, bearer, savedAt: new Date().toISOString(), method: 'test-account', handle: testHandle });
+    console.log(`harness-local: signed in to ${env.target} test account '${testHandle}'.`);
+    return cookie ? { Cookie: cookie } : { Authorization: `Bearer ${bearer}` };
+  }
+
+  // Resolved per call and per TARGET: a cached session belongs to exactly one
+  // environment, and a 6-day-fresh prod cookie replayed into a staging run is
+  // a silent wrong-environment read (see config/local-data.ts).
+  const cachePath = authCachePath(env.target);
+
+  // The staging dev bypass is the only other sign-in.
+  const bypassToken = process.env.NEWS_HARNESS_DEV_BYPASS_TOKEN?.trim();
+  if (env.target !== 'staging' || !bypassToken) {
     throw new Error(
-      'harness-local: NEWS_HARNESS_TEST_ACCOUNT_TOKEN and NEWS_HARNESS_TEST_ACCOUNT_HANDLE are required when ' +
-        'NEWS_HARNESS_TARGET is staging/prod. A test account is the only sign-in the harness supports there.',
+      'harness-local: set NEWS_HARNESS_TEST_ACCOUNT_TOKEN and NEWS_HARNESS_TEST_ACCOUNT_HANDLE ' +
+        '(staging or prod), or NEWS_HARNESS_DEV_BYPASS_TOKEN (staging only). There is no email-code sign-in.',
     );
   }
-  const testCachePath = authCachePath(env.target, testHandle);
-  const cachedTest = loadCache(testCachePath);
-  if (cachedTest && isCacheFresh(cachedTest, TEST_SESSION_MAX_AGE_MS) && cachedTest.method === 'test-account' && cachedTest.handle === testHandle) {
-    if (cachedTest.cookie) return { Cookie: cachedTest.cookie };
-    if (cachedTest.bearer) return { Authorization: `Bearer ${cachedTest.bearer}` };
+
+  const cached = loadCache(cachePath);
+  // A cache written another way is ignored rather than reused: it is a
+  // different account, and silently answering as the wrong one is the same
+  // class of mistake the per-target namespacing exists to prevent.
+  if (cached && isCacheFresh(cached) && cached.method === 'dev-bypass') {
+    if (cached.cookie) return { Cookie: cached.cookie };
+    if (cached.bearer) return { Authorization: `Bearer ${cached.bearer}` };
   }
-  const { cookie, bearer } = await signInWithTestAccount(env.authEndpoint, testToken, testHandle);
-  saveCache(testCachePath, { cookie, bearer, savedAt: new Date().toISOString(), method: 'test-account', handle: testHandle });
-  console.log(`harness-local: signed in to ${env.target} test account '${testHandle}'.`);
+
+  const deviceId =
+    process.env.NEWS_HARNESS_DEV_DEVICE_ID?.trim() || `harness-${randomUUID()}`;
+  const { cookie, bearer } = await signInWithDevBypass(
+    env.authEndpoint,
+    bypassToken as string,
+    deviceId,
+  );
+  saveCache(cachePath, { cookie, bearer, savedAt: new Date().toISOString(), method: 'dev-bypass' });
+  // eslint-disable-next-line no-console
+  console.log(`harness-local: signed in to staging via dev bypass (deviceId ${deviceId}).`);
   return cookie ? { Cookie: cookie } : { Authorization: `Bearer ${bearer}` };
 }

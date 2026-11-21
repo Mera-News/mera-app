@@ -151,8 +151,8 @@ Set `NEWS_HARNESS_TARGET` in `harness-local/.env.harness`:
   dev-user bypass whenever `NODE_ENV !== 'production'`.
 - `staging` / `prod` — requires `NEWS_HARNESS_AUTH_ENDPOINT`,
   `NEWS_HARNESS_TEST_ACCOUNT_TOKEN` and `NEWS_HARNESS_TEST_ACCOUNT_HANDLE`. A
-  test account is the only sign-in the harness has there. The session is cached
-  per handle for 20 hours, so runs stay non-interactive.
+  test account is the sign-in for both. On staging only, `NEWS_HARNESS_DEV_BYPASS_TOKEN`
+  signs in through the device dev bypass instead. There is no email-code sign-in.
 
 ## Daily-quota note
 
@@ -180,6 +180,7 @@ above).
 | `NEWS_HARNESS_INFERENCE_ENDPOINT` | no | E2EE gateway. Only the gateway lane needs it. |
 | `NEWS_HARNESS_TEST_ACCOUNT_TOKEN` | yes for staging/prod | The test-account token. Never printed. |
 | `NEWS_HARNESS_TEST_ACCOUNT_HANDLE` | yes for staging/prod | The test-account handle, `^[a-z0-9][a-z0-9-]{1,39}$`. |
+| `NEWS_HARNESS_DEV_BYPASS_TOKEN` | no | Staging only: the device dev-bypass token, used when no test account is set. Never printed. `NEWS_HARNESS_DEV_DEVICE_ID` pins its deviceId. |
 | `NEWS_HARNESS_MODEL` | no | Overrides the default cloud model. |
 | `NEWS_HARNESS_DEBUG` | no | Verbose logging. |
 
