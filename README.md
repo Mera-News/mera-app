@@ -170,10 +170,11 @@ Stated here rather than omitted:
 - **Source code cannot prove which code a server runs.** This is true of every service that publishes a
   backend: its guarantee has to come from the protocol, not from the server source.
 - **Some records have no time limit.** Deleting an account signs it out on every device at once and
-  removes its device keys and push token; after 30 days its profile settings, feedback, unblock
-  requests, daily usage, sessions and sign-in links are deleted. An anonymised stub of the account, the
-  billing record and the payment provider's raw billing event log are kept with no time limit. Other
-  periods: sessions 1 year, daily article counts 90 days, feedback 365 days, unblock-request
+  removes its device keys and push token, and nothing can cancel it; after 30 days its profile
+  settings, feedback, unblock requests, daily usage, sessions and sign-in links are deleted. An
+  anonymised stub of the account and the billing record are kept with no time limit. Other periods:
+  raw payment events from the billing provider 180 days, sessions 1 year, daily article counts 90
+  days, feedback 365 days, unblock-request
   transcripts 90 or 180 days, the email log 30 days, the push log 14 days (with no account id). On the
   phone, deletion wipes the database, stores, keychain and files; backups already in your own iCloud or
   Google Drive stay there.
