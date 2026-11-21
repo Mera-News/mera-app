@@ -31,7 +31,7 @@ Mera is built on **Expo SDK 54 / React Native 0.81** with **React 19**. Key laye
   ⚠️ **Not enforced, stated plainly:** freshness on normal calls (a nonce is used only on the Verify attestation screen), platform TCB currency and QE identity (that needs Intel PCS collateral the app does not fetch), enclave measurements against published values (none are published), and that the GPUs belong to the enclave. NVIDIA's signed GPU result is read only on the Verify attestation tap, and it does **not** show those GPUs are attached to the enclave. The check proves a genuine Intel TDX machine holds the key, not which software it runs, so do not describe this path as "hardware-proven". The Mera gateway only relays: it does not itself run in a TEE and refuses no request over attestation.
 
   **Not end-to-end encrypted:** web search and fact-check search. The query text goes to Mera's server over a normal secure connection.
-- **Better Auth** handles accounts. You sign in with the phone itself (App Attest on iOS, Play Integrity on Android). There is no email, password, Apple or Google sign-in: each account is anonymous, with a placeholder address the server makes up. The server refuses to create an account with, or add, a real address; an email-code sign-in still exists only for accounts that held an address from before. On Android the server stores only a keyed hash of the device id. Session tokens are kept in expo-secure-store. Google sign-in is used only to connect Google Drive for backups.
+- **Better Auth** handles accounts. You sign in with the phone itself (App Attest on iOS, Play Integrity on Android). There is no email, password, Apple or Google sign-in: each account is anonymous, with a placeholder address the server makes up. The server refuses to create an account with, or add, a real address, and Mera holds no email addresses. On Android the server stores only a keyed hash of the device id. Session tokens are kept in expo-secure-store. Google sign-in is used only to connect Google Drive for backups.
 - **Configurable backend**: all three service endpoints are set via environment variables, so the app can be pointed at any backend satisfying the contracts below. Note the caveat in [Backend Requirements](#backend-requirements-byo-backend): the auth and GraphQL endpoints need a Mera Labs deployment or your own implementation, because those services are private.
 - **`mera-inference-gateway`**: the E2EE inference relay, published as [`mera-inference-gateway`](https://github.com/Mera-News/mera-inference-gateway), source-available under PolyForm Shield 1.0.0.
 
@@ -162,9 +162,11 @@ Stated here rather than omitted:
 - **Attestation proves the key, not the software.** The quote check blocks, but freshness on normal
   calls, TCB currency, enclave measurements and GPU binding are not enforced (see Architecture
   Overview).
-- **No reproducible builds or signed release hashes.** You can read this source; you cannot yet prove
-  the binary on your phone, or the code on Mera's servers, was built from it. No signed image,
-  published digest or deployed commit exists yet.
+- **No reproducible builds.** [RELEASES.md](RELEASES.md) lists each over-the-air update with its
+  commit and the SHA-256 of its bundles, so you can check that your phone runs what Mera published.
+  The build is not reproducible, so that cannot prove the bundle was built from the commit, and the
+  store binary has no published hash. Mera's servers publish no signed image, digest or deployed
+  commit yet.
 - **Source code cannot prove which code a server runs.** This is true of every service that publishes a
   backend: its guarantee has to come from the protocol, not from the server source.
 - **Some records have no time limit.** Deleting an account signs it out on every device at once and
