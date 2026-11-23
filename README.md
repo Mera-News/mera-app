@@ -8,7 +8,7 @@
 
 ## What is Mera?
 
-Mera is a personalized news app for iOS and Android. It scores article relevance with an LLM that runs **either fully on-device** (Qwen3.5 4B via llama.rn) **or in a confidential cloud TEE**, with the inference path chosen per the user's settings. Both paths uphold the **Mera Protocol**: your profile and reading history stay on the device, and inference is only ever performed locally or inside an encrypted environment. News is fetched and personalized in real time against the Mera backend.
+Mera is a personalized news app for iOS and Android. It scores article relevance with an LLM that runs **either fully on-device or in a confidential cloud TEE**, with the inference path chosen per the user's settings. Both paths uphold the **Mera Protocol**: your profile and reading history stay on the device, and inference is only ever performed locally or inside an encrypted environment. News is fetched and personalized in real time against the Mera backend.
 
 This repository is **source-available, not open source**, published under the [Mera Source-Available License](LICENSE.md), which grants the right to read, compile, and run the software for study, security review, and evaluation, and does not grant production or commercial use. Copyright © 2025-2026 Mera Labs B.V. (KVK 42077437).
 
@@ -16,11 +16,11 @@ This repository is **source-available, not open source**, published under the [M
 
 ## Architecture Overview
 
-Mera is built on **Expo SDK 54 / React Native 0.81** with **React 19**. Key layers:
+Mera is built on **Expo SDK 58 / React Native 0.88** with **React 19**. Key layers:
 
 - **Apollo Client** (GraphQL, no-cache policy) fetches article suggestion IDs and content from a NestJS backend.
 - **WatermelonDB** caches article suggestions locally for offline scoring and diffing.
-- **Inference (on-device or confidential cloud)**: Relevance scoring, topic generation, and personalization reasons are produced by an LLM running either on-device (llama.rn running Qwen3.5 4B) or in a cloud TEE. The user chooses the path; the on-device path needs no network call.
+- **Inference (on-device or confidential cloud)**: Relevance scoring, topic generation, and personalization reasons are produced by an LLM running either on-device or in a cloud TEE. The user chooses the path; the on-device path needs no network call.
 - **Mera Protocol**: personal data stays on the device, and inference is performed only locally or inside an encrypted environment. What leaves the device for news is the real topic phrases. They travel with your session, because the server checks your plan and counts the day's reading, so the server sees your account and your topics together while it answers. No stored record links an account to a topic. There is no decoy or padding layer, so nothing hides the topic list from Mera's server.
 - **E2EE cloud inference (TEE)**: when the cloud path is used, payloads are end-to-end encrypted (XChaCha20-Poly1305 + X25519 ECDH) to a NEAR AI Cloud v2 gateway, so inference runs inside a trusted execution environment the operator cannot inspect. The client fetches the enclave's attestation report from `/api/attestation/report` and encrypts to the signing key it publishes.
 
