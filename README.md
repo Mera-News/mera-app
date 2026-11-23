@@ -125,7 +125,7 @@ The AI logic that builds the personalized feed (topic generation, relevance scor
 ## What is public and what is private
 
 Publishing the client shows what the app *sends*. The news side of the backend is public too, so you
-can also read how news is fetched, clustered and served. The parts that know who you are stay private.
+can also read how news is fetched and served. The parts that know who you are stay private.
 
 **Public, source-available under PolyForm Shield 1.0.0** (free to self-host, not open source):
 
@@ -133,7 +133,6 @@ can also read how news is fetched, clustered and served. The parts that know who
 |---|---|
 | [`mera-news-client`](https://github.com/Mera-News/mera-news-client) | The app's non-UI logic: database, stores, scheduler, scoring, chat, encryption |
 | [`mera-news-data-server`](https://github.com/Mera-News/mera-news-data-server) | The news server: ingest worker and news API |
-| [`mera-news-clustering`](https://github.com/Mera-News/mera-news-clustering) | Story clustering |
 | [`mera-news-pod`](https://github.com/Mera-News/mera-news-pod) and [`mera-news-pod-plugins`](https://github.com/Mera-News/mera-news-pod-plugins) | A self-hosted host that runs the client for one person |
 | [`mera-inference-gateway`](https://github.com/Mera-News/mera-inference-gateway) | The encrypted inference relay |
 
