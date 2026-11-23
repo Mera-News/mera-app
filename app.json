@@ -22,6 +22,9 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.mera.news",
       "appleTeamId": "Q8RA98G9S9",
+      "associatedDomains": [
+        "applinks:mera.news"
+      ],
       "icon": "./assets/icons/ios-dark.png",
       "entitlements": {
         "com.apple.developer.kernel.increased-memory-limit": true
@@ -99,6 +102,23 @@
     },
     "android": {
       "package": "com.mera.news",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "mera.news",
+              "pathPrefix": "/add/"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/adaptive-icon.png",
         "backgroundColor": "#ffffff"

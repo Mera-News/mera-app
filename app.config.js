@@ -114,6 +114,8 @@ module.exports = ({ config }) => {
   // before JS runs, so both are switched off in config rather than in code.
   const e2eAndroid = { ...result.android, package: 'com.mera.news.e2e' };
   delete e2eAndroid.googleServicesFile;
+  // The e2e APK is another package: it must not claim mera.news/add links (App Links).
+  delete e2eAndroid.intentFilters;
   return {
     ...result,
     scheme: 'meraapp-e2e',
