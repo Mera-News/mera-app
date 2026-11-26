@@ -1,8 +1,10 @@
 // The Feed's age label for a story kept past 24h (D7): nothing under a day, then
 // "From yesterday", the weekday for 2-5 local days back, a short date from 6.
 // Local CALENDAR days, not hours: a story 40h old at 9am is from two days ago.
+// Subscribes to the label, never the raw clock (see lib/time-tick.ts).
 
 import { toEpochMs, type TimeAgoInput } from '@/lib/algorithms/time-ago';
+import { useTimeTickValue } from '@/lib/time-tick';
 import type { TFunction } from 'i18next';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -25,9 +27,16 @@ export function feedAgeLabel(pubDate: TimeAgoInput, now: number, locale: string 
   return t('feed.age.fromDate', { date: at.toLocaleDateString(locale, { month: 'short', day: 'numeric' }) });
 }
 
+export function useFeedAgeLabel(pubDate: TimeAgoInput): string | null {
+  const { t, i18n } = useTranslation();
+  const locale = i18n?.language;
+  return useTimeTickValue((now) => feedAgeLabel(pubDate, now, locale, t));
+}
+
 /** Decided once at mount, never re-derived: the large card draws the label as
  *  its own line, so one crossing 24h mid-session would push every row below
- *  it (invariant 5). */
+ *  it (invariant 5). The compact row draws it inside its meta row and takes
+ *  the live label. */
 export function useFrozenFeedAgeLabel(pubDate: TimeAgoInput): string | null {
   const { t, i18n } = useTranslation();
   const [label] = useState(() => feedAgeLabel(pubDate, Date.now(), i18n?.language, t));

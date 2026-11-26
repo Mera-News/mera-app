@@ -43,8 +43,9 @@
 // and turns into a label over the first Low row. Before the session's first
 // run finishes the footer is a quiet reading line and Low stays hidden. Once
 // the fold is within a screen, new picks are HELD (the closed pin) and the
-// fold or end card says so above its Refresh button. Every row is the full
-// card. The empty states are the counts card plus the shortcuts (FeedShortcuts).
+// fold or end card says so above its Refresh button. High and Emergency keep
+// the large card; Medium and Low are compact rows (D10). The empty states are
+// the counts card plus the shortcuts (FeedShortcuts).
 //
 // The unviewed/viewed input to that sort is a SNAPSHOT, so a card never sinks
 // under the reader mid-session. Together with the pinned prefix it refreshes at
@@ -95,7 +96,8 @@ import { useAppLanguage } from '@/lib/stores/app-language-store';
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
 import FeedShortcuts from '@/components/custom/feed/FeedShortcuts';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
-import { useFrozenFeedAgeLabel } from './feed-age-label';
+import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
+import { useFeedAgeLabel, useFrozenFeedAgeLabel } from './feed-age-label';
 import { resolveFeedRowDisplay } from '@/components/custom/feed/feed-row-display';
 import FeedSkeleton from '@/components/custom/feed/FeedSkeleton';
 import { arrivedAtOf, isNewCard, type FeedEntry } from './feed-entries';
@@ -155,6 +157,7 @@ const ARRIVAL_ENTERING = (delay: number) =>
 const FeedRow = React.memo(function FeedRow({
   item,
   divider,
+  compact,
   noteHeldLine,
   notReadLine,
   suggestion,
@@ -174,6 +177,8 @@ const FeedRow = React.memo(function FeedRow({
    *  (Show: All only), or the fold label over the first folded one. Never a
    *  row of its own, so every row stays a story. */
   divider?: React.ReactNode;
+  /** Medium and Low: the compact row (D10), frozen per session. */
+  compact: boolean;
   /** The held note line, resolved once by the list while the reading hold
    *  is set; undefined otherwise (a pending note shows the writing state). */
   noteHeldLine: string | undefined;
@@ -216,8 +221,9 @@ const FeedRow = React.memo(function FeedRow({
   const hasCardState = useFeedOrderStore((s) => !!s.cardStates[item.id]);
   const seen = openedExactly || hasCardState;
   const isNew = newSince !== null && isNewCard(arrivedAtOf(suggestion), seen, newSince);
-  // No relative age on this screen; a story kept past a day says so (D7). The
-  // label is its own line: frozen, so it never pushes rows down.
+  // No relative age on this screen; a story kept past a day says so (D7).
+  const ageLabel = useFeedAgeLabel(suggestion.firstPubDate ?? suggestion.createdAt);
+  // The large card's label is its own line: frozen, so it never pushes rows down.
   const largeAgeLabel = useFrozenFeedAgeLabel(suggestion.firstPubDate ?? suggestion.createdAt);
   return (
     // The wrapper is UNCONDITIONAL and only `entering` varies, so the tree
@@ -231,6 +237,22 @@ const FeedRow = React.memo(function FeedRow({
       }
     >
     {divider ?? null}
+    {compact ? (
+      // Tap opens the article; no inline actions, no halo, the ••• menu stays
+      // (D18 Q6), and the verdict goes through the Feed's handlers.
+      <ArticleSuggestionCompactCard
+        suggestion={suggestion}
+        onPress={onPress}
+        surface="for_you"
+        read={seen}
+        similarCount={similarCount ?? undefined}
+        similarVariant="reports"
+        feedbackHandlers={feedbackHandlers}
+        verdict={verdict}
+        showRecency={false}
+        ageLabel={ageLabel}
+      />
+    ) : (
     <ArticleSuggestionCard
       suggestion={suggestion}
       noteHeldLine={noteHeldLine}
@@ -257,6 +279,7 @@ const FeedRow = React.memo(function FeedRow({
       halo={isNew}
       flat
     />
+    )}
     </Animated.View>
   );
 });
@@ -368,6 +391,9 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
       <FeedRow
         item={item}
         divider={divider}
+        // Picks lead the rows; the not-read tail after them keeps the large
+        // card and its not-read line.
+        compact={display.compact && index < picksCount}
         noteHeldLine={noteHeldLine}
         notReadLine={notReadLine}
         suggestion={display.suggestion}

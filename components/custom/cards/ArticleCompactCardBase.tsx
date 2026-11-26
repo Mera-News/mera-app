@@ -169,6 +169,11 @@ interface ArticleCompactCardBaseProps {
    *  the existing row, full width (under the image too), right-aligned. The
    *  row never changes the image arithmetic above. Absent/0: no row. */
   similarCount?: number;
+  /** `reports`: the Feed's "N more reports" wording, shown whatever the global gate says. */
+  similarVariant?: 'similar' | 'reports';
+  /** false (the Feed): no relative age; `ageLabel` alone may show for a story kept past 24h. Default true. */
+  showRecency?: boolean;
+  ageLabel?: string | null;
   /** A row inside a grouped list (the Sectioned view's preview): no plate,
    *  margin, radius or root Pressable, just the same content and inner padding
    *  in a plain View. The caller draws the container and owns any press. */
@@ -201,11 +206,17 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   statusLabel,
   timeLabel,
   similarCount: similarCountProp,
+  similarVariant = 'similar',
+  showRecency = true,
+  ageLabel,
   grouped = false,
 }) => {
   const { t } = useTranslation();
   // The similar-articles line is off (owner) until it says something the order does not.
-  const similarCount = SIMILAR_ARTICLES_LINE_ENABLED ? similarCountProp : undefined;
+  const reports = similarVariant === 'reports';
+  const similarCount = SIMILAR_ARTICLES_LINE_ENABLED || reports ? similarCountProp : undefined;
+  // What the row shows and what VoiceOver reads for age is one string.
+  const shownAge = timeLabel ?? (showRecency ? null : (ageLabel ?? null));
   const colors = useColors();
   const moreLabel = t('articleMenu.openA11y');
   const displayTitle = titleEnglish || titleOriginal || '';
@@ -221,11 +232,11 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
     shownTitle ?? displayTitle,
     titleFailed ? t('feed.translationFailed') : null,
     meta.publication,
-    timeLabel ?? meta.age,
+    timeLabel ?? (showRecency ? meta.age : ageLabel),
     spokenPriority,
     meta.language,
     statusLabel,
-    similarCount != null && similarCount >= 1 ? t('feed.similarArticles', { count: similarCount }) : null,
+    similarCount != null && similarCount >= 1 ? t(reports ? 'feed.moreReports' : 'feed.similarArticles', { count: similarCount }) : null,
   ]);
   const blurImages = useBlurImagesStore((s) => s.blurImages);
   // The same line count the image is sized against — see COMPACT_IMAGE_SIZE.
@@ -287,8 +298,8 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                 countryCode={countryCode}
                 showFlag
                 centerAccessory={priorityAccessory}
-                showRecency
-                ageText={timeLabel ?? null}
+                showRecency={showRecency || shownAge != null}
+                ageText={shownAge}
               />
             </Box>
             {metaAccessory}
@@ -442,9 +453,9 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
               </Box>
             ) : null}
           </Box>
-          {similarCount != null && similarCount >= 1 ? (
+          {similarCount != null && (similarCount >= 1 || reports) ? (
             <Box style={{ marginTop: 8 }}>
-              <SimilarArticlesRow count={similarCount} />
+              <SimilarArticlesRow count={similarCount} variant={similarVariant} />
             </Box>
           ) : null}
         </Box>
