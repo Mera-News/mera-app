@@ -1,6 +1,7 @@
 // The Sectioned view, fact feed and fact page build their read snapshot from the persisted card
 // state (D21): an unread High at 3 days stays in the window, a viewed one does not.
 import { act, renderHook } from '@testing-library/react-native';
+import { resetFeedViewPrefs, setFeedAlgo } from '@/components/custom/feed/feed-view-prefs';
 import { useReadSnapshot } from '@/components/custom/feed/use-read-snapshot';
 import { setSetting } from '@/lib/database/services/setting-service';
 import { FEED_CARD_STATE_SETTING_KEY } from '@/lib/stores/feed-order-store';
@@ -20,13 +21,28 @@ const high = (id: string): ForYouSuggestion =>
     firstPubDate: new Date(NOW - 3 * DAY).toISOString(),
   }) as unknown as ForYouSuggestion;
 
-it('keeps an unread High at 3d and drops a viewed one, from the persisted card state', async () => {
+beforeEach(() => resetFeedViewPrefs());
+
+async function windowOf(rows: ForYouSuggestion[], ageDays = 3) {
   await setSetting(FEED_CARD_STATE_SETTING_KEY, JSON.stringify({ states: { viewed: ['v', 1], skipped: ['s', 1] } }));
-  const rows = [high('viewed'), high('skipped'), high('fresh')];
   const { result } = await renderHook(() => useReadSnapshot(rows, []));
   await act(async () => {});
-  const snap = result.current;
-  expect(snap).toBeDefined();
-  const cut = NOW - 2 * DAY;
-  expect(rows.map((r) => isWithinWindow(r, cut, snap))).toEqual([false, true, true]);
+  expect(result.current).toBeDefined();
+  // `high` publishes 3 days before NOW; shift the cut so the row is `ageDays` old.
+  const cut = NOW - 2 * DAY - (ageDays - 3) * DAY;
+  return rows.map((r) => isWithinWindow(r, cut, result.current));
+}
+
+it('keeps an unread High at 3d and drops a viewed and a scrolled-past one, from the persisted card state', async () => {
+  expect(await windowOf([high('viewed'), high('skipped'), high('fresh')])).toEqual([false, false, true]);
+});
+
+it('with scrolled past not counted as read, a skipped High stays', async () => {
+  setFeedAlgo({ skippedIsRead: false });
+  expect(await windowOf([high('viewed'), high('skipped'), high('fresh')])).toEqual([false, true, true]);
+});
+
+it('a shorter keep drops an unread High at 3d', async () => {
+  setFeedAlgo({ keepDays: 2 });
+  expect(await windowOf([high('fresh')])).toEqual([false]);
 });

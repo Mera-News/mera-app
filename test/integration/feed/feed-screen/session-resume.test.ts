@@ -1,6 +1,7 @@
 // Returning to the app: a short absence changes nothing, a long one (SESSION_RESUME_AFTER_MS = 5 min
 // of BACKGROUND) starts a new reading session. Time is a strict fake clock moved with
 // `jest.setSystemTime`, so the 5-minute boundary is exact.
+import { setFeedAlgo } from '@/components/custom/feed/feed-view-prefs';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { setAppState } from '@/test/helpers';
 import {
@@ -74,7 +75,17 @@ describe('background then active', () => {
     useStrictClock();
     await awayFor(awayMs);
 
-    // r7 (viewed) sinks to tier 1; HIGH leads; the old pin no longer holds r1..r6 in place.
+    // HIGH leads; the old pin no longer holds r1..r6 in place; r7 (viewed) goes behind the fold.
+    await waitFor(() => expect(feed.ids()).toEqual(['newH', 'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r8']));
+  });
+
+  it('with seen stories kept in the main list, the viewed row sinks after the unviewed ones', async () => {
+    setFeedAlgo({ seenBelowFold: false });
+    const feed = await readerMidFeed();
+
+    useStrictClock();
+    await awayFor(FIVE_MIN);
+
     await waitFor(() =>
       expect(feed.ids()).toEqual(['newH', 'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r8', 'r7']),
     );

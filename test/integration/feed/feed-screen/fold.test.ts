@@ -3,7 +3,13 @@
 // viewability pairs.
 import { AccessibilityInfo } from 'react-native';
 import { FEED_SYNC_TASK } from '@/components/custom/FeedSyncIndicator';
-import { resetFeedViewPrefs, setFeedMinimap, setFeedShow, useFeedShowCountsStore } from '@/components/custom/feed/feed-view-prefs';
+import {
+  resetFeedViewPrefs,
+  setFeedAlgo,
+  setFeedMinimap,
+  setFeedShow,
+  useFeedShowCountsStore,
+} from '@/components/custom/feed/feed-view-prefs';
 import { loadSuggestions } from '@/lib/database/services/article-suggestion-reads';
 import { batchMarkScoreFailed } from '@/lib/database/services/article-suggestion-scoring-writes';
 import { upsertLocation } from '@/lib/database/services/location-service';
@@ -132,6 +138,48 @@ describe('the fold line', () => {
 
     await act(() => feed.result.current.onShowThem());
     expect(feed.ids()).toEqual(['h', 'm', 'pm', 'l', 'pl']);
+  });
+});
+
+describe('seen stories behind the fold (the Feed algorithm default)', () => {
+  /** Mount, view `seen`, and start a new session so the snapshot sees it. */
+  async function mountSeen(rows: readonly (readonly [string, number])[], seen: string) {
+    await signInFixtureAccount();
+    const feed = await mountWith(rows);
+    await act(() => useFeedOrderStore.getState().markViewed(seen));
+    await act(() => feed.result.current.onRefresh());
+    await finishRun();
+    await waitFor(() => expect(fold(feed).terminal).toBe('fold'));
+    return feed;
+  }
+
+  it('only seen rows behind it: the fold counts them as seen; expanded, the seen label takes the fold slot', async () => {
+    const feed = await mountSeen([['h1', HIGH], ['h2', HIGH]], 'h2');
+    expect(feed.ids()).toEqual(['h1']);
+    expect(fold(feed)).toMatchObject({ count: 1, seenCount: 1 });
+
+    await act(() => feed.result.current.onShowThem());
+
+    expect(feed.ids()).toEqual(['h1', 'h2']);
+    expect(fold(feed)).toMatchObject({ index: 1, seenIndex: 1 });
+  });
+
+  it('mixed: unseen Low first, then the seen rows under their own label', async () => {
+    const feed = await mountSeen([['h1', HIGH], ['h2', HIGH], ['l', LOW]], 'h2');
+    expect(feed.ids()).toEqual(['h1']);
+    expect(fold(feed)).toMatchObject({ count: 2, seenCount: 1 });
+
+    await act(() => feed.result.current.onShowThem());
+
+    expect(feed.ids()).toEqual(['h1', 'l', 'h2']);
+    expect(fold(feed)).toMatchObject({ index: 1, seenIndex: 2 });
+  });
+
+  it('with seen stories kept in the main list, a seen High stays above the fold', async () => {
+    setFeedAlgo({ seenBelowFold: false });
+    const feed = await mountSeen([['h1', HIGH], ['h2', HIGH], ['l', LOW]], 'h2');
+    expect(feed.ids()).toEqual(['h1', 'h2']);
+    expect(fold(feed)).toMatchObject({ count: 1, seenCount: 0 });
   });
 });
 

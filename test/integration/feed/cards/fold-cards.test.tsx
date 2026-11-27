@@ -62,6 +62,22 @@ describe('AllCaughtUpCard fold variants', () => {
     expect(getByText('Nothing new looks important for you right now.')).toBeTruthy();
     expect(getByText('Mera found 1 story that might still interest you.')).toBeTruthy();
   });
+  it('fold with only seen stories behind it says they were seen', async () => {
+    const { getByText } = await render(<AllCaughtUpCard variant="fold" count={3} seenCount={3} onShowThem={() => {}} />);
+    expect(getByText("You're up to date on what matters to you.")).toBeTruthy();
+    expect(getByText('3 more stories are ones you already saw.')).toBeTruthy();
+  });
+  it('fold with seen and unseen stories behind it says both', async () => {
+    const { getByText } = await render(<AllCaughtUpCard variant="fold" count={1} seenCount={1} nothingAbove onShowThem={() => {}} />);
+    expect(getByText('1 more story is one you already saw.')).toBeTruthy();
+    const mixed = await render(<AllCaughtUpCard variant="fold" count={4} seenCount={1} onShowThem={() => {}} />);
+    expect(mixed.getByText('4 more stories are ones you already saw or are less likely to matter to you.')).toBeTruthy();
+  });
+  it('seen label: its own header text', async () => {
+    const { getByTestId } = await render(<AllCaughtUpCard variant="label" seen />);
+    expect(getByTestId('fold-seen-label').props.children).toBe('Stories you already saw');
+    expect(getByTestId('fold-seen-label').props.accessibilityRole).toBe('header');
+  });
   it('fold shows the held line with Refresh only when picks were held', async () => {
     const quiet = await render(<AllCaughtUpCard variant="fold" count={3} onShowThem={() => {}} onRefresh={() => {}} />);
     expect(quiet.queryByTestId('fold-held-line')).toBeNull();

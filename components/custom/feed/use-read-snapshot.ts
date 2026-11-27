@@ -6,7 +6,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { getSetting } from '@/lib/database/services/setting-service';
+import { readOptionsOf } from '@/lib/feed-ordering/feed-algo';
 import { buildReadSnapshot, parseCardState, type ReadSnapshot } from '@/lib/feed-ordering/read-snapshot';
+import { useFeedAlgo } from './feed-view-prefs';
 import { FEED_CARD_STATE_SETTING_KEY, useFeedOrderStore, type CardStateRecord } from '@/lib/stores/feed-order-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 
@@ -28,8 +30,10 @@ export function useReadSnapshot(
       live = false;
     };
   }, [cardStates]);
+  // The reader's keep and "scrolled past is read" (Settings > Feed algorithm).
+  const algo = useFeedAlgo();
   return useMemo(
-    () => (cardStates ? buildReadSnapshot(cardStates, openedIds, suggestions) : undefined),
-    [cardStates, openedIds, suggestions],
+    () => (cardStates ? buildReadSnapshot(cardStates, openedIds, suggestions, readOptionsOf(algo)) : undefined),
+    [cardStates, openedIds, suggestions, algo],
   );
 }

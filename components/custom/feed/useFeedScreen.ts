@@ -13,6 +13,7 @@ import {
   type FoldObservation,
 } from './fold-readiness';
 import { buildReadSnapshot } from '@/lib/feed-ordering/read-snapshot';
+import { readOptionsOf } from '@/lib/feed-ordering/feed-algo';
 import { observeAll as observeLocations } from '@/lib/database/services/location-service';
 import { useNetworkStore } from '@/lib/stores/network-store';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
@@ -48,6 +49,7 @@ import {
 import {
   FEED_SHOW_LABEL_KEY,
   setFeedShowCounts,
+  useFeedAlgo,
   useFeedMinimap,
   useFeedShow,
   useFeedShowCountsStore,
@@ -205,6 +207,10 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // both stores have loaded: built before, every viewed High would read unread.
   const orderHydrated = useFeedOrderStore((s) => s.hydrated);
   const openedHydrated = useOpenedStoriesStore((s) => s.hydrated);
+  // The reader's Feed algorithm (Settings > Feed algorithm): the keep and
+  // "scrolled past is read" go into the read snapshot, the fold and sink
+  // choices into the layout. A change starts a new session (below).
+  const algo = useFeedAlgo();
   const allCandidates = useMemo(
     () =>
       buildFeedList(suggestions, EMPTY_SET, Date.now(), userGeoLanguageCtx, {
@@ -215,10 +221,11 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
           useFeedOrderStore.getState().cardStates,
           useOpenedStoriesStore.getState().ids,
           suggestions,
+          readOptionsOf(algo),
         ),
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [suggestions, userGeoLanguageCtx, orderHydrated, openedHydrated],
+    [suggestions, userGeoLanguageCtx, orderHydrated, openedHydrated, algo],
   );
   const allCandidatesRef = useRef(allCandidates);
   allCandidatesRef.current = allCandidates;
@@ -288,11 +295,16 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   // on every re-sort). The pin extends over the rendered above-fold picks
   // only, so a not-read or folded card can never be pinned above a pick.
   const layoutRef = useRef<FeedLayout | null>(null);
+  // Whether that layout was built from a SEEDED partition snapshot. On a cold
+  // launch the ingest effect runs in the same flush as the seed, against a
+  // layout built from the empty snapshot (every row unseen): pinning from it
+  // froze last session's seen rows on top for the whole first session.
+  const layoutSeededRef = useRef(false);
   /** `extendPin` against the last layout. */
   const extendPinFromLayout = useCallback(
     (prev: FeedPin, deepestSeenId: string | null, floor: number): FeedPin => {
       const l = layoutRef.current;
-      if (!l) return prev;
+      if (!l || !layoutSeededRef.current) return prev;
       return extendPin(prev, l.above, deepestSeenId, floor, l.renderedAfterPicks, l.below.map((it) => it.id));
     },
     [],
@@ -415,13 +427,16 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
      *  wall-clock crossed a bucket edge — the same drift `FeedListItem.score` is
      *  frozen at build time to avoid. */
     at: number;
-  }>(() => ({ cardStates: {}, openedArticleIds: new Set(), at: Date.now() }));
+    /** False until both stores hydrated and the snapshot was taken from them. */
+    seeded: boolean;
+  }>(() => ({ cardStates: {}, openedArticleIds: new Set(), at: Date.now(), seeded: false }));
 
   const refreshPartitionSnapshot = useCallback(() => {
     setPartitionSnapshot({
       cardStates: useFeedOrderStore.getState().cardStates,
       openedArticleIds: useOpenedStoriesStore.getState().articleIds,
       at: Date.now(),
+      seeded: true,
     });
   }, []);
 
@@ -634,10 +649,12 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
         show,
         discarded: discardedShown,
         ready: foldReadiness.ready,
+        algo,
       }),
-    [data, partitionSnapshot, pin, liveById, userGeoLanguageCtx, folded, show, discardedShown, foldReadiness.ready],
+    [data, partitionSnapshot, pin, liveById, userGeoLanguageCtx, folded, show, discardedShown, foldReadiness.ready, algo],
   );
   layoutRef.current = layout;
+  layoutSeededRef.current = partitionSnapshot.seeded;
   const { rows: listData, picks: picksCount } = layout;
   // Every scored story this session holds, folded or not (held picks aside).
   const scoredRows = useMemo(() => [...layout.above, ...layout.below], [layout]);
@@ -972,6 +989,16 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     resetSession(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [show, resetSession]);
+  // A Feed algorithm change is a new session too: the list re-sorts under the
+  // new rules and returns to the top, like a Show switch (no announcement).
+  const lastAlgoRef = useRef(algo);
+  useEffect(() => {
+    if (lastAlgoRef.current === algo) return;
+    lastAlgoRef.current = algo;
+    seenRowIdsRef.current = null;
+    pendingScrollResetRef.current = true;
+    resetSession(false);
+  }, [algo, resetSession]);
   useEffect(() => {
     const switchedUnder = pendingShowAnnounceRef.current;
     if (!switchedUnder || switchedUnder === partitionSnapshot) return;
@@ -1084,8 +1111,13 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   const fold = useMemo(
     () => ({
       terminal: layout.terminal,
-      /** Folded stories (Low rows only, never the not-read tail). */
+      /** Folded stories (Low rows, and seen rows under the Feed algorithm's
+       *  default; never the not-read tail). */
       count: layout.below.length,
+      /** How many of them the reader already saw. */
+      seenCount: layout.belowSeen,
+      /** The row whose divider slot carries the seen label (expanded). */
+      seenIndex: layout.seenIndex,
       nothingAbove: layout.above.length === 0,
       /** Picks the closed pin holds until the next session. */
       held: layout.heldCount,

@@ -39,6 +39,11 @@ interface AllCaughtUpCardProps {
     readonly variant?: 'fold' | 'label' | 'end' | 'reading';
     /** fold: stories below the line (Low story rows only, never the not-read tail). */
     readonly count?: number;
+    /** fold: how many of `count` the reader already saw (Feed algorithm:
+     *  seen stories go behind the fold). Picks the seen or mixed body. */
+    readonly seenCount?: number;
+    /** label: the seen stories' label, drawn over the first seen folded row. */
+    readonly seen?: boolean;
     /** fold: nothing reached Medium, so the title says so. */
     readonly nothingAbove?: boolean;
     readonly onShowThem?: () => void;
@@ -55,6 +60,8 @@ const AllCaughtUpCardBody: React.FC<AllCaughtUpCardProps> = ({
     action,
     variant,
     count = 0,
+    seenCount = 0,
+    seen = false,
     nothingAbove = false,
     onShowThem,
     held = false,
@@ -84,13 +91,13 @@ const AllCaughtUpCardBody: React.FC<AllCaughtUpCardProps> = ({
         return (
             <Box testID={testID} className="px-4 pt-2 pb-3">
                 <Text
-                    testID="fold-label"
+                    testID={seen ? 'fold-seen-label' : 'fold-label'}
                     accessible
                     accessibilityRole="header"
                     size="sm"
                     className="text-ink-3 font-semibold"
                 >
-                    {t('feed.fold.label')}
+                    {t(seen ? 'feed.fold.seenLabel' : 'feed.fold.label')}
                 </Text>
             </Box>
         );
@@ -113,7 +120,16 @@ const AllCaughtUpCardBody: React.FC<AllCaughtUpCardProps> = ({
           ? t('feed.fold.endTitle')
           : (title ?? t('feed.allCaughtUp'));
     const lead = isFold
-        ? t(nothingAbove ? 'feed.fold.nothingBody' : 'feed.fold.upToDateBody', { count })
+        ? t(
+              seenCount > 0 && seenCount >= count
+                  ? 'feed.fold.seenBody'
+                  : seenCount > 0
+                    ? 'feed.fold.mixedBody'
+                    : nothingAbove
+                      ? 'feed.fold.nothingBody'
+                      : 'feed.fold.upToDateBody',
+              { count },
+          )
         : isEnd
           ? t('feed.fold.endBody')
           : null;

@@ -108,6 +108,7 @@ async function seedEverySetting(): Promise<void> {
   await setSetting('mera_button_corner', 'tl');
   await setSetting('feed_view', 'sectioned');
   await setSetting('feed_minimap', 'true');
+  await setSetting('feed_algo', JSON.stringify({ seenBelowFold: false, keepDays: 3 }));
   await setSetting('backup_cadence', 'daily');
   await setSetting('backup_provider', 'icloud');
   await setSetting('backup_wifi_only', '0');
@@ -144,7 +145,12 @@ describe('hydrateAllStores: seeded settings come back', () => {
     expect(knownSourceNamesForPublisher('pub-1')).toEqual(['bbc news', 'bbc']);
     expect(usePageOrderStore.getState()).toMatchObject({ stored: ['country:DE', 'world'], hydrated: true });
     expect(useMeraCornerStore.getState()).toMatchObject({ corner: 'tl', hydrated: true });
-    expect(useFeedViewPrefs.getState()).toMatchObject({ view: 'sectioned', minimap: true });
+    expect(useFeedViewPrefs.getState()).toMatchObject({
+      view: 'sectioned',
+      minimap: true,
+      // A partial row: the stored fields, every other one at its default.
+      algo: { skippedIsRead: true, keepDays: 3, mediumStaysAbove: true, seenBelowFold: false, highSinks: false },
+    });
     expect(backupCadence()).toBe('daily');
     expect(backupProviderId()).toBe('icloud');
     expect(backupWifiOnly()).toBe(false);

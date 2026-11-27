@@ -178,11 +178,18 @@ describe('clearAllStores: module mirrors', () => {
     await setSetting('feed_view', 'sectioned');
     await setSetting('feed_minimap', 'true');
     await setSetting('feed_show', 'picks');
+    const algo = { skippedIsRead: false, keepDays: 2, mediumStaysAbove: false, seenBelowFold: false, highSinks: true };
+    await setSetting('feed_algo', JSON.stringify(algo));
     await loadFeedViewPrefs();
-    expect(useFeedViewPrefs.getState()).toEqual({ view: 'sectioned', minimap: true, show: 'picks' });
+    expect(useFeedViewPrefs.getState()).toEqual({ view: 'sectioned', minimap: true, show: 'picks', algo });
 
     await clearAllStores();
-    expect(useFeedViewPrefs.getState()).toEqual({ view: 'continuous', minimap: false, show: 'all' });
+    expect(useFeedViewPrefs.getState()).toEqual({
+      view: 'continuous',
+      minimap: false,
+      show: 'all',
+      algo: { skippedIsRead: true, keepDays: 7, mediumStaysAbove: true, seenBelowFold: true, highSinks: false },
+    });
 
     await setSetting('feed_view', 'sectioned');
     await loadFeedViewPrefs();

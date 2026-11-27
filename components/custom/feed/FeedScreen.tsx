@@ -384,6 +384,9 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
           action={notReadDividerAction}
           testID="feed-not-read-divider"
         />
+      ) : index === fold.seenIndex ? (
+        // Only seen rows behind the fold: the seen label alone, in the fold's slot.
+        <AllCaughtUpCard variant="label" seen testID="feed-fold-seen-label" />
       ) : index === fold.index ? (
         <AllCaughtUpCard variant="label" testID="feed-fold-label" />
       ) : undefined;
@@ -414,7 +417,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
       />
       );
     },
-    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion, registerRow, liveById, newSince, rowSessionRef, arrivingIdsRef, show, picksCount, notReadDivider, notReadDividerBody, notReadDividerAction, notReadDividerOn, noteHeldLine, notReadLine, fold.index, fold.shown],
+    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion, registerRow, liveById, newSince, rowSessionRef, arrivingIdsRef, show, picksCount, notReadDivider, notReadDividerBody, notReadDividerAction, notReadDividerOn, noteHeldLine, notReadLine, fold.index, fold.seenIndex, fold.shown],
   );
 
   const keyExtractor = useCallback((item: FeedEntry) => item.id, []);
@@ -435,6 +438,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
           <AllCaughtUpCard
             variant={fold.terminal}
             count={fold.count}
+            seenCount={fold.seenCount}
             nothingAbove={fold.nothingAbove}
             onShowThem={onShowThem}
             held={fold.held > 0}
@@ -444,7 +448,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
           />
         </Box>
       ) : null,
-    [listData.length, fold.terminal, fold.count, fold.nothingAbove, fold.held, onShowThem, onRefresh, refreshing],
+    [listData.length, fold.terminal, fold.count, fold.seenCount, fold.nothingAbove, fold.held, onShowThem, onRefresh, refreshing],
   );
 
 

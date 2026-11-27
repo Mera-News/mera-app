@@ -4,6 +4,7 @@
 import { renderHookInScreen } from '@/test/helpers';
 import { act, waitFor } from '@testing-library/react-native';
 import { useFeedScreen } from '@/components/custom/feed/useFeedScreen';
+import { resetFeedViewPrefs } from '@/components/custom/feed/feed-view-prefs';
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
 import { loadSuggestions } from '@/lib/database/services/article-suggestion-reads';
 import { saveScoringResult } from '@/lib/database/services/article-suggestion-scoring-writes';
@@ -77,10 +78,11 @@ export async function hydrateSuggestions(): Promise<void> {
   await useForYouStore.getState().hydrateSuggestionsFromDb();
 }
 
-/** Every store the hook reads, back to a blank, un-hydrated slate. `feed-order-store.reset()` also
+/** Every store the hook reads, back to a blank, un-hydrated slate (the Feed algorithm too). `feed-order-store.reset()` also
  *  cancels a pending card-state persist timer (module state); it leaves `hydrated: true`, which
  *  the explicit setState undoes. */
 export async function resetFeedStores(): Promise<void> {
+  resetFeedViewPrefs();
   useFeedOrderStore.getState().reset();
   useFeedOrderStore.setState({ hydrated: false });
   resetForYouStore();

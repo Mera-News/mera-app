@@ -5,6 +5,9 @@
 //                 (Continuous only). 'unread' and 'discarded' are never
 //                 written: they last until the next cold launch, which opens
 //                 on All (owner, R7).
+//   feed_algo     JSON FeedAlgoPrefs           Settings > Feed algorithm
+//                 (parsed per field by the client's parseFeedAlgo; its DB
+//                 sweep reads the same row itself).
 //
 // None is a counter (invariant 9). All are backed up with the other
 // preferences. `loadFeedViewPrefs` is awaited by the startup gate beside the
@@ -13,6 +16,12 @@
 // takes the rows, not this memory.
 
 import type { FeedShow, FeedShowCount } from '@/components/custom/feed/not-read-tail';
+import {
+  FEED_ALGO_DEFAULTS,
+  FEED_ALGO_SETTING_KEY,
+  parseFeedAlgo,
+  type FeedAlgoPrefs,
+} from '@/lib/feed-ordering/feed-algo';
 import logger from '@/lib/logger';
 import { create } from 'zustand';
 
@@ -27,9 +36,10 @@ interface FeedViewPrefsState {
   view: FeedView;
   minimap: boolean;
   show: FeedShow;
+  algo: FeedAlgoPrefs;
 }
 
-const DEFAULTS: FeedViewPrefsState = { view: 'continuous', minimap: false, show: 'all' };
+const DEFAULTS: FeedViewPrefsState = { view: 'continuous', minimap: false, show: 'all', algo: FEED_ALGO_DEFAULTS };
 
 /** Each Show option's name. */
 export const FEED_SHOW_LABEL_KEY = {
@@ -44,6 +54,7 @@ export const useFeedViewPrefs = create<FeedViewPrefsState>()(() => DEFAULTS);
 export const useFeedView = (): FeedView => useFeedViewPrefs((s) => s.view);
 export const useFeedMinimap = (): boolean => useFeedViewPrefs((s) => s.minimap);
 export const useFeedShow = (): FeedShow => useFeedViewPrefs((s) => s.show);
+export const useFeedAlgo = (): FeedAlgoPrefs => useFeedViewPrefs((s) => s.algo);
 
 /** Each Show option's card count, published by the mounted Continuous list
  *  for the View chip's menu (null while it is not mounted). `discarded` is
@@ -91,16 +102,18 @@ export function loadFeedViewPrefs(): Promise<void> {
   loadPromise = (async () => {
     try {
       const { getSetting } = settings();
-      const [view, minimap, show] = await Promise.all([
+      const [view, minimap, show, algo] = await Promise.all([
         getSetting(FEED_VIEW_SETTING_KEY),
         getSetting(FEED_MINIMAP_SETTING_KEY),
         getSetting(FEED_SHOW_SETTING_KEY),
+        getSetting(FEED_ALGO_SETTING_KEY),
       ]);
       if (started !== generation) return;
       useFeedViewPrefs.setState({
         view: parseFeedView(view),
         minimap: minimap === 'true',
         show: parseFeedShow(show),
+        algo: parseFeedAlgo(algo),
       });
     } catch (err) {
       logger.captureException(err, { tags: { module: 'feed-view-prefs', method: 'load' } });
@@ -131,6 +144,13 @@ export function setFeedShow(show: FeedShow): void {
 export function setFeedMinimap(on: boolean): void {
   useFeedViewPrefs.setState({ minimap: on });
   write(FEED_MINIMAP_SETTING_KEY, on ? 'true' : 'false');
+}
+
+/** Settings > Feed algorithm: merge one or more choices and write the whole row. */
+export function setFeedAlgo(patch: Partial<FeedAlgoPrefs>): void {
+  const algo = { ...useFeedViewPrefs.getState().algo, ...patch };
+  useFeedViewPrefs.setState({ algo });
+  write(FEED_ALGO_SETTING_KEY, JSON.stringify(algo));
 }
 
 /** The fact page's last "Go to Feed": the Feed page, sectioned view. */

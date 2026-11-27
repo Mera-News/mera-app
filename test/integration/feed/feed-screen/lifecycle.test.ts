@@ -1,6 +1,7 @@
 // The Feed's Continuous view: useFeedScreen driven under renderHook with the real stores, the
 // in-memory DB and MSW. Seams: insert-only ingest, the pinned prefix, the partition snapshot,
 // pending-note ordering, blur, and the empty-state chain flags.
+import { setFeedAlgo } from '@/components/custom/feed/feed-view-prefs';
 import { addFact } from '@/lib/database/services/fact-service';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { useForYouStore } from '@/lib/stores/for-you-store';
@@ -124,8 +125,26 @@ describe('partition snapshot', () => {
     expect(feed.ids()).toEqual(before);
   });
 
-  it('pull-to-refresh re-freezes it: viewed cards sink below the unviewed ones', async () => {
+  it('pull-to-refresh re-freezes it: viewed cards go behind the fold', async () => {
     await signInFixtureAccount();
+    const feed = await mountWith(EIGHT);
+    const before = feed.ids();
+    const pinnedRow = before[0];
+    const dynamicRow = before[6];
+
+    await act(() => {
+      useFeedOrderStore.getState().markViewed(pinnedRow);
+      useFeedOrderStore.getState().markViewed(dynamicRow);
+    });
+    await act(() => feed.result.current.onRefresh());
+
+    const unviewed = before.filter((id) => id !== pinnedRow && id !== dynamicRow);
+    await waitFor(() => expect(feed.ids()).toEqual(unviewed));
+  });
+
+  it('with seen stories kept in the main list, a refresh sinks viewed cards below the unviewed ones', async () => {
+    await signInFixtureAccount();
+    setFeedAlgo({ seenBelowFold: false });
     const feed = await mountWith(EIGHT);
     const before = feed.ids();
     const pinnedRow = before[0];
@@ -140,6 +159,25 @@ describe('partition snapshot', () => {
     // Unviewed in their old relative order, then the two viewed ones (tier 1) in theirs.
     const unviewed = before.filter((id) => id !== pinnedRow && id !== dynamicRow);
     await waitFor(() => expect(feed.ids()).toEqual([...unviewed, pinnedRow, dynamicRow]));
+  });
+});
+
+describe('a Feed algorithm change', () => {
+  it('starts a new session at the top: the snapshot re-freezes and the list scrolls to 0', async () => {
+    const feed = await mountWith(EIGHT);
+    const before = feed.ids();
+    await act(() => useFeedOrderStore.getState().markViewed(before[0]));
+    await act(async () => {});
+    expect(feed.ids()).toEqual(before);
+    const scrollToOffset = jest.fn();
+    (feed.result.current.listRef as { current: unknown }).current = { scrollToOffset };
+
+    await act(() => setFeedAlgo({ highSinks: true }));
+    await act(() => new Promise((r) => requestAnimationFrame(() => r(null))));
+
+    // The viewed row went behind the fold under the re-frozen snapshot.
+    expect(feed.ids()).toEqual(before.slice(1));
+    expect(scrollToOffset).toHaveBeenCalledWith({ offset: 0, animated: false });
   });
 });
 
