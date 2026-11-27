@@ -111,7 +111,9 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
       titleKey: 'sources.topHeadlines',
       // 'world.explainer.window' (the time switch) is out while WorldPages' window chip is
       // commented out; put it back with the chip.
-      paragraphKeys: ['world.explainer.justMath', 'world.explainer.mathWorld'],
+      // One paragraph for World and every country page: the shown publication and the order
+      // depend on the reader's language and the reading score, so no formula is spelled out.
+      paragraphKeys: ['world.explainer.justMath'],
       chapter: 'explore',
       sourcesLink: true,
     },
@@ -134,17 +136,8 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
   },
 };
 
-/** A country page: World's shape, its own explainer. */
-const COUNTRY_PAGE_META: PageMeta = {
-  ...PAGE_META.world,
-  explainer: {
-    titleKey: 'sources.topHeadlines',
-    // 'world.explainer.window' returns with the window chip (see PAGE_META.world).
-    paragraphKeys: ['world.explainer.justMath', 'world.explainer.mathCountry'],
-    chapter: 'explore',
-    sourcesLink: true,
-  },
-};
+/** A country page: World's shape and World's explainer. */
+const COUNTRY_PAGE_META: PageMeta = PAGE_META.world;
 
 /** Tab-bar labels (also the cross-tab edge label). */
 export const TAB_LABEL_KEYS: Readonly<Record<TabId, I18nKey>> = {

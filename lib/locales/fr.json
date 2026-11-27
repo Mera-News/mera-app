@@ -2123,7 +2123,7 @@
         "slides": {
           "unscored-on-purpose": {
             "headline": "Délibérément pas à votre sujet",
-            "body": "Monde est le seul endroit où Mera ne personnalise rien. Pas de notation, pas de raisons, rien n'est appris de ce que vous ouvrez ici. Seulement ce que les rédactions de chaque pays mettent en avant, dans leur ordre.",
+            "body": "Monde est le seul endroit où Mera n'utilise pas vos centres d'intérêt. Rien ici n'est noté pour vous, il n'y a pas de raisons, et rien n'est appris de ce que vous ouvrez ici. Seulement ce que les rédactions de chaque pays mettent en avant. La publication affichée pour chaque actualité, et l'ordre, dépendent de votre langue et du score de lecture.",
             "ask": "Pourquoi Monde n'est-il pas personnalisé ?"
           },
           "the-chips": {
@@ -2868,7 +2868,10 @@
     "notPreferHint": "Masque ses articles de votre fil d'actu",
     "includedWith": "Incluse avec {{country}}",
     "includedWithA11y": "Préférée, incluse avec {{country}}",
-    "includedWithHelp": "Incluse avec {{country}}. Pour changer cela, retirez {{country}} dans Sources."
+    "includedWithHelp": "Incluse avec {{country}}. Pour changer cela, retirez {{country}} dans Sources.",
+    "readingScore": "Score de lecture sur téléphone {{score}}/100",
+    "readingScoreA11y": "Score de lecture sur téléphone {{score}} sur 100",
+    "readingScoreHint": "Ouvre le rapport sur mera.news, en anglais."
   },
   "nav": {
     "page": {
@@ -2935,9 +2938,7 @@
     },
     "explainer": {
       "window": "Le sélecteur de temps définit la profondeur de la page : 6, 12, 24 ou 48 heures. Chaque liste ne compte que les articles publiés dans cette fenêtre.",
-      "justMath": "Juste des calculs. Aucune IA ne classe cette page, et elle est la même pour tout le monde.",
-      "mathWorld": "Chaque pays qui couvre un sujet lui donne 1 point, plus un peu pour chaque autre éditeur présent dans ce pays, jusqu'à 4 points par pays. On additionne les points de tous les pays, et le total le plus élevé arrive en premier.",
-      "mathCountry": "On compte les articles que les éditeurs de ce pays ont écrits sur un sujet au cours des dernières 24 heures. Le sujet qui en a le plus arrive en premier."
+      "justMath": "Juste du calcul. Aucune IA ne classe cette page. Chaque lecteur voit les mêmes actualités. La publication affichée pour chaque actualité, et l'ordre, dépendent de votre langue et du score de lecture. Tous les autres reportages se trouvent sous « Articles connexes »."
     },
     "homeRow": "Vous voulez des actualités de l'endroit où vous vivez ?"
   },

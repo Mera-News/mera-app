@@ -2091,7 +2091,7 @@
         "slides": {
           "unscored-on-purpose": {
             "headline": "Cố ý không về bạn",
-            "body": "Thế giới là nơi duy nhất Mera không cá nhân hóa gì cả. Không chấm điểm, không đưa lý do, không học gì từ những gì bạn mở ở đây. Chỉ là những tin mà tòa soạn của mỗi quốc gia đang đặt lên hàng đầu, theo đúng thứ tự của họ.",
+            "body": "Thế giới là nơi duy nhất Mera không dùng sở thích của bạn. Không có gì ở đây được chấm điểm cho bạn, không có lý do nào, và không học gì từ những gì bạn mở ở đây. Chỉ là những tin mà tòa soạn mỗi quốc gia đang đặt lên hàng đầu. Tờ báo hiển thị cho mỗi tin, và thứ tự, phụ thuộc vào ngôn ngữ của bạn và điểm đọc trên điện thoại.",
             "ask": "Vì sao Thế giới không được cá nhân hóa?"
           },
           "the-chips": {
@@ -2836,7 +2836,10 @@
     "notPreferHint": "Ẩn các bài viết từ nguồn này khỏi Bảng tin của bạn",
     "includedWith": "Đã bao gồm trong {{country}}",
     "includedWithA11y": "Ưu tiên, đã bao gồm trong {{country}}",
-    "includedWithHelp": "Đã bao gồm trong {{country}}. Để thay đổi, hãy xóa {{country}} trong Nguồn."
+    "includedWithHelp": "Đã bao gồm trong {{country}}. Để thay đổi, hãy xóa {{country}} trong Nguồn.",
+    "readingScore": "Điểm đọc trên điện thoại {{score}}/100",
+    "readingScoreA11y": "Điểm đọc trên điện thoại {{score}} trên 100",
+    "readingScoreHint": "Mở báo cáo trên mera.news, bằng tiếng Anh."
   },
   "nav": {
     "page": {
@@ -2902,9 +2905,7 @@
     },
     "explainer": {
       "window": "Công tắc thời gian quyết định trang này nhìn lại bao xa: 6, 12, 24 hoặc 48 giờ. Mỗi danh sách chỉ đếm các bài được đăng trong khoảng thời gian đó.",
-      "justMath": "Chỉ là phép đếm. Không có AI nào xếp hạng trang này, và trang trông giống nhau với mọi người.",
-      "mathWorld": "Mỗi quốc gia đưa tin về một câu chuyện được 1 điểm, cộng thêm một chút cho mỗi báo khác ở quốc gia đó, tối đa 4 điểm cho mỗi quốc gia. Cộng tất cả các quốc gia lại, tổng điểm cao nhất sẽ đứng đầu.",
-      "mathCountry": "Đếm số bài mà các báo của quốc gia này viết về một câu chuyện trong 24 giờ qua. Câu chuyện có nhiều bài nhất sẽ đứng đầu."
+      "justMath": "Chỉ là phép tính. Không có AI nào xếp hạng trang này. Mọi người đều thấy cùng những tin tức. Tờ báo hiển thị cho mỗi tin, và thứ tự, phụ thuộc vào ngôn ngữ của bạn và điểm đọc trên điện thoại. Mọi bài báo khác nằm trong mục “Đưa tin liên quan”."
     },
     "homeRow": "Muốn xem tin tức từ nơi bạn sống không?"
   },

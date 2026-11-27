@@ -2111,7 +2111,7 @@
         "slides": {
           "unscored-on-purpose": {
             "headline": "Absichtlich nicht über dir",
-            "body": "Welt ist der eine Ort, an dem Mera nichts personalisiert. Keine Bewertung, keine Begründungen, nichts wird aus dem gelernt, was du hier öffnest. Nur das, womit die Redaktionen jedes Landes aufmachen, in ihrer Reihenfolge.",
+            "body": "Welt ist der eine Ort, an dem Mera deine Interessen nicht nutzt. Hier wird nichts für dich bewertet, es gibt keine Begründungen, und aus dem, was du hier öffnest, wird nichts gelernt. Nur das, womit die Redaktionen jedes Landes aufmachen. Welcher Herausgeber pro Geschichte angezeigt wird und die Reihenfolge hängen von deiner Sprache und dem Telefon-Lesewert ab.",
             "ask": "Warum ist Welt nicht personalisiert?"
           },
           "the-chips": {
@@ -2856,7 +2856,10 @@
     "notPreferHint": "Blendet ihre Artikel aus deinen Nachrichten aus",
     "includedWith": "Mit {{country}} enthalten",
     "includedWithA11y": "Bevorzugt, mit {{country}} enthalten",
-    "includedWithHelp": "Mit {{country}} enthalten. Um das zu ändern, entferne {{country}} unter Quellen."
+    "includedWithHelp": "Mit {{country}} enthalten. Um das zu ändern, entferne {{country}} unter Quellen.",
+    "readingScore": "Telefon-Lesewert {{score}}/100",
+    "readingScoreA11y": "Telefon-Lesewert {{score}} von 100",
+    "readingScoreHint": "Öffnet den Bericht auf mera.news, auf Englisch."
   },
   "nav": {
     "page": {
@@ -2923,9 +2926,7 @@
     },
     "explainer": {
       "window": "Der Zeitschalter legt fest, wie weit die Seite zurückschaut: 6, 12, 24 oder 48 Stunden. Jede Liste zählt nur Artikel, die innerhalb dieses Zeitraums erschienen sind.",
-      "justMath": "Nur Mathematik. Keine KI sortiert diese Seite, und sie sieht für alle gleich aus.",
-      "mathWorld": "Jedes Land, das über eine Geschichte berichtet, gibt ihr 1 Punkt, dazu ein bisschen mehr für jeden weiteren Verlag dort, maximal 4 Punkte pro Land. Alle Länder werden zusammengezählt, und die höchste Summe steht ganz oben.",
-      "mathCountry": "Gezählt werden die Artikel, die Verlage dieses Landes in den letzten 24 Stunden über eine Geschichte geschrieben haben. Die Geschichte mit den meisten Artikeln steht ganz oben."
+      "justMath": "Reine Mathematik. Keine KI sortiert diese Seite. Alle sehen dieselben Geschichten. Welcher Herausgeber pro Geschichte angezeigt wird und die Reihenfolge hängen von deiner Sprache und dem Telefon-Lesewert ab. Alle anderen Berichte findest du unter „Ähnliche Berichte“."
     },
     "homeRow": "Möchtest du Nachrichten aus deiner Gegend?"
   },

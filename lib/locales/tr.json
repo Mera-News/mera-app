@@ -2113,7 +2113,7 @@
         "slides": {
           "unscored-on-purpose": {
             "headline": "Kasıtlı olarak seninle ilgili değil",
-            "body": "Dünya, Mera'nın hiçbir şeyi kişiselleştirmediği tek yerdir. Puanlama yok, neden yok, burada açtıklarınızdan hiçbir şey öğrenilmez. Sadece her ülkenin haber merkezlerinin öne çıkardıkları, kendi sıralarıyla.",
+            "body": "Dünya, Mera'nın ilgi alanlarınızı kullanmadığı tek yerdir. Burada sizin için hiçbir şey puanlanmaz, hiçbir neden yazılmaz ve burada açtıklarınızdan hiçbir şey öğrenilmez. Sadece her ülkenin haber merkezlerinin öne çıkardıkları. Her hikâye için gösterilen yayın ve sıralama, dilinize ve yayının okuma puanına bağlıdır.",
             "ask": "Dünya neden kişiselleştirilmiyor?"
           },
           "the-chips": {
@@ -2858,7 +2858,10 @@
     "notPreferHint": "Makalelerini Akışınızdan gizler",
     "includedWith": "{{country}} ile birlikte dahil",
     "includedWithA11y": "Tercih edilen, {{country}} ile birlikte dahil",
-    "includedWithHelp": "Bu yayın {{country}} ile birlikte dahil edilir. Bunu değiştirmek için Kaynaklar bölümünden {{country}} ülkesini kaldırın."
+    "includedWithHelp": "Bu yayın {{country}} ile birlikte dahil edilir. Bunu değiştirmek için Kaynaklar bölümünden {{country}} ülkesini kaldırın.",
+    "readingScore": "Telefonda okuma puanı {{score}}/100",
+    "readingScoreA11y": "Telefonda okuma puanı {{score}}, 100 üzerinden",
+    "readingScoreHint": "Dokununca yayının raporu mera.news üzerinde, İngilizce olarak açılır."
   },
   "nav": {
     "page": {
@@ -2925,9 +2928,7 @@
     },
     "explainer": {
       "window": "Zaman anahtarı sayfanın ne kadar geriye baktığını belirler: 6, 12, 24 ya da 48 saat. Her liste yalnızca o aralıkta yayımlanan makaleleri sayar.",
-      "justMath": "Sadece matematik. Bu sayfayı hiçbir yapay zeka sıralamaz ve herkes için aynı görünür.",
-      "mathWorld": "Bir haberi ele alan her ülke habere 1 puan verir. O ülkedeki her ek yayıncı için biraz daha eklenir, ama her ülke en fazla 4 puanla sınırlıdır. Tüm ülkeler toplanır ve en yüksek toplam en üstte yer alır.",
-      "mathCountry": "Bu ülkenin yayıncılarının son 24 saatte bir habere dair yazdığı makaleleri sayın. En çok makalesi olan haber en üstte yer alır."
+      "justMath": "Sadece hesaplama. Bu sayfayı hiçbir yapay zeka sıralamaz. Herkes aynı haberleri görür. Her hikâye için gösterilen yayın ve sıralama, dilinize ve yayının okuma puanına bağlıdır. Aynı haberin diğer tüm yazıları “İlgili haberler” altında listelenir."
     },
     "homeRow": "Yaşadığın yerden haber almak ister misin?"
   },

@@ -2203,7 +2203,7 @@
         "slides": {
           "unscored-on-purpose": {
             "headline": "Celowo nie o Tobie",
-            "body": "Świat to jedyne miejsce, w którym Mera niczego nie personalizuje. Bez punktacji, bez powodów, nic nie uczy się z tego, co tu otwierasz. Tylko to, od czego redakcje każdego kraju zaczynają, w ich kolejności.",
+            "body": "Świat to jedyne miejsce, w którym Mera nie korzysta z Twoich zainteresowań. Nic tutaj nie jest oceniane pod Ciebie, nie ma tu powodów, a z tego, co tu otwierasz, nic się nie uczy. Tylko to, od czego zaczynają redakcje każdego kraju. Wydawca pokazany przy każdej historii oraz kolejność historii zależą od Twojego języka i wyniku czytelności na telefonie.",
             "ask": "Dlaczego Świat nie jest spersonalizowany?"
           },
           "the-chips": {
@@ -2968,7 +2968,10 @@
     "notPreferHint": "Ukrywa jego artykuły w twoim Strumieniu",
     "includedWith": "Razem z krajem: {{country}}",
     "includedWithA11y": "Preferowany, razem z krajem: {{country}}",
-    "includedWithHelp": "Razem z krajem: {{country}}. Aby to zmienić, usuń kraj w Źródłach: {{country}}."
+    "includedWithHelp": "Razem z krajem: {{country}}. Aby to zmienić, usuń kraj w Źródłach: {{country}}.",
+    "readingScore": "Wynik czytelności na telefonie {{score}}/100",
+    "readingScoreA11y": "Wynik czytelności na telefonie {{score}} na 100",
+    "readingScoreHint": "Otwiera raport na mera.news, po angielsku."
   },
   "nav": {
     "page": {
@@ -3037,9 +3040,7 @@
     },
     "explainer": {
       "window": "Przełącznik czasu ustawia, jak daleko wstecz patrzy strona: 6, 12, 24 lub 48 godzin. Każda lista liczy tylko artykuły opublikowane w tym oknie.",
-      "justMath": "Tylko matematyka. Żadna AI nie układa tej strony, a dla każdego wygląda tak samo.",
-      "mathWorld": "Każdy kraj, w którym pojawia się dana historia, daje jej 1 punkt, plus trochę więcej za każdego kolejnego wydawcę w tym kraju, najwyżej 4 punkty na kraj. Sumujemy punkty ze wszystkich krajów, a najwyższy wynik jest na górze.",
-      "mathCountry": "Liczymy artykuły, które wydawcy z tego kraju napisali o danej historii w ciągu ostatnich 24 godzin. Historia z największą liczbą artykułów jest na górze."
+      "justMath": "Po prostu matematyka. Żadna AI nie układa tej strony. Wszyscy widzą te same historie. Wydawca pokazany przy każdej historii oraz kolejność historii zależą od Twojego języka i wyniku czytelności na telefonie. Każdy inny raport znajdziesz w sekcji Powiązane doniesienia."
     },
     "homeRow": "Chcesz wiadomości z miejsca, w którym mieszkasz?"
   },

@@ -50,11 +50,11 @@ describe('page-registry', () => {
     expect(alpha2OfPage('feed')).toBeNull();
   });
 
-  it('puts country pages in World with their own explainer', () => {
+  it('puts country pages in World with World’s one-paragraph explainer', () => {
     expect(tabOfPage('country:FR')).toBe('world');
     expect(pageMeta('country:FR').tab).toBe('world');
-    expect(pageMeta('country:FR').explainer?.paragraphKeys).toContain('world.explainer.mathCountry');
-    expect(pageMeta('world').explainer?.paragraphKeys).toContain('world.explainer.mathWorld');
+    expect(pageMeta('world').explainer?.paragraphKeys).toEqual(['world.explainer.justMath']);
+    expect(pageMeta('country:FR').explainer).toEqual(pageMeta('world').explainer);
   });
 
   it('maps surfaces to tabs, Search to none', () => {
