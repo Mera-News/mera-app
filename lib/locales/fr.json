@@ -278,35 +278,17 @@
       "helpStatus": "État du fournisseur d'IA"
     },
     "fold": {
-      "upToDateTitle": "Vous êtes à jour sur ce qui vous concerne.",
-      "upToDateBody_one": "{{count}} article de plus a moins de chances de vous concerner.",
-      "upToDateBody_other": "{{count}} articles de plus ont moins de chances de vous concerner.",
-      "nothingTitle": "Rien de nouveau ne semble important pour vous en ce moment.",
-      "nothingBody_one": "Mera a trouvé {{count}} article qui pourrait encore vous intéresser.",
-      "nothingBody_other": "Mera a trouvé {{count}} articles qui pourraient encore vous intéresser.",
-      "showThem": "Les afficher",
-      "label": "Moins susceptibles de vous concerner",
-      "shownAnnounce_one": "Affichage de {{count}} article de plus",
-      "shownAnnounce_other": "Affichage de {{count}} articles de plus",
+      "label": "Bon à savoir",
       "held": "Mera a sélectionné de nouveaux articles pendant que vous lisiez.",
       "stillReading": "Mera est toujours en train de lire. Les nouveaux articles apparaîtront ici.",
       "endTitle": "C'est tout pour le moment.",
       "endBody": "Mera continue de lire en arrière-plan. Revenez plus tard.",
-      "seenBody_one": "{{count}} article de plus que vous avez déjà vu.",
-      "seenBody_other": "{{count}} articles de plus que vous avez déjà vus.",
-      "mixedBody_one": "{{count}} article de plus que vous avez déjà vu ou qui compte probablement moins pour vous.",
-      "mixedBody_other": "{{count}} articles de plus que vous avez déjà vus ou qui comptent probablement moins pour vous.",
       "seenLabel": "Articles que vous avez déjà vus"
     },
     "firstFeed": {
       "body": "Mera lit les actualités du jour pour vous. Vos centres d'intérêt restent sur votre téléphone, donc aucun serveur ne conserve de fil vous concernant. C'est pourquoi Mera commence à lire dès que vous ouvrez l'application.",
       "link": "Comment Mera garde cela privé",
       "dismiss": "Ignorer"
-    },
-    "age": {
-      "yesterday": "D'hier",
-      "fromDay": "Depuis {{day}}",
-      "fromDate": "Depuis {{date}}"
     },
     "moreReports_one": "{{count}} autre reportage",
     "moreReports_other": "{{count}} autres reportages",

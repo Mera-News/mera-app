@@ -271,35 +271,17 @@
       "helpStatus": "Yapay zeka sağlayıcısının durumu"
     },
     "fold": {
-      "upToDateTitle": "Senin için önemli olan haberlerin hepsini okudun.",
-      "upToDateBody_one": "Senin için önemli olma ihtimali daha düşük {{count}} haber daha var.",
-      "upToDateBody_other": "Senin için önemli olma ihtimali daha düşük {{count}} haber daha var.",
-      "nothingTitle": "Şu anda senin için önemli görünen yeni bir şey yok.",
-      "nothingBody_one": "Mera, seni hâlâ ilgilendirebilecek {{count}} haber buldu.",
-      "nothingBody_other": "Mera, seni hâlâ ilgilendirebilecek {{count}} haber buldu.",
-      "showThem": "Hepsini göster",
-      "label": "Senin için önemli olma ihtimali daha düşük",
-      "shownAnnounce_one": "{{count}} haber daha gösteriliyor",
-      "shownAnnounce_other": "{{count}} haber daha gösteriliyor",
+      "label": "Bilmekte fayda var",
       "held": "Sen okurken Mera yeni haberler seçti.",
       "stillReading": "Mera hâlâ okuyor. Yeni haberler burada görünecek.",
       "endTitle": "Şimdilik hepsi bu.",
       "endBody": "Mera arka planda okumaya devam ediyor. Daha sonra tekrar bak.",
-      "seenBody_one": "{{count}} haber daha, zaten gördüğün bir haber.",
-      "seenBody_other": "{{count}} haber daha, zaten gördüğün haberler.",
-      "mixedBody_one": "{{count}} haber daha, zaten gördüğün ya da senin için önemli olma ihtimali daha düşük bir haber.",
-      "mixedBody_other": "{{count}} haber daha, zaten gördüğün ya da senin için önemli olma ihtimali daha düşük haberler.",
       "seenLabel": "Zaten gördüğün haberler"
     },
     "firstFeed": {
       "body": "Mera bugünün haberlerini senin için okuyor. İlgi alanların telefonunda kalır, bu yüzden hiçbir sunucu senin hakkında bir akış tutmaz. Bu yüzden Mera uygulamayı açtığında okumaya başlar.",
       "link": "Mera bunu gizli nasıl tutuyor",
       "dismiss": "Kapat"
-    },
-    "age": {
-      "yesterday": "Dünden",
-      "fromDay": "{{day}} tarihinden",
-      "fromDate": "{{date}} tarihinden"
     },
     "moreReports_one": "{{count}} rapor daha",
     "moreReports_other": "{{count}} rapor daha",

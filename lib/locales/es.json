@@ -273,35 +273,17 @@
       "helpStatus": "Estado del proveedor de IA"
     },
     "fold": {
-      "upToDateTitle": "Estás al día con lo que te importa.",
-      "upToDateBody_one": "{{count}} historia más tiene menos probabilidades de importarte.",
-      "upToDateBody_other": "{{count}} historias más tienen menos probabilidades de importarte.",
-      "nothingTitle": "Nada nuevo parece importante para ti en este momento.",
-      "nothingBody_one": "Mera encontró {{count}} historia que podría interesarte.",
-      "nothingBody_other": "Mera encontró {{count}} historias que podrían interesarte.",
-      "showThem": "Mostrarlas",
-      "label": "Menos probable que te importe",
-      "shownAnnounce_one": "Mostrando {{count}} historia más",
-      "shownAnnounce_other": "Mostrando {{count}} historias más",
+      "label": "Bueno saberlo",
       "held": "Mera eligió historias nuevas mientras leías.",
       "stillReading": "Mera sigue leyendo. Las historias nuevas aparecerán aquí.",
       "endTitle": "Eso es todo por ahora.",
       "endBody": "Mera sigue leyendo en segundo plano. Vuelve a consultar más tarde.",
-      "seenBody_one": "{{count}} historia más es una que ya viste.",
-      "seenBody_other": "{{count}} historias más son las que ya viste.",
-      "mixedBody_one": "{{count}} historia más es una que ya viste o que tiene menos probabilidades de importarte.",
-      "mixedBody_other": "{{count}} historias más son las que ya viste o que tienen menos probabilidades de importarte.",
       "seenLabel": "Historias que ya viste"
     },
     "firstFeed": {
       "body": "Mera lee las noticias de hoy por ti. Tus intereses se quedan en tu teléfono, así que ningún servidor guarda un feed sobre ti. Por eso Mera empieza a leer cuando abres la app.",
       "link": "Cómo Mera mantiene esto privado",
       "dismiss": "Cerrar"
-    },
-    "age": {
-      "yesterday": "De ayer",
-      "fromDay": "De {{day}}",
-      "fromDate": "De {{date}}"
     },
     "moreReports_one": "{{count}} informe más",
     "moreReports_other": "{{count}} informes más",

@@ -38,12 +38,11 @@
 // feed by exactly one route: `hydrate` dropping a persisted id whose story aged
 // out of the publication window between sessions (FEED_WINDOW_MS).
 //
-// THE FOLD (D5). Medium and up render above it, Low one tap away: the footer
-// is the fold card ("Show them"), which pins every rendered and folded row
-// and turns into a label over the first Low row. Before the session's first
-// run finishes the footer is a quiet reading line and Low stays hidden. Once
-// the fold is within a screen, new picks are HELD (the closed pin) and the
-// fold or end card says so above its Refresh button. High and Emergency keep
+// THE FOLD (D5). Medium and up render above it, Low after it under the
+// "Good to know" label (owner: a section, never a card behind a button). Before
+// the session's first run finishes the footer is a quiet reading line and Low
+// stays hidden. Once the reader is past the picks, new picks are HELD (the
+// closed pin) and the end card says so above its Refresh button. High and Emergency keep
 // the large card; Medium and Low are compact rows (D10). The empty states are
 // the counts card plus the shortcuts (FeedShortcuts).
 //
@@ -97,7 +96,6 @@ import type { PageHeaderBinding } from '@/components/custom/nav/types';
 import FeedShortcuts from '@/components/custom/feed/FeedShortcuts';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
-import { useFeedAgeLabel, useFrozenFeedAgeLabel } from './feed-age-label';
 import { resolveFeedRowDisplay } from '@/components/custom/feed/feed-row-display';
 import FeedSkeleton from '@/components/custom/feed/FeedSkeleton';
 import { arrivedAtOf, isNewCard, type FeedEntry } from './feed-entries';
@@ -176,7 +174,7 @@ const FeedRow = React.memo(function FeedRow({
 }: {
   item: FeedListItem;
   /** Drawn above the card: the not-read divider over the first not-read card
-   *  (Show: All only), or the fold label over the first folded one. Never a
+   *  (Show: All only), or the Good to know label over the first Low one. Never a
    *  row of its own, so every row stays a story. */
   divider?: React.ReactNode;
   /** Medium and Low: the compact row (D10), frozen per session. */
@@ -223,10 +221,6 @@ const FeedRow = React.memo(function FeedRow({
   const hasCardState = useFeedOrderStore((s) => !!s.cardStates[item.id]);
   const seen = openedExactly || hasCardState;
   const isNew = newSince !== null && isNewCard(arrivedAtOf(suggestion), seen, newSince);
-  // No relative age on this screen; a story kept past a day says so (D7).
-  const ageLabel = useFeedAgeLabel(suggestion.firstPubDate ?? suggestion.createdAt);
-  // The large card's label is its own line: frozen, so it never pushes rows down.
-  const largeAgeLabel = useFrozenFeedAgeLabel(suggestion.firstPubDate ?? suggestion.createdAt);
   return (
     // The wrapper is UNCONDITIONAL and only `entering` varies, so the tree
     // shape never changes between renders of the same row.
@@ -251,8 +245,6 @@ const FeedRow = React.memo(function FeedRow({
         similarVariant="reports"
         feedbackHandlers={feedbackHandlers}
         verdict={verdict}
-        showRecency={false}
-        ageLabel={ageLabel}
       />
     ) : (
     <ArticleSuggestionCard
@@ -262,12 +254,6 @@ const FeedRow = React.memo(function FeedRow({
       reserveNoteSpace={reserveNoteSpace}
       similarCount={similarCount}
       onPress={onPress}
-      // No relative age and no NEW badge on this screen. "2h ago" and a green NEW
-      // pill are both answers to "has something arrived?", which is the
-      // question this feed is deliberately not asking. Interests' compact
-      // cards keep both, and the article detail screen always shows the time.
-      showRecency={false}
-      ageLabel={largeAgeLabel}
       similarVariant="reports"
       verdict={verdict}
       onVerdict={onVerdict}
@@ -313,7 +299,6 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     scoredCount,
     allRowsCount,
     fold,
-    onShowThem,
     liveById,
     rowSessionRef,
     arrivingIdsRef,
@@ -419,31 +404,25 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
       />
       );
     },
-    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion, registerRow, liveById, newSince, rowSessionRef, arrivingIdsRef, show, picksCount, notReadDivider, notReadDividerBody, notReadDividerAction, notReadDividerOn, noteHeldLine, notReadLine, fold.index, fold.seenIndex, fold.shown],
+    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion, registerRow, liveById, newSince, rowSessionRef, arrivingIdsRef, show, picksCount, notReadDivider, notReadDividerBody, notReadDividerAction, notReadDividerOn, noteHeldLine, notReadLine, fold.index, fold.seenIndex],
   );
 
   const keyExtractor = useCallback((item: FeedEntry) => item.id, []);
 
   // The footer is the layout's terminal card (D5): the quiet reading line
-  // while the session's first run reads, the fold card at the Medium/Low line
-  // ("Show them"), or the end card. Held picks add their line to the fold or
-  // end card, above Refresh.
+  // while the session's first run reads, or the end card. Held picks add their
+  // line to the end card, above Refresh.
   //
   // Gated on a non-empty list because FlatList renders `ListFooterComponent`
   // even when `data` is empty, and an empty Feed shows the counts card and the
-  // shortcuts instead (`renderEmpty`). The fold card is the exception: with
-  // nothing above the line it is the whole list.
+  // shortcuts instead (`renderEmpty`).
   const listFooter = useMemo(
     () =>
-      listData.length > 0 || fold.terminal === 'fold' ? (
+      listData.length > 0 ? (
         // The list footer, never a row: a new variant fades in place.
         <Appear key={fold.terminal} rise={0} style={{ marginTop: 16 }} testID="feed-caught-up-footer">
           <AllCaughtUpCard
             variant={fold.terminal}
-            count={fold.count}
-            seenCount={fold.seenCount}
-            nothingAbove={fold.nothingAbove}
-            onShowThem={onShowThem}
             held={fold.held > 0}
             onRefresh={onRefresh}
             refreshing={refreshing}
@@ -451,7 +430,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
           />
         </Appear>
       ) : null,
-    [listData.length, fold.terminal, fold.count, fold.seenCount, fold.nothingAbove, fold.held, onShowThem, onRefresh, refreshing],
+    [listData.length, fold.terminal, fold.held, onRefresh, refreshing],
   );
 
 
@@ -483,8 +462,6 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     // No facts: the block sits in the list header (above any top headlines,
     // C4), so the empty list itself says nothing more.
     if (noFacts) return null;
-    // Nothing above the fold: the fold card (the footer) is the list.
-    if (fold.terminal === 'fold') return null;
     // A Show filter with nothing in it (the Feed itself has rows): its own
     // empty block, never a bare list (owner, R7).
     // Rows held back while the first run reads are not a filter: fall

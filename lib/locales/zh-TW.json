@@ -259,35 +259,17 @@
       "helpStatus": "AI 供應商狀態"
     },
     "fold": {
-      "upToDateTitle": "您已掌握所有對您重要的內容。",
-      "upToDateBody_one": "另有 {{count}} 則報導與您的關聯較低。",
-      "upToDateBody_other": "另有 {{count}} 則報導與您的關聯較低。",
-      "nothingTitle": "目前沒有對您重要的新內容。",
-      "nothingBody_one": "梅拉找到 {{count}} 則您可能仍感興趣的報導。",
-      "nothingBody_other": "梅拉找到 {{count}} 則您可能仍感興趣的報導。",
-      "showThem": "顯示",
-      "label": "與您的關聯較低",
-      "shownAnnounce_one": "正在顯示另外 {{count}} 則報導",
-      "shownAnnounce_other": "正在顯示另外 {{count}} 則報導",
+      "label": "值得了解",
       "held": "您閱讀時，梅拉挑選了新的報導。",
       "stillReading": "梅拉仍在閱讀。新的報導會出現在這裡。",
       "endTitle": "目前就這些了。",
       "endBody": "梅拉會在背景繼續閱讀。請稍後再來看看。",
-      "seenBody_one": "另有 {{count}} 則報導是您已經看過的。",
-      "seenBody_other": "另有 {{count}} 則報導是您已經看過的。",
-      "mixedBody_one": "另有 {{count}} 則報導是您已經看過的，或與您的關聯較低。",
-      "mixedBody_other": "另有 {{count}} 則報導是您已經看過的，或與您的關聯較低。",
       "seenLabel": "您已看過的報導"
     },
     "firstFeed": {
       "body": "梅拉正在為您閱讀今天的新聞。您告訴梅拉的內容只儲存在這支手機上，因此沒有伺服器保存關於您的動態。所以梅拉會在您開啟 App 時開始閱讀。",
       "link": "梅拉如何保護這些隱私",
       "dismiss": "關閉"
-    },
-    "age": {
-      "yesterday": "來自昨天",
-      "fromDay": "來自{{day}}",
-      "fromDate": "來自{{date}}"
     },
     "moreReports_one": "另有 {{count}} 則報導",
     "moreReports_other": "另有 {{count}} 則報導",

@@ -2,7 +2,7 @@
 // row's feedback wiring.
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
-import { AccessibilityInfo } from 'react-native';
+import { AccessibilityInfo, Text } from 'react-native';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import ArticleCompactCardBase from '@/components/custom/cards/ArticleCompactCardBase';
 import ArticleCardBase from '@/components/custom/cards/ArticleCardBase';
@@ -48,46 +48,16 @@ jest.mock('@/components/custom/cards/use-article-actions', () => ({
 
 beforeAll(initI18nEn);
 
-describe('AllCaughtUpCard fold variants', () => {
-  it('fold: title, plural body, and Show them', async () => {
-    const onShowThem = jest.fn();
-    const { getByText, getByTestId } = await render(<AllCaughtUpCard variant="fold" count={12} onShowThem={onShowThem} />);
-    expect(getByText("You're up to date on what matters to you.")).toBeTruthy();
-    expect(getByText('12 more stories are less likely to matter to you.')).toBeTruthy();
-    fireEvent.press(getByTestId('fold-show-them'));
-    expect(onShowThem).toHaveBeenCalled();
-  });
-  it('fold with nothing above says so, singular count', async () => {
-    const { getByText } = await render(<AllCaughtUpCard variant="fold" nothingAbove count={1} onShowThem={() => {}} />);
-    expect(getByText('Nothing new looks important for you right now.')).toBeTruthy();
-    expect(getByText('Mera found 1 story that might still interest you.')).toBeTruthy();
-  });
-  it('fold with only seen stories behind it says they were seen', async () => {
-    const { getByText } = await render(<AllCaughtUpCard variant="fold" count={3} seenCount={3} onShowThem={() => {}} />);
-    expect(getByText("You're up to date on what matters to you.")).toBeTruthy();
-    expect(getByText('3 more stories are ones you already saw.')).toBeTruthy();
-  });
-  it('fold with seen and unseen stories behind it says both', async () => {
-    const { getByText } = await render(<AllCaughtUpCard variant="fold" count={1} seenCount={1} nothingAbove onShowThem={() => {}} />);
-    expect(getByText('1 more story is one you already saw.')).toBeTruthy();
-    const mixed = await render(<AllCaughtUpCard variant="fold" count={4} seenCount={1} onShowThem={() => {}} />);
-    expect(mixed.getByText('4 more stories are ones you already saw or are less likely to matter to you.')).toBeTruthy();
-  });
+describe('AllCaughtUpCard Feed variants', () => {
   it('seen label: its own header text', async () => {
     const { getByTestId } = await render(<AllCaughtUpCard variant="label" seen />);
     expect(getByTestId('fold-seen-label').props.children).toBe('Stories you already saw');
     expect(getByTestId('fold-seen-label').props.accessibilityRole).toBe('header');
   });
-  it('fold shows the held line with Refresh only when picks were held', async () => {
-    const quiet = await render(<AllCaughtUpCard variant="fold" count={3} onShowThem={() => {}} onRefresh={() => {}} />);
-    expect(quiet.queryByTestId('fold-held-line')).toBeNull();
-    const held = await render(<AllCaughtUpCard variant="fold" count={3} held onShowThem={() => {}} onRefresh={() => {}} />);
-    expect(held.getByText('Mera picked new stories while you were reading.')).toBeTruthy();
-    expect(held.getByTestId('all-caught-up-refresh')).toBeTruthy();
-  });
   it('label: a plain header; mounting it (a virtualized cell scrolling back) announces nothing', async () => {
     const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
     const { getByTestId } = await render(<AllCaughtUpCard variant="label" />);
+    expect(getByTestId('fold-label').props.children).toBe('Good to know');
     expect(getByTestId('fold-label').props.accessibilityRole).toBe('header');
     expect(announce).not.toHaveBeenCalled();
   });
@@ -131,23 +101,25 @@ describe('reports variant', () => {
   });
 });
 
-describe('age label on Feed cards', () => {
-  it('compact: shows the label and speaks it, never the relative age', async () => {
-    const { getByText, getByLabelText } = await render(
-      <ArticleCompactCardBase titleEnglish="A story" testID="c" pubDate={new Date(Date.now() - 3600e3).toISOString()} showRecency={false} ageLabel="From yesterday" />,
+describe('Feed card meta row (owner)', () => {
+  it('compact: the priority chip sits left and the short age in the middle', async () => {
+    const { getByTestId, getByText } = await render(
+      <ArticleCompactCardBase
+        titleEnglish="A story"
+        testID="c"
+        pubDate={new Date(Date.now() - 4 * 86400e3).toISOString()}
+        priorityAccessory={<Text testID="chip">Low</Text>}
+      />,
     );
-    expect(getByText('From yesterday')).toBeTruthy();
-    expect(getByLabelText(/From yesterday/)).toBeTruthy();
+    expect(getByTestId('meta-leading')).toContainElement(getByTestId('chip'));
+    expect(getByTestId('meta-age-slot')).toContainElement(getByText('4d ago'));
   });
-  it('compact: no label and no recency speaks no age at all', async () => {
-    const { queryByLabelText } = await render(
-      <ArticleCompactCardBase titleEnglish="A story" testID="c" pubDate={new Date(Date.now() - 3600e3).toISOString()} showRecency={false} />,
+  it('large: the short age is in the meta row, no separate label line', async () => {
+    const { getByText, queryByTestId } = await render(
+      <ArticleCardBase titleEnglish="A story" testID="b" publicationName="Pub" pubDate={new Date(Date.now() - 2 * 86400e3).toISOString()} />,
     );
-    expect(queryByLabelText(/ago/)).toBeNull();
-  });
-  it('large: draws the label under showRecency=false', async () => {
-    const { getByTestId } = await render(<ArticleCardBase titleEnglish="A story" testID="b" showRecency={false} ageLabel="From Saturday" />);
-    expect(getByTestId('card-age-label')).toBeTruthy();
+    expect(getByText('2d ago')).toBeTruthy();
+    expect(queryByTestId('card-age-label')).toBeNull();
   });
 });
 

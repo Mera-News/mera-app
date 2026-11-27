@@ -127,8 +127,6 @@ interface ArticleCardBaseProps {
   similarCount?: number | null;
   /** `reports`: the Feed's "N more reports" wording, shown whatever the global gate says. */
   similarVariant?: 'similar' | 'reports';
-  /** The Feed's "From yesterday" label for a story kept past 24h; only drawn while `showRecency` is off. */
-  ageLabel?: string | null;
 }
 
 /** The content VStack's own horizontal padding (`px-4`). `metaRowRightReserve`
@@ -164,7 +162,6 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   halo,
   similarCount: similarCountProp,
   similarVariant = 'similar',
-  ageLabel,
 }) => {
   const { t } = useTranslation();
   // The similar-articles line is off (owner) until it says something the order does not.
@@ -195,7 +192,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
     shownTitle ?? displayTitle,
     titleFailed ? t('feed.translationFailed') : null,
     meta.publication,
-    showRecency ? meta.age : ageLabel,
+    showRecency ? meta.age : null,
     spokenPriority,
     meta.language,
     ...(spokenTail ?? []),
@@ -278,11 +275,6 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
               onPublicationPress={onPublicationPress}
             />
           </Box>
-          {!showRecency && ageLabel ? (
-            <Text size="xs" className="font-medium text-ink-3" testID="card-age-label">
-              {ageLabel}
-            </Text>
-          ) : null}
           {/* No title at all: the app's own fallback copy, already in the
               reader's language, never runtime-translated. */}
           {titleEnglish || titleOriginal ? (

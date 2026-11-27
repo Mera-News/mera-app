@@ -35,7 +35,6 @@ import {
   countUnviewed,
   EMPTY_PIN,
   arrivalFloor,
-  expandFold,
   extendPin,
   layoutFeed,
   type FeedLayout,
@@ -655,22 +654,24 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
   );
   layoutRef.current = layout;
   layoutSeededRef.current = partitionSnapshot.seeded;
-  const { rows: listData, picks: picksCount } = layout;
+  const { picks: picksCount } = layout;
+  // No card before the partition snapshot is seeded: unseeded, every row reads unseen,
+  // so the cards the reader opened would show and then fold away a moment later.
+  const listData = useMemo(() => (partitionSnapshot.seeded ? layout.rows : []), [partitionSnapshot.seeded, layout.rows]);
   // Every scored story this session holds, folded or not (held picks aside).
   const scoredRows = useMemo(() => [...layout.above, ...layout.below], [layout]);
 
   // The Show menu's counts: what each option RENDERS (owner: always the exact
-  // number), so folded stories count once they are shown, and the not-read
-  // tail counts under All only while it renders. Discarded's only while its
+  // number): the rows below the fold and the not-read tail count once the
+  // session's first run is done, when they render. Discarded's only while its
   // stories are built.
   useEffect(() => {
-    const pickRows = pin.expanded ? scoredRows : layout.above;
+    const pickRows = foldReadiness.ready ? scoredRows : layout.above;
     const counts = feedShowCounts(pickRows, folded.tail, folded.overflow, discarded?.rows ?? [], discarded?.total ?? 0);
-    const tailRenders = pin.expanded || (foldReadiness.ready && layout.below.length === 0);
-    if (!tailRenders) counts.all = { n: pickRows.length };
+    if (!foldReadiness.ready) counts.all = { n: pickRows.length };
     const { discarded: _unbuilt, ...withoutDiscarded } = counts;
     setFeedShowCounts(discarded ? counts : withoutDiscarded);
-  }, [layout, scoredRows, pin.expanded, foldReadiness.ready, folded, discarded]);
+  }, [layout, scoredRows, foldReadiness.ready, folded, discarded]);
   useEffect(() => () => setFeedShowCounts(null), []);
   const allRowsCount = scoredRows.length + folded.tail.length;
   // The divider says "below are articles Mera hasn't read yet": only while
@@ -1098,35 +1099,17 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     lastProcessingRunFinishedAt !== null;
   const hasRows = allRowsCount > 0;
 
-  // "Show them": pin what renders plus the folded rows, closed and expanded.
-  // The count is announced HERE, once, not from the label's mount: the label
-  // sits in a virtualized cell that remounts when scrolled back into range.
-  const onShowThem = useCallback(() => {
-    const current = layoutRef.current;
-    setPin((prev) => (current ? expandFold(prev, current) : prev));
-    if (current?.below.length) {
-      AccessibilityInfo.announceForAccessibility(t('feed.fold.shownAnnounce', { count: current.below.length }));
-    }
-  }, [t]);
   const fold = useMemo(
     () => ({
       terminal: layout.terminal,
-      /** Folded stories (Low rows, and seen rows under the Feed algorithm's
-       *  default; never the not-read tail). */
-      count: layout.below.length,
-      /** How many of them the reader already saw. */
-      seenCount: layout.belowSeen,
-      /** The row whose divider slot carries the seen label (expanded). */
+      /** The first seen row below the fold, whose divider slot carries the seen label. */
       seenIndex: layout.seenIndex,
-      nothingAbove: layout.above.length === 0,
       /** Picks the closed pin holds until the next session. */
       held: layout.heldCount,
-      /** The row whose divider slot carries the fold label (expanded). */
+      /** The first row below the fold, whose divider slot carries "Good to know". */
       index: layout.foldIndex,
-      /** How many "Show them" revealed, for the label's announcement. */
-      shown: pin.belowIds.length,
     }),
-    [layout, pin.belowIds.length],
+    [layout],
   );
 
   return {
@@ -1138,7 +1121,6 @@ export function useFeedScreen({ isFocused, header }: { readonly isFocused: boole
     notReadDividerOn,
     notReadLine,
     fold,
-    onShowThem,
     scoredCount: scoredRows.length,
     allRowsCount,
     liveById,

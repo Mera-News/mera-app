@@ -82,7 +82,7 @@ const TrackStoryCardBody: React.FC<Props> = ({ proposal, source, onGrown }) => {
   const { outcomes, profileOffer = [], profileStep = null } = source;
   const status = trackCardStatus({ outcomes, dismissed: source.dismissed, superseded: source.superseded, added: profileStep === 'added' });
   const rows = proposal.actions.flatMap((a) =>
-    a.type === 'track_story' ? [{ label: a.label, key: normaliseTrackText(a.label) }] : [],
+    a.type === 'track_story' ? [{ label: a.label, key: normaliseTrackText(a.label), action: a }] : [],
   );
 
   const failedKeys = rows.filter((r) => outcomes[r.key] === 'failed').map((r) => r.key);
@@ -289,6 +289,22 @@ const TrackStoryCardBody: React.FC<Props> = ({ proposal, source, onGrown }) => {
       useFloatingChatStore.getState().collapse();
       (require('@/components/custom/nav/navigate-to-page') as typeof import('@/components/custom/nav/navigate-to-page')).navigateToPage('stories');
     };
+    // A followed row opens its own story, found the way the follow matched it. With no
+    // match (removed since), the Followed stories page stands in.
+    const openStory = async (action: (typeof rows)[number]['action']) => {
+      const { findActiveTrackedId } = require('@/lib/database/services/tracked-story-service') as typeof import('@/lib/database/services/tracked-story-service');
+      const id = await findActiveTrackedId({
+        stableClusterId: action.subject.stableClusterId ?? null,
+        articleId: action.subject.articleId,
+        searchText: action.searchText.trim(),
+      });
+      if (!id) return openFollowed();
+      useFloatingChatStore.getState().collapse();
+      (require('expo-router') as typeof import('expo-router')).router.push({
+        pathname: '/logged-in/story-timeline',
+        params: { trackedStoryId: id },
+      });
+    };
     return (
       <View style={[styles.card, styles.cardSettled]} testID="track-card-followed">
         <View style={styles.headerRow}>
@@ -315,20 +331,43 @@ const TrackStoryCardBody: React.FC<Props> = ({ proposal, source, onGrown }) => {
                 ) : (
                   <MaterialIcons {...DECORATIVE_ICON_A11Y} name="error-outline" size={20} color={colors.ink3} />
                 )}
-                <View
-                  testID={`track-row-${idx}`}
-                  accessible
-                  accessibilityRole="text"
-                  accessibilityLabel={`${spoken(r)}, ${outcomeText(outcome)}`}
-                  style={styles.rowBody}
-                >
-                  {labelNode(r, false)}
-                  {outcome !== 'following' && (
-                    <Text size="xs" style={outcome === 'failed' ? styles.failedText : styles.outcomeText}>
-                      {outcomeText(outcome)}
-                    </Text>
-                  )}
-                </View>
+                {done && !inOnboarding ? (
+                  // Opens the story's page. Not in onboarding: it would leave the wizard.
+                  <GlyphSafeButton
+                    testID={`track-row-${idx}`}
+                    onPress={() => void openStory(r.action)}
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: false }}
+                    accessibilityLabel={`${spoken(r)}, ${outcomeText(outcome)}`}
+                    style={styles.storyFrame}
+                    visualStyle={styles.storyRow}
+                  >
+                    <View style={styles.rowBody}>
+                      {labelNode(r, false)}
+                      {outcome !== 'following' && (
+                        <Text size="xs" style={styles.outcomeText}>
+                          {outcomeText(outcome)}
+                        </Text>
+                      )}
+                    </View>
+                    <MaterialIcons {...DECORATIVE_ICON_A11Y} name="chevron-right" size={20} color={colors.ink3} />
+                  </GlyphSafeButton>
+                ) : (
+                  <View
+                    testID={`track-row-${idx}`}
+                    accessible
+                    accessibilityRole="text"
+                    accessibilityLabel={`${spoken(r)}, ${outcomeText(outcome)}`}
+                    style={styles.rowBody}
+                  >
+                    {labelNode(r, false)}
+                    {outcome !== 'following' && (
+                      <Text size="xs" style={outcome === 'failed' ? styles.failedText : styles.outcomeText}>
+                        {outcomeText(outcome)}
+                      </Text>
+                    )}
+                  </View>
+                )}
               </View>
             );
           })}
@@ -653,6 +692,8 @@ const useStyles = themedStyles((c, mode) =>
     },
     checkIcon: { marginTop: 1 },
     rowBody: { flex: 1, gap: 2 },
+    storyFrame: { flex: 1, minHeight: FRAME },
+    storyRow: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
     rowText: { color: c.ink },
     rowTextMuted: { color: c.ink3 },
     outcomeText: { color: c.ink2 },

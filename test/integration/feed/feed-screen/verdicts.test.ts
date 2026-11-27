@@ -15,10 +15,8 @@ async function mount() {
   await seedComplete([['a', HIGH], ['b', MEDIUM], ['c', LOW]]);
   await hydrateSuggestions();
   const feed = await renderFeed();
-  // The Low card sits below the fold: open it, as a reader would with Show them.
+  // The Low card renders under Good to know once the first run is done.
   await finishRun();
-  await waitFor(() => expect(feed.result.current.fold.terminal).toBe('fold'));
-  await act(() => feed.result.current.onShowThem());
   await waitFor(() => expect(feed.ids()).toHaveLength(3));
   const suggestionOf = (id: string) => feed.result.current.listData.find((it) => it.id === id)!.suggestion;
   const record = (id: string) => useFeedOrderStore.getState().verdicts[id];

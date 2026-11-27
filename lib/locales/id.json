@@ -259,35 +259,17 @@
       "helpStatus": "Status penyedia AI"
     },
     "fold": {
-      "upToDateTitle": "Anda sudah membaca hal-hal yang penting bagi Anda.",
-      "upToDateBody_one": "{{count}} cerita lagi kemungkinan kecil penting bagi Anda.",
-      "upToDateBody_other": "{{count}} cerita lagi kemungkinan kecil penting bagi Anda.",
-      "nothingTitle": "Belum ada yang baru yang tampak penting bagi Anda saat ini.",
-      "nothingBody_one": "Mera menemukan {{count}} cerita yang mungkin masih menarik bagi Anda.",
-      "nothingBody_other": "Mera menemukan {{count}} cerita yang mungkin masih menarik bagi Anda.",
-      "showThem": "Tampilkan",
-      "label": "Kemungkinan kecil penting bagi Anda",
-      "shownAnnounce_one": "Menampilkan {{count}} cerita lagi",
-      "shownAnnounce_other": "Menampilkan {{count}} cerita lagi",
+      "label": "Baik untuk diketahui",
       "held": "Mera memilih cerita baru selagi Anda membaca.",
       "stillReading": "Mera masih membaca. Cerita baru akan muncul di sini.",
       "endTitle": "Itu saja untuk sekarang.",
       "endBody": "Mera terus membaca di latar belakang. Periksa lagi nanti.",
-      "seenBody_one": "{{count}} cerita lagi adalah cerita yang sudah Anda lihat.",
-      "seenBody_other": "{{count}} cerita lagi adalah cerita yang sudah Anda lihat.",
-      "mixedBody_one": "{{count}} cerita lagi adalah cerita yang sudah Anda lihat atau kemungkinan kecil penting bagi Anda.",
-      "mixedBody_other": "{{count}} cerita lagi adalah cerita yang sudah Anda lihat atau kemungkinan kecil penting bagi Anda.",
       "seenLabel": "Cerita yang sudah Anda lihat"
     },
     "firstFeed": {
       "body": "Mera sedang membaca berita hari ini untuk Anda. Apa yang Anda ceritakan kepada Mera tetap di ponsel ini, jadi tidak ada server yang menyimpan feed tentang Anda. Itulah sebabnya Mera mulai membaca saat Anda membuka aplikasi.",
       "link": "Cara Mera menjaga privasi ini",
       "dismiss": "Tutup"
-    },
-    "age": {
-      "yesterday": "Dari kemarin",
-      "fromDay": "Dari {{day}}",
-      "fromDate": "Dari {{date}}"
     },
     "moreReports_one": "{{count}} laporan lagi",
     "moreReports_other": "{{count}} laporan lagi",

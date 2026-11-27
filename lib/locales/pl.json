@@ -311,16 +311,7 @@
       "helpStatus": "Status dostawcy AI"
     },
     "fold": {
-      "upToDateTitle": "Jesteś na bieżąco z tym, co dla Ciebie ważne.",
-      "upToDateBody_one": "Jeszcze {{count}} historia raczej nie będzie dla Ciebie ważna.",
-      "upToDateBody_other": "Jeszcze {{count}} historii raczej nie będzie dla Ciebie ważnych.",
-      "nothingTitle": "Nic nowego nie wygląda teraz na ważne dla Ciebie.",
-      "nothingBody_one": "Mera znalazła {{count}} historię, która może Cię nadal zainteresować.",
-      "nothingBody_other": "Mera znalazła {{count}} historii, które mogą Cię nadal zainteresować.",
-      "showThem": "Pokaż je",
-      "label": "Mniej prawdopodobne, że będzie dla Ciebie ważne",
-      "shownAnnounce_one": "Pokazuję jeszcze {{count}} historię",
-      "shownAnnounce_other": "Pokazuję jeszcze {{count}} historii",
+      "label": "Warto wiedzieć",
       "held": "Mera wybrała nowe historie podczas czytania.",
       "stillReading": "Mera wciąż czyta. Nowe historie pojawią się tutaj.",
       "endTitle": "To wszystko na teraz.",
@@ -331,25 +322,16 @@
       "nothingBody_many": "Mera znalazła {{count}} historii, które mogą Cię nadal zainteresować.",
       "shownAnnounce_few": "Pokazuję jeszcze {{count}} historie",
       "shownAnnounce_many": "Pokazuję jeszcze {{count}} historii",
-      "seenBody_one": "Jeszcze {{count}} historia jest taka, którą już widziałeś.",
       "seenBody_few": "Jeszcze {{count}} historie to takie, które już widziałeś.",
       "seenBody_many": "Jeszcze {{count}} historii to takie, które już widziałeś.",
-      "seenBody_other": "Jeszcze {{count}} historii to takie, które już widziałeś.",
-      "mixedBody_one": "Jeszcze {{count}} historia to taka, którą już widziałeś albo która raczej nie będzie dla Ciebie ważna.",
       "mixedBody_few": "Jeszcze {{count}} historie to takie, które już widziałeś albo które raczej nie będą dla Ciebie ważne.",
       "mixedBody_many": "Jeszcze {{count}} historii to takie, które już widziałeś albo które raczej nie będą dla Ciebie ważne.",
-      "mixedBody_other": "Jeszcze {{count}} historii to takie, które już widziałeś albo które raczej nie będą dla Ciebie ważne.",
       "seenLabel": "Historie, które już widziałeś"
     },
     "firstFeed": {
       "body": "Mera czyta dla Ciebie dzisiejsze wiadomości. Twoje zainteresowania zostają w telefonie, więc żaden serwer nie przechowuje Twojego Strumienia. Dlatego Mera zaczyna czytać, gdy otwierasz aplikację.",
       "link": "Jak Mera zachowuje prywatność",
       "dismiss": "Zamknij"
-    },
-    "age": {
-      "yesterday": "Z wczoraj",
-      "fromDay": "Z {{day}}",
-      "fromDate": "Z {{date}}"
     },
     "moreReports_one": "{{count}} kolejny raport",
     "moreReports_other": "{{count}} kolejnych raportów",

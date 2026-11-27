@@ -51,16 +51,9 @@ interface ArticleMetaRowProps {
      * would leave an orphan clock glyph next to a NEW pill.
      */
     showRecency?: boolean;
-    /**
-     * A slot rendered between the recency and language slots.
-     *
-     * The row is already `justify-between`, so a third populated slot lands in
-     * the middle of the free space with no new layout machinery — the same
-     * shape the full-size card gets from its publication slot. The compact card
-     * puts its priority chip here. Absent by default, so every other caller is
-     * unchanged.
-     */
-    centerAccessory?: React.ReactNode;
+    /** A slot drawn at the LEFT of a compact row, the time then centred between it
+     *  and flag + language (owner). The compact card puts its priority chip here. */
+    leadingAccessory?: React.ReactNode;
     /**
      * Makes the publication name open the publication page. On a CARD the name
      * is hidden from VoiceOver (the card root is one element and carries an
@@ -83,7 +76,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     read = false,
     showFlag = true,
     showRecency = true,
-    centerAccessory,
+    leadingAccessory,
     onPublicationPress,
     ageText,
 }) => {
@@ -172,17 +165,33 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
             ) : null;
 
     // COMPACT rows (no publication in this row; the publisher sits in their
-    // footer and the middle slot is the priority chip): time, chip, then flag
-    // and language together at the right, spread across the width.
+    // footer): the priority chip LEFT, time CENTRED, flag and language RIGHT
+    // (owner). Equal flex sides keep the time centred whatever the chip's width.
+    // Without a chip: time left, flag and language right.
     if (!showPublicationSlot) {
+        const flagLanguage = (
+            // The flag sits immediately left of the language (owner).
+            <HStack className="items-center" space="xs" style={{ flexShrink: 0 }} testID="meta-flag-language">
+                {flagEl}
+                {languageEl}
+            </HStack>
+        );
+        if (!leadingAccessory) {
+            return (
+                <HStack className="items-center justify-between" space="sm">
+                    {ageEl}
+                    {flagLanguage}
+                </HStack>
+            );
+        }
         return (
-            <HStack className="items-center justify-between" space="sm">
+            <HStack className="items-center" space="sm">
+                <HStack className="items-center" style={{ flex: 1, minWidth: 0 }} testID="meta-leading">
+                    {leadingAccessory}
+                </HStack>
                 {ageEl}
-                {centerAccessory ? <Box style={{ flexShrink: 0 }}>{centerAccessory}</Box> : null}
-                {/* The flag sits immediately left of the language (owner). */}
-                <HStack className="items-center" space="xs" style={{ flexShrink: 0 }} testID="meta-flag-language">
-                    {flagEl}
-                    {languageEl}
+                <HStack className="items-center" style={{ flex: 1, justifyContent: 'flex-end' }}>
+                    {flagLanguage}
                 </HStack>
             </HStack>
         );

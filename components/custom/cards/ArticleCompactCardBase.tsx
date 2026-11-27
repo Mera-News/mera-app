@@ -171,9 +171,8 @@ interface ArticleCompactCardBaseProps {
   similarCount?: number;
   /** `reports`: the Feed's "N more reports" wording, shown whatever the global gate says. */
   similarVariant?: 'similar' | 'reports';
-  /** false (the Feed): no relative age; `ageLabel` alone may show for a story kept past 24h. Default true. */
+  /** false: no relative age. Default true. */
   showRecency?: boolean;
-  ageLabel?: string | null;
   /** A row inside a grouped list (the Sectioned view's preview): no plate,
    *  margin, radius or root Pressable, just the same content and inner padding
    *  in a plain View. The caller draws the container and owns any press. */
@@ -208,7 +207,6 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   similarCount: similarCountProp,
   similarVariant = 'similar',
   showRecency = true,
-  ageLabel,
   grouped = false,
 }) => {
   const { t } = useTranslation();
@@ -216,7 +214,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   const reports = similarVariant === 'reports';
   const similarCount = SIMILAR_ARTICLES_LINE_ENABLED || reports ? similarCountProp : undefined;
   // What the row shows and what VoiceOver reads for age is one string.
-  const shownAge = timeLabel ?? (showRecency ? null : (ageLabel ?? null));
+  const shownAge = timeLabel ?? null;
   const colors = useColors();
   const moreLabel = t('articleMenu.openA11y');
   const displayTitle = titleEnglish || titleOriginal || '';
@@ -232,7 +230,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
     shownTitle ?? displayTitle,
     titleFailed ? t('feed.translationFailed') : null,
     meta.publication,
-    timeLabel ?? (showRecency ? meta.age : ageLabel),
+    timeLabel ?? (showRecency ? meta.age : null),
     spokenPriority,
     meta.language,
     statusLabel,
@@ -285,7 +283,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
       {/* No fixed minHeight: the card wraps its content. It was 128, which
             left visible dead space under a short 2-line headline. */}
         <Box className="flex-col">
-          {/* 1. Meta row — the FULL card width: time · priority · flag and
+          {/* 1. Meta row — the FULL card width: priority · time · flag and
               language (the flag sits immediately left of the language). */}
           <Box className="flex-row items-center" style={{ gap: 6 }}>
             <Box className="flex-1">
@@ -297,7 +295,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                 read={read}
                 countryCode={countryCode}
                 showFlag
-                centerAccessory={priorityAccessory}
+                leadingAccessory={priorityAccessory}
                 showRecency={showRecency || shownAge != null}
                 ageText={shownAge}
               />

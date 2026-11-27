@@ -271,35 +271,17 @@
       "helpStatus": "Status van AI-aanbieder"
     },
     "fold": {
-      "upToDateTitle": "Je bent helemaal bij met wat voor jou relevant is.",
-      "upToDateBody_one": "Nog {{count}} verhaal is minder waarschijnlijk belangrijk voor jou.",
-      "upToDateBody_other": "Nog {{count}} verhalen zijn minder waarschijnlijk belangrijk voor jou.",
-      "nothingTitle": "Op dit moment lijkt er niets nieuws belangrijk voor jou.",
-      "nothingBody_one": "Mera vond {{count}} verhaal dat je misschien nog interesseert.",
-      "nothingBody_other": "Mera vond {{count}} verhalen die je misschien nog interesseren.",
-      "showThem": "Toon ze",
-      "label": "Minder waarschijnlijk belangrijk voor jou",
-      "shownAnnounce_one": "{{count}} extra verhaal wordt getoond",
-      "shownAnnounce_other": "{{count}} extra verhalen worden getoond",
+      "label": "Goed om te weten",
       "held": "Mera koos nieuwe verhalen terwijl je aan het lezen was.",
       "stillReading": "Mera leest nog steeds. Nieuwe verhalen verschijnen hier.",
       "endTitle": "Dat is alles voor nu.",
       "endBody": "Mera blijft op de achtergrond lezen. Kom later nog eens kijken.",
-      "seenBody_one": "Nog {{count}} verhaal is er een dat je al hebt gezien.",
-      "seenBody_other": "Nog {{count}} verhalen zijn er die je al hebt gezien.",
-      "mixedBody_one": "Nog {{count}} verhaal is er een dat je al hebt gezien of dat minder waarschijnlijk belangrijk voor je is.",
-      "mixedBody_other": "Nog {{count}} verhalen zijn er die je al hebt gezien of die minder waarschijnlijk belangrijk voor je zijn.",
       "seenLabel": "Verhalen die je al hebt gezien"
     },
     "firstFeed": {
       "body": "Mera leest het nieuws van vandaag voor je. Je interesses blijven op je telefoon, dus geen server bewaart een feed over jou. Daarom begint Mera met lezen zodra je de app opent.",
       "link": "Zo houdt Mera dit privé",
       "dismiss": "Sluiten"
-    },
-    "age": {
-      "yesterday": "Van gisteren",
-      "fromDay": "Van {{day}}",
-      "fromDate": "Van {{date}}"
     },
     "moreReports_one": "{{count}} extra bericht",
     "moreReports_other": "{{count}} extra berichten",

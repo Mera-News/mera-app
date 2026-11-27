@@ -1,7 +1,6 @@
-// The fold (D5, D18): Medium and up above it, Low one tap away, nothing on screen moves when picks
-// arrive. Driven through useFeedScreen with the real stores, the in-memory DB and the list's own
+// The fold (D5, D18): Medium and up above it, Low under "Good to know" after the first run, nothing
+// on screen moves when picks arrive. Driven through useFeedScreen with the real stores, the in-memory DB and the list's own
 // viewability pairs.
-import { AccessibilityInfo } from 'react-native';
 import { FEED_SYNC_TASK } from '@/components/custom/FeedSyncIndicator';
 import {
   resetFeedViewPrefs,
@@ -17,7 +16,7 @@ import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { useForYouStore, type ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useNetworkStore } from '@/lib/stores/network-store';
-import { initI18nEn, setAppState, signInFixtureAccount } from '@/test/helpers';
+import { setAppState, signInFixtureAccount } from '@/test/helpers';
 import {
   HIGH,
   LOW,
@@ -94,16 +93,18 @@ async function patchRows(patch: Record<string, Partial<ForYouSuggestion>>) {
 }
 
 describe('the fold line', () => {
-  it('before the first run finishes: Low hidden, the quiet reading line; then the fold card counts Low only', async () => {
+  it('before the first run finishes: Low hidden, the quiet reading line; then Low under its label, the tail, the end card', async () => {
     const feed = await mountWith([['h', HIGH], ['m', MEDIUM], ['l1', LOW], ['l2', LOW]], () => seedTried(['t1']));
     expect(feed.ids()).toEqual(['h', 'm']);
     expect(fold(feed).terminal).toBe('reading');
 
     await finishRun();
 
-    await waitFor(() => expect(fold(feed).terminal).toBe('fold'));
-    expect(feed.ids()).toEqual(['h', 'm']);
-    expect(fold(feed)).toMatchObject({ count: 2, nothingAbove: false, held: 0 });
+    await waitFor(() => expect(fold(feed).terminal).toBe('end'));
+    expect(feed.ids()).toEqual(['h', 'm', 'l1', 'l2', 't1']);
+    expect(fold(feed)).toMatchObject({ index: 2, held: 0 });
+    // The not-read divider follows every scored row.
+    expect(feed.result.current.picksCount).toBe(4);
   });
 
   it('seen High and Medium stay above it, an unread High at 30h sits above a fresh Medium', async () => {
@@ -116,16 +117,16 @@ describe('the fold line', () => {
     }
     const feed = await mountWith([['m', MEDIUM], ['l', LOW]]);
     await finishRun();
-    await waitFor(() => expect(fold(feed).terminal).toBe('fold'));
-    expect(feed.ids()).toEqual(['oldH', 'm']);
+    await waitFor(() => expect(fold(feed).terminal).toBe('end'));
+    expect(feed.ids()).toEqual(['oldH', 'm', 'l']);
+    expect(fold(feed).index).toBe(2);
   });
 
-  it('nothing reaching Medium: the fold card says so and the list has no rows', async () => {
+  it('nothing reaching Medium: the label sits over the first row', async () => {
     const feed = await mountWith([['l1', LOW], ['l2', LOW]]);
     await finishRun();
-    await waitFor(() => expect(fold(feed).terminal).toBe('fold'));
-    expect(feed.ids()).toEqual([]);
-    expect(fold(feed)).toMatchObject({ count: 2, nothingAbove: true });
+    await waitFor(() => expect(feed.ids()).toEqual(['l1', 'l2']));
+    expect(fold(feed).index).toBe(0);
   });
 
   it('a pending note sinks to the end of its own side of the fold', async () => {
@@ -133,11 +134,7 @@ describe('the fold line', () => {
     await seedReasonPending('pl', LOW);
     const feed = await mountWith([['h', HIGH], ['m', MEDIUM], ['l', LOW]]);
     await finishRun();
-    await waitFor(() => expect(fold(feed).terminal).toBe('fold'));
-    expect(feed.ids()).toEqual(['h', 'm', 'pm']);
-
-    await act(() => feed.result.current.onShowThem());
-    expect(feed.ids()).toEqual(['h', 'm', 'pm', 'l', 'pl']);
+    await waitFor(() => expect(feed.ids()).toEqual(['h', 'm', 'pm', 'l', 'pl']));
   });
 });
 
@@ -149,28 +146,18 @@ describe('seen stories behind the fold (the Feed algorithm default)', () => {
     await act(() => useFeedOrderStore.getState().markViewed(seen));
     await act(() => feed.result.current.onRefresh());
     await finishRun();
-    await waitFor(() => expect(fold(feed).terminal).toBe('fold'));
+    await waitFor(() => expect(fold(feed).terminal).toBe('end'));
     return feed;
   }
 
-  it('only seen rows behind it: the fold counts them as seen; expanded, the seen label takes the fold slot', async () => {
+  it('only seen rows below it: the seen label takes the fold slot', async () => {
     const feed = await mountSeen([['h1', HIGH], ['h2', HIGH]], 'h2');
-    expect(feed.ids()).toEqual(['h1']);
-    expect(fold(feed)).toMatchObject({ count: 1, seenCount: 1 });
-
-    await act(() => feed.result.current.onShowThem());
-
     expect(feed.ids()).toEqual(['h1', 'h2']);
     expect(fold(feed)).toMatchObject({ index: 1, seenIndex: 1 });
   });
 
   it('mixed: unseen Low first, then the seen rows under their own label', async () => {
     const feed = await mountSeen([['h1', HIGH], ['h2', HIGH], ['l', LOW]], 'h2');
-    expect(feed.ids()).toEqual(['h1']);
-    expect(fold(feed)).toMatchObject({ count: 2, seenCount: 1 });
-
-    await act(() => feed.result.current.onShowThem());
-
     expect(feed.ids()).toEqual(['h1', 'l', 'h2']);
     expect(fold(feed)).toMatchObject({ index: 1, seenIndex: 2 });
   });
@@ -178,8 +165,8 @@ describe('seen stories behind the fold (the Feed algorithm default)', () => {
   it('with seen stories kept in the main list, a seen High stays above the fold', async () => {
     setFeedAlgo({ seenBelowFold: false });
     const feed = await mountSeen([['h1', HIGH], ['h2', HIGH], ['l', LOW]], 'h2');
-    expect(feed.ids()).toEqual(['h1', 'h2']);
-    expect(fold(feed)).toMatchObject({ count: 1, seenCount: 0 });
+    expect(feed.ids()).toEqual(['h1', 'h2', 'l']);
+    expect(fold(feed)).toMatchObject({ index: 2, seenIndex: null });
   });
 });
 
@@ -194,7 +181,7 @@ describe('fold readiness', () => {
 
     await act(() => useNetworkStore.setState({ isConnected: false }));
 
-    expect(fold(feed).terminal).toBe('fold');
+    expect(fold(feed).terminal).toBe('end');
   });
 
   it('a sync that fails, then 3 s of quiet: ready', async () => {
@@ -208,7 +195,7 @@ describe('fold readiness', () => {
       jest.advanceTimersByTime(3_100);
     });
 
-    expect(fold(feed).terminal).toBe('fold');
+    expect(fold(feed).terminal).toBe('end');
   });
 
   it('a scoring run in progress keeps it waiting for the run to finish', async () => {
@@ -222,64 +209,38 @@ describe('fold readiness', () => {
     expect(fold(feed).terminal).toBe('reading');
 
     await finishRun();
-    expect(fold(feed).terminal).toBe('fold');
+    expect(fold(feed).terminal).toBe('end');
   });
 });
 
-describe('Show them', () => {
-  it('renders Low under the label, then the not-read tail, then the end card; the divider follows the picks', async () => {
-    const feed = await mountWith([['h', HIGH], ['m', MEDIUM], ['l1', LOW], ['l2', LOW]], () => seedTried(['t1']));
-    await finishRun();
-    await waitFor(() => expect(fold(feed).terminal).toBe('fold'));
-
-    await act(() => feed.result.current.onShowThem());
-
-    expect(feed.ids()).toEqual(['h', 'm', 'l1', 'l2', 't1']);
-    expect(fold(feed)).toMatchObject({ terminal: 'end', index: 2, shown: 2 });
-    expect(feed.result.current.picksCount).toBe(4);
-  });
-
-  it('Show them announces the revealed count once, from the tap', async () => {
-    await initI18nEn(); // the case asserts English copy
-    const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
-    const feed = await mountWith([['h', HIGH], ['m', MEDIUM], ['l1', LOW], ['l2', LOW]]);
-    await finishRun();
-    await waitFor(() => expect(fold(feed).terminal).toBe('fold'));
-    announce.mockClear();
-    await act(() => feed.result.current.onShowThem());
-    expect(announce).toHaveBeenCalledWith('Showing 2 more stories');
-    expect(announce).toHaveBeenCalledTimes(1);
-  });
-
-  it('resetSession collapses it again', async () => {
+describe('the session boundary', () => {
+  it('a refresh hides Low again until its first run is done', async () => {
     await signInFixtureAccount();
     const feed = await mountWith([['h', HIGH], ['l', LOW]]);
     await finishRun();
-    await waitFor(() => expect(fold(feed).terminal).toBe('fold'));
-    await act(() => feed.result.current.onShowThem());
-    expect(feed.ids()).toEqual(['h', 'l']);
+    await waitFor(() => expect(feed.ids()).toEqual(['h', 'l']));
 
     await act(() => feed.result.current.onRefresh());
+    expect(feed.ids()).toEqual(['h']);
     await finishRun();
 
-    await waitFor(() => expect(fold(feed).terminal).toBe('fold'));
-    expect(feed.ids()).toEqual(['h']);
-    expect(fold(feed).index).toBeNull();
+    await waitFor(() => expect(feed.ids()).toEqual(['h', 'l']));
+    expect(fold(feed).index).toBe(1);
   });
 });
 
 describe('arrivals with the fold', () => {
-  it('fold on screen: a High arrival is held, nothing rendered moves, the held line counts it', async () => {
+  it('Low rows on screen: a High arrival is held, nothing rendered moves, the held line counts it', async () => {
     const feed = await mountWith([['h1', HIGH], ['h2', HIGH], ['l1', LOW], ['l2', LOW]]);
     await finishRun();
-    await waitFor(() => expect(fold(feed).terminal).toBe('fold'));
-    await onScreen(feed, ['h1', 'h2']);
+    await waitFor(() => expect(fold(feed).terminal).toBe('end'));
+    await onScreen(feed, ['h1', 'h2', 'l1', 'l2']);
 
     await pickArrives('hot');
     await pickArrives('late-low', LOW);
 
-    expect(feed.ids()).toEqual(['h1', 'h2']);
-    expect(fold(feed)).toMatchObject({ count: 2, held: 2 });
+    expect(feed.ids()).toEqual(['h1', 'h2', 'l1', 'l2']);
+    expect(fold(feed)).toMatchObject({ index: 2, held: 2 });
   });
 
   it('fold more than a screen below: a High arrival sorts in above it, past the pin', async () => {
@@ -287,7 +248,7 @@ describe('arrivals with the fold', () => {
     const rows = Array.from({ length: 7 }, (_, i) => [`r${i}`, MEDIUM] as const);
     const feed = await mountWith([...rows, ['l1', LOW]]);
     await finishRun();
-    await waitFor(() => expect(fold(feed).terminal).toBe('fold'));
+    await waitFor(() => expect(fold(feed).terminal).toBe('end'));
     const before = feed.ids();
     await onScreen(feed, before.slice(0, 2));
 
@@ -296,7 +257,8 @@ describe('arrivals with the fold', () => {
     expect(feed.ids().slice(0, 6)).toEqual(before.slice(0, 6));
     expect(feed.ids()[6]).toBe('hot');
     expect(feed.ids()[7]).toBe(before[6]);
-    expect(fold(feed)).toMatchObject({ terminal: 'fold', count: 1, held: 0 });
+    expect(feed.ids()[8]).toBe('l1');
+    expect(fold(feed)).toMatchObject({ index: 8, held: 0 });
   });
 
   it('a note landing moves nothing above the reader', async () => {
@@ -323,26 +285,22 @@ describe('arrivals with the fold', () => {
 describe('Show filter, minimap and counts with the fold', () => {
   afterEach(() => setFeedShow('all'));
 
-  it("Mera's picks folds too; the minimap maps only the rendered picks", async () => {
+  it("Mera's picks shows Low under its label too, with no tail", async () => {
     await act(() => setFeedMinimap(true));
     const feed = await mountWith([['h', HIGH], ['m', MEDIUM], ['l', LOW]], () => seedTried(['t1']));
     await act(() => setFeedShow('picks'));
     await finishRun();
-    await waitFor(() => expect(fold(feed).terminal).toBe('fold'));
-    expect(feed.ids()).toEqual(['h', 'm']);
-    expect(feed.result.current.minimapRows.map((r) => r.id)).toEqual(['h', 'm']);
+    await waitFor(() => expect(fold(feed).terminal).toBe('end'));
+    expect(feed.ids()).toEqual(['h', 'm', 'l']);
+    expect(feed.result.current.minimapRows.map((r) => r.id)).toEqual(['h', 'm', 'l']);
     await act(() => setFeedMinimap(false));
   });
 
   it('the Show menu counts what each option renders', async () => {
     const feed = await mountWith([['h', HIGH], ['l', LOW]], () => seedTried(['t1']));
     await finishRun();
-    await waitFor(() => expect(fold(feed).terminal).toBe('fold'));
+    await waitFor(() => expect(fold(feed).terminal).toBe('end'));
     const counts = () => useFeedShowCountsStore.getState().counts;
-    await waitFor(() => expect(counts()).toMatchObject({ all: { n: 1 }, picks: { n: 1 }, unread: { n: 1 } }));
-
-    await act(() => feed.result.current.onShowThem());
-
     await waitFor(() => expect(counts()).toMatchObject({ all: { n: 3 }, picks: { n: 2 }, unread: { n: 1 } }));
   });
 });

@@ -271,35 +271,17 @@
       "helpStatus": "Status des KI-Anbieters"
     },
     "fold": {
-      "upToDateTitle": "Du bist auf dem neuesten Stand mit allem, was dich betrifft.",
-      "upToDateBody_one": "{{count}} weitere Geschichte ist für dich wahrscheinlich weniger wichtig.",
-      "upToDateBody_other": "{{count}} weitere Geschichten sind für dich wahrscheinlich weniger wichtig.",
-      "nothingTitle": "Im Moment wirkt nichts Neues wichtig für dich.",
-      "nothingBody_one": "Mera hat {{count}} Geschichte gefunden, die dich trotzdem interessieren könnte.",
-      "nothingBody_other": "Mera hat {{count}} Geschichten gefunden, die dich trotzdem interessieren könnten.",
-      "showThem": "Anzeigen",
-      "label": "Für dich wahrscheinlich weniger wichtig",
-      "shownAnnounce_one": "{{count}} weitere Geschichte wird angezeigt",
-      "shownAnnounce_other": "{{count}} weitere Geschichten werden angezeigt",
+      "label": "Gut zu wissen",
       "held": "Mera hat neue Geschichten ausgewählt, während du gelesen hast.",
       "stillReading": "Mera liest noch. Neue Geschichten erscheinen hier.",
       "endTitle": "Das war's fürs Erste.",
       "endBody": "Mera liest im Hintergrund weiter. Schau später noch einmal vorbei.",
-      "seenBody_one": "{{count}} weitere Geschichte hast du schon gesehen.",
-      "seenBody_other": "{{count}} weitere Geschichten hast du schon gesehen.",
-      "mixedBody_one": "{{count}} weitere Geschichte hast du schon gesehen oder sie ist für dich wahrscheinlich weniger wichtig.",
-      "mixedBody_other": "{{count}} weitere Geschichten hast du schon gesehen oder sie sind für dich wahrscheinlich weniger wichtig.",
       "seenLabel": "Geschichten, die du schon gesehen hast"
     },
     "firstFeed": {
       "body": "Mera liest heute die Nachrichten für dich. Deine Interessen bleiben auf deinem Telefon, daher speichert kein Server einen Feed über dich. Deshalb beginnt Mera mit dem Lesen, sobald du die App öffnest.",
       "link": "So schützt Mera deine Privatsphäre",
       "dismiss": "Schließen"
-    },
-    "age": {
-      "yesterday": "Von gestern",
-      "fromDay": "Vom {{day}}",
-      "fromDate": "Vom {{date}}"
     },
     "moreReports_one": "{{count}} weiterer Bericht",
     "moreReports_other": "{{count}} weitere Berichte",

@@ -32,22 +32,14 @@ interface AllCaughtUpCardProps {
     readonly refreshing?: boolean;
     /** The not-read divider while the read hold is on: the upgrade button, under the body. */
     readonly action?: React.ReactNode;
-    /** The Feed's fold states (D5/D18). Omitted: the legacy footer / divider above.
-     *  fold: the card at the Medium/Low line. label: the shrunk card once opened.
+    /** The Feed's states (D5/D18). Omitted: the legacy footer / divider above.
+     *  label: the "Good to know" section label over the first row below the fold.
      *  end: the terminal card, Refresh always kept. reading: the quiet line while
      *  the session's first run is still processing. */
-    readonly variant?: 'fold' | 'label' | 'end' | 'reading';
-    /** fold: stories below the line (Low story rows only, never the not-read tail). */
-    readonly count?: number;
-    /** fold: how many of `count` the reader already saw (Feed algorithm:
-     *  seen stories go behind the fold). Picks the seen or mixed body. */
-    readonly seenCount?: number;
-    /** label: the seen stories' label, drawn over the first seen folded row. */
+    readonly variant?: 'label' | 'end' | 'reading';
+    /** label: the seen stories' label, drawn over the first seen row below the fold. */
     readonly seen?: boolean;
-    /** fold: nothing reached Medium, so the title says so. */
-    readonly nothingAbove?: boolean;
-    readonly onShowThem?: () => void;
-    /** fold/end: picks were held back while the reader read; adds the held line above Refresh. */
+    /** end: picks were held back while the reader read; adds the held line above Refresh. */
     readonly held?: boolean;
 }
 
@@ -59,11 +51,7 @@ const AllCaughtUpCardBody: React.FC<AllCaughtUpCardProps> = ({
     refreshing = false,
     action,
     variant,
-    count = 0,
-    seenCount = 0,
     seen = false,
-    nothingAbove = false,
-    onShowThem,
     held = false,
 }) => {
     const { t } = useTranslation();
@@ -112,27 +100,9 @@ const AllCaughtUpCardBody: React.FC<AllCaughtUpCardProps> = ({
         );
     }
 
-    const isFold = variant === 'fold';
     const isEnd = variant === 'end';
-    const headline = isFold
-        ? t(nothingAbove ? 'feed.fold.nothingTitle' : 'feed.fold.upToDateTitle')
-        : isEnd
-          ? t('feed.fold.endTitle')
-          : (title ?? t('feed.allCaughtUp'));
-    const lead = isFold
-        ? t(
-              seenCount > 0 && seenCount >= count
-                  ? 'feed.fold.seenBody'
-                  : seenCount > 0
-                    ? 'feed.fold.mixedBody'
-                    : nothingAbove
-                      ? 'feed.fold.nothingBody'
-                      : 'feed.fold.upToDateBody',
-              { count },
-          )
-        : isEnd
-          ? t('feed.fold.endBody')
-          : null;
+    const headline = isEnd ? t('feed.fold.endTitle') : (title ?? t('feed.allCaughtUp'));
+    const lead = isEnd ? t('feed.fold.endBody') : null;
     const refreshButton = onRefresh ? (
         <Button action="primary" onPress={onRefresh} isDisabled={refreshing} testID="all-caught-up-refresh">
             {refreshing ? <ButtonSpinner /> : null}
@@ -165,21 +135,13 @@ const AllCaughtUpCardBody: React.FC<AllCaughtUpCardProps> = ({
                 </Text>
             ) : null}
 
-            {isFold && onShowThem ? (
-                <Box className="mt-2 mb-2">
-                    <Button action="primary" onPress={onShowThem} testID="fold-show-them">
-                        <ButtonText>{t('feed.fold.showThem')}</ButtonText>
-                    </Button>
-                </Box>
-            ) : null}
-
             {isEnd && bodyText ? (
                 <Text size="sm" className="text-ink-3 text-center mb-3" testID="all-caught-up-mindful">
                     {bodyText}
                 </Text>
             ) : null}
 
-            {(isFold || isEnd) && held ? (
+            {isEnd && held ? (
                 <Box className="items-center mb-4" style={{ gap: 12 }}>
                     <Text testID="fold-held-line" size="sm" className="text-ink text-center">
                         {t('feed.fold.held')}
@@ -200,7 +162,7 @@ const AllCaughtUpCardBody: React.FC<AllCaughtUpCardProps> = ({
             ) : null}
 
             {/* Cycling mindfulness message — the "put the phone down" nudge. */}
-            {bodyText && !isFold && !isEnd ? (
+            {bodyText && !isEnd ? (
                 <Text size="sm" className="text-ink-2 text-center">
                     {bodyText}
                 </Text>
@@ -240,7 +202,7 @@ const AllCaughtUpCardBody: React.FC<AllCaughtUpCardProps> = ({
     );
 };
 
-// Keyed by variant: the footer swaps reading / fold / end in place, and the variants differ in style shape
+// Keyed by variant: the footer swaps reading / end in place, and the variants differ in style shape
 // (shadow, plate). A style that gains a CSS variable after its first render trips react-native-css-interop's
 // dev-only upgrade warning, which stringifies navigation props and crashes the Feed. A fresh mount per variant
 // keeps every instance's shape fixed from its first render.

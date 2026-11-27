@@ -96,8 +96,6 @@ interface ArticleCardProps {
    *  Null/omitted: no row. */
   similarCount?: number | null;
   similarVariant?: 'similar' | 'reports';
-  /** The Feed's "From yesterday" label. */
-  ageLabel?: string | null;
 }
 
 export type { ArticleCardProps };
@@ -136,7 +134,6 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   halo,
   similarCount,
   similarVariant,
-  ageLabel,
 }) => {
   const { t } = useTranslation();
 
@@ -366,7 +363,6 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       halo={halo}
       similarCount={similarCount}
       similarVariant={similarVariant}
-      ageLabel={ageLabel}
       metaRowRightReserve={metaRowRightReserve}
       footer={actionBar}
       spokenPriority={spokenPriority}

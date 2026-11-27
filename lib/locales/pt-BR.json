@@ -273,35 +273,17 @@
       "helpStatus": "Status do provedor de IA"
     },
     "fold": {
-      "upToDateTitle": "Você está em dia com o que importa para você.",
-      "upToDateBody_one": "Mais {{count}} história tem menos chance de importar para você.",
-      "upToDateBody_other": "Mais {{count}} histórias têm menos chance de importar para você.",
-      "nothingTitle": "Nada de novo parece importante para você agora.",
-      "nothingBody_one": "A Mera encontrou {{count}} história que ainda pode interessar a você.",
-      "nothingBody_other": "A Mera encontrou {{count}} histórias que ainda podem interessar a você.",
-      "showThem": "Mostrar",
-      "label": "Menos chance de importar para você",
-      "shownAnnounce_one": "Mostrando mais {{count}} história",
-      "shownAnnounce_other": "Mostrando mais {{count}} histórias",
+      "label": "Bom saber",
       "held": "A Mera escolheu novas histórias enquanto você lia.",
       "stillReading": "A Mera ainda está lendo. As novas histórias vão aparecer aqui.",
       "endTitle": "Por enquanto é só isso.",
       "endBody": "A Mera continua lendo em segundo plano. Volte mais tarde.",
-      "seenBody_one": "Mais {{count}} história é uma que você já viu.",
-      "seenBody_other": "Mais {{count}} histórias são as que você já viu.",
-      "mixedBody_one": "Mais {{count}} história é uma que você já viu ou que tem menos chance de importar para você.",
-      "mixedBody_other": "Mais {{count}} histórias são as que você já viu ou que têm menos chance de importar para você.",
       "seenLabel": "Histórias que você já viu"
     },
     "firstFeed": {
       "body": "A Mera está lendo as notícias de hoje para você. O que você conta à Mera fica neste celular, então nenhum servidor guarda um feed sobre você. Por isso a Mera começa a ler quando você abre o app.",
       "link": "Como a Mera mantém isso privado",
       "dismiss": "Dispensar"
-    },
-    "age": {
-      "yesterday": "De ontem",
-      "fromDay": "De {{day}}",
-      "fromDate": "De {{date}}"
     },
     "moreReports_one": "Mais {{count}} reportagem",
     "moreReports_other": "Mais {{count}} reportagens",

@@ -259,35 +259,17 @@
       "helpStatus": "Trạng thái nhà cung cấp AI"
     },
     "fold": {
-      "upToDateTitle": "Bạn đã cập nhật hết những tin tức liên quan đến bạn.",
-      "upToDateBody_one": "{{count}} tin nữa ít có khả năng quan trọng với bạn.",
-      "upToDateBody_other": "{{count}} tin nữa ít có khả năng quan trọng với bạn.",
-      "nothingTitle": "Hiện chưa có tin mới nào quan trọng với bạn.",
-      "nothingBody_one": "Mera tìm thấy {{count}} tin có thể vẫn khiến bạn quan tâm.",
-      "nothingBody_other": "Mera tìm thấy {{count}} tin có thể vẫn khiến bạn quan tâm.",
-      "showThem": "Hiện chúng",
-      "label": "Ít có khả năng quan trọng với bạn",
-      "shownAnnounce_one": "Đang hiện thêm {{count}} tin",
-      "shownAnnounce_other": "Đang hiện thêm {{count}} tin",
+      "label": "Nên biết",
       "held": "Mera đã chọn tin mới trong lúc bạn đọc.",
       "stillReading": "Mera vẫn đang đọc. Tin mới sẽ hiện ở đây.",
       "endTitle": "Hiện tại chỉ có vậy thôi.",
       "endBody": "Mera tiếp tục đọc ở chế độ nền. Bạn quay lại sau nhé.",
-      "seenBody_one": "{{count}} tin nữa là tin bạn đã xem.",
-      "seenBody_other": "{{count}} tin nữa là tin bạn đã xem.",
-      "mixedBody_one": "{{count}} tin nữa là tin bạn đã xem hoặc ít có khả năng quan trọng với bạn.",
-      "mixedBody_other": "{{count}} tin nữa là tin bạn đã xem hoặc ít có khả năng quan trọng với bạn.",
       "seenLabel": "Tin bạn đã xem"
     },
     "firstFeed": {
       "body": "Mera đang đọc tin tức hôm nay cho bạn. Sở thích của bạn chỉ nằm trên điện thoại này, nên không máy chủ nào giữ một bảng tin về bạn. Vì vậy Mera bắt đầu đọc khi bạn mở ứng dụng.",
       "link": "Mera giữ điều này riêng tư như thế nào",
       "dismiss": "Đóng"
-    },
-    "age": {
-      "yesterday": "Từ hôm qua",
-      "fromDay": "Từ {{day}}",
-      "fromDate": "Từ {{date}}"
     },
     "moreReports_one": "{{count}} bài viết khác",
     "moreReports_other": "{{count}} bài viết khác",

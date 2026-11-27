@@ -39,9 +39,7 @@ interface ArticleSuggestionCompactCardProps {
   verdict?: Verdict | null;
   /** `reports`: "N more reports" (the Feed). */
   similarVariant?: 'similar' | 'reports';
-  /** Feed rule: no relative age; only the "From yesterday" label past 24h. */
   showRecency?: boolean;
-  ageLabel?: string | null;
 }
 
 /**
@@ -67,7 +65,6 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
   verdict = null,
   similarVariant,
   showRecency,
-  ageLabel,
 }) => {
   const { t } = useTranslation();
   const status = suggestion.status;
@@ -156,7 +153,6 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
         similarCount={similarCount}
         similarVariant={similarVariant}
         showRecency={showRecency}
-        ageLabel={ageLabel}
       />
       {menu.element}
     </>

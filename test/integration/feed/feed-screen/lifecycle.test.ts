@@ -12,6 +12,7 @@ import {
   MEDIUM,
   act,
   arrive,
+  finishRun,
   hydrateSuggestions,
   renderFeed,
   resetFeedStores,
@@ -46,9 +47,9 @@ describe('ingest is insert-only', () => {
     const feed = await mountWith([['a', HIGH], ['b', MEDIUM]]);
     expect(feed.ids()).toEqual(['a', 'b']);
 
-    // A Low arrival joins the folded rows (D5), behind "Show them".
+    // A Low arrival waits below the fold (D5) until the first run is done.
     await arrive([['c', LOW]]);
-    await waitFor(() => expect(feed.result.current.fold.count).toBe(1));
+    await waitFor(() => expect(useFeedOrderStore.getState().order).toContain('c'));
     expect(feed.ids()).toEqual(['a', 'b']);
 
     await arrive([['d', HIGH]]);
@@ -193,8 +194,8 @@ describe('rows whose note is still being written', () => {
 
     // The fold splits on the band without the pending offset; on each side the pending row sinks.
     expect(feed.ids()).toEqual(['hi', 'mid', 'pend-hi']);
-    await act(() => feed.result.current.onShowThem());
-    expect(feed.ids()).toEqual(['hi', 'mid', 'pend-hi', 'lo', 'pend-lo']);
+    await finishRun();
+    await waitFor(() => expect(feed.ids()).toEqual(['hi', 'mid', 'pend-hi', 'lo', 'pend-lo']));
   });
 });
 

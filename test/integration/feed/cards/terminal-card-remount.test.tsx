@@ -1,4 +1,4 @@
-// The Feed footer swaps reading / fold / end in place. Each variant must MOUNT fresh: a style that gains a CSS
+// The Feed footer swaps reading / end in place. Each variant must MOUNT fresh: a style that gains a CSS
 // variable on a re-render trips react-native-css-interop's dev-only upgrade warning, which crashed the Feed
 // ("Couldn't find a LinkingContext context"). Jest cannot see the warning, so this pins the cause: no instance
 // survives a variant change.
@@ -20,9 +20,9 @@ jest.mock('@/components/custom/MeraLogo', () => {
 
 beforeAll(initI18nEn);
 
-it('fold to end remounts the card instead of restyling it', async () => {
+it('a variant change remounts the card instead of restyling it', async () => {
   mounts.n = 0;
-  const view = await render(<AllCaughtUpCard variant="fold" count={3} />);
+  const view = await render(<AllCaughtUpCard />);
   expect(mounts.n).toBe(1);
   await view.rerender(<AllCaughtUpCard variant="end" />);
   expect(mounts.n).toBe(2);

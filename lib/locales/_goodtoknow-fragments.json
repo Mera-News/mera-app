@@ -1,0 +1,143 @@
+{
+  "_comment": "The Feed's rows below the fold are a section, not a card behind Show them (owner).",
+  "ar": {
+    "feed": {
+      "fold": {
+        "label": "من الجيد معرفته"
+      }
+    }
+  },
+  "de": {
+    "feed": {
+      "fold": {
+        "label": "Gut zu wissen"
+      }
+    }
+  },
+  "en": {
+    "feed": {
+      "fold": {
+        "label": "Good to know"
+      }
+    }
+  },
+  "es": {
+    "feed": {
+      "fold": {
+        "label": "Bueno saberlo"
+      }
+    }
+  },
+  "fr": {
+    "feed": {
+      "fold": {
+        "label": "Bon à savoir"
+      }
+    }
+  },
+  "hi": {
+    "feed": {
+      "fold": {
+        "label": "जानना अच्छा है"
+      }
+    }
+  },
+  "id": {
+    "feed": {
+      "fold": {
+        "label": "Baik untuk diketahui"
+      }
+    }
+  },
+  "it": {
+    "feed": {
+      "fold": {
+        "label": "Buono a sapersi"
+      }
+    }
+  },
+  "ja": {
+    "feed": {
+      "fold": {
+        "label": "知っておくと良いこと"
+      }
+    }
+  },
+  "ko": {
+    "feed": {
+      "fold": {
+        "label": "알아 두면 좋은 소식"
+      }
+    }
+  },
+  "nl": {
+    "feed": {
+      "fold": {
+        "label": "Goed om te weten"
+      }
+    }
+  },
+  "pl": {
+    "feed": {
+      "fold": {
+        "label": "Warto wiedzieć"
+      }
+    }
+  },
+  "pt-BR": {
+    "feed": {
+      "fold": {
+        "label": "Bom saber"
+      }
+    }
+  },
+  "ru": {
+    "feed": {
+      "fold": {
+        "label": "Полезно знать"
+      }
+    }
+  },
+  "th": {
+    "feed": {
+      "fold": {
+        "label": "น่ารู้"
+      }
+    }
+  },
+  "tr": {
+    "feed": {
+      "fold": {
+        "label": "Bilmekte fayda var"
+      }
+    }
+  },
+  "uk": {
+    "feed": {
+      "fold": {
+        "label": "Корисно знати"
+      }
+    }
+  },
+  "vi": {
+    "feed": {
+      "fold": {
+        "label": "Nên biết"
+      }
+    }
+  },
+  "zh-CN": {
+    "feed": {
+      "fold": {
+        "label": "值得了解"
+      }
+    }
+  },
+  "zh-TW": {
+    "feed": {
+      "fold": {
+        "label": "值得了解"
+      }
+    }
+  }
+}

@@ -445,6 +445,27 @@ describe('resolved states', () => {
     expect(view.queryByTestId('track-more')).toBeNull();
   });
 
+  it('a followed row is a button: it closes the chat and opens that story', async () => {
+    const router = (require('expo-router') as typeof import('expo-router')).router;
+    const push = jest.spyOn(router, 'push').mockImplementation(() => {});
+    await act(() => useFloatingChatStore.setState({ isExpanded: true }));
+    const { view } = await mount(['Artemis II launch']);
+    await fireEvent.press(view.getByTestId('track-follow'));
+    await waitFor(() => expect(view.getByTestId('track-card-followed')).toBeTruthy());
+    const [story] = await firstValueFrom(observeActive());
+
+    const row = view.getByTestId('track-row-0');
+    expect(row.props.accessibilityRole).toBe('button');
+    expect(frameHeight(row)).toBeGreaterThanOrEqual(44);
+    await fireEvent.press(row);
+
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith({ pathname: '/logged-in/story-timeline', params: { trackedStoryId: story.id } }),
+    );
+    expect(useFloatingChatStore.getState().isExpanded).toBe(false);
+    push.mockRestore();
+  });
+
   it('See followed stories closes the chat and opens the Followed stories page', async () => {
     const nav = require('@/components/custom/nav/navigate-to-page') as typeof import('@/components/custom/nav/navigate-to-page');
     const go = jest.spyOn(nav, 'navigateToPage').mockImplementation(() => {});

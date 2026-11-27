@@ -273,35 +273,17 @@
       "helpStatus": "Stato del fornitore IA"
     },
     "fold": {
-      "upToDateTitle": "Sei aggiornato su ciò che conta per te.",
-      "upToDateBody_one": "{{count}} altra storia ha meno probabilità di contare per te.",
-      "upToDateBody_other": "{{count}} altre storie hanno meno probabilità di contare per te.",
-      "nothingTitle": "Al momento non c'è niente di nuovo che sembri importante per te.",
-      "nothingBody_one": "Mera ha trovato {{count}} storia che potrebbe ancora interessarti.",
-      "nothingBody_other": "Mera ha trovato {{count}} storie che potrebbero ancora interessarti.",
-      "showThem": "Mostrale",
-      "label": "Con meno probabilità di contare per te",
-      "shownAnnounce_one": "Mostro {{count}} altra storia",
-      "shownAnnounce_other": "Mostro {{count}} altre storie",
+      "label": "Buono a sapersi",
       "held": "Mera ha scelto nuove storie mentre leggevi.",
       "stillReading": "Mera sta ancora leggendo. Le nuove storie compariranno qui.",
       "endTitle": "Per ora è tutto.",
       "endBody": "Mera continua a leggere in secondo piano. Ricontrolla più tardi.",
-      "seenBody_one": "{{count}} altra storia è una che hai già visto.",
-      "seenBody_other": "{{count}} altre storie sono quelle che hai già visto.",
-      "mixedBody_one": "{{count}} altra storia è una che hai già visto o che ha meno probabilità di contare per te.",
-      "mixedBody_other": "{{count}} altre storie sono quelle che hai già visto o che hanno meno probabilità di contare per te.",
       "seenLabel": "Storie che hai già visto"
     },
     "firstFeed": {
       "body": "Mera legge le notizie di oggi per te. I tuoi interessi restano sul telefono, quindi nessun server conserva un feed su di te. Per questo Mera inizia a leggere quando apri l'app.",
       "link": "Come Mera mantiene tutto privato",
       "dismiss": "Chiudi"
-    },
-    "age": {
-      "yesterday": "Di ieri",
-      "fromDay": "Di {{day}}",
-      "fromDate": "Del {{date}}"
     },
     "moreReports_one": "{{count}} altro servizio",
     "moreReports_other": "{{count}} altri servizi",

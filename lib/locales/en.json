@@ -309,35 +309,17 @@
       "helpStatus": "AI provider status"
     },
     "fold": {
-      "upToDateTitle": "You're up to date on what matters to you.",
-      "upToDateBody_one": "{{count}} more story is less likely to matter to you.",
-      "upToDateBody_other": "{{count}} more stories are less likely to matter to you.",
-      "nothingTitle": "Nothing new looks important for you right now.",
-      "nothingBody_one": "Mera found {{count}} story that might still interest you.",
-      "nothingBody_other": "Mera found {{count}} stories that might still interest you.",
-      "showThem": "Show them",
-      "label": "Less likely to matter to you",
-      "shownAnnounce_one": "Showing {{count}} more story",
-      "shownAnnounce_other": "Showing {{count}} more stories",
+      "label": "Good to know",
       "held": "Mera picked new stories while you were reading.",
       "stillReading": "Mera is still reading. New stories will show up here.",
       "endTitle": "That's everything for now.",
       "endBody": "Mera keeps reading in the background. Check back later.",
-      "seenBody_one": "{{count}} more story is one you already saw.",
-      "seenBody_other": "{{count}} more stories are ones you already saw.",
-      "mixedBody_one": "{{count}} more story is one you already saw or is less likely to matter to you.",
-      "mixedBody_other": "{{count}} more stories are ones you already saw or are less likely to matter to you.",
       "seenLabel": "Stories you already saw"
     },
     "firstFeed": {
       "body": "Mera is reading today's news for you. What you tell Mera stays on this phone, so no server keeps a feed about you. That's why Mera starts reading when you open the app.",
       "link": "How Mera keeps this private",
       "dismiss": "Dismiss"
-    },
-    "age": {
-      "yesterday": "From yesterday",
-      "fromDay": "From {{day}}",
-      "fromDate": "From {{date}}"
     },
     "moreReports_one": "{{count}} more report",
     "moreReports_other": "{{count}} more reports",

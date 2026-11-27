@@ -27,6 +27,7 @@ import {
 } from '@/lib/database/services/article-suggestion-diagnostics';
 import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
+import { useFeedViewPrefs } from '@/components/custom/feed/feed-view-prefs';
 import { runBlobPrimitivesProbe, type ProbeReport } from '@/lib/backup/dev-probe';
 import { STATUS_LABELS, TABLE_LABELS } from './observability-labels';
 
@@ -271,6 +272,7 @@ export function useObservabilityScreen() {
                     scoringModes,
                     sharedNotes,
                     userCtx,
+                    algo: useFeedViewPrefs.getState().algo,
                     nowMs: Date.now(),
                 }),
             );
@@ -336,6 +338,35 @@ export function useObservabilityScreen() {
             for (const { key, value } of dbStats.settings) settingsMap[key] = value;
         }
 
+        // Every row in the For You pool, for a full relevance review. The OS share sheet carries
+        // it intact; it is the reader's own export, never sent anywhere by the app.
+        const fo = useFeedOrderStore.getState();
+        const openedIds = useOpenedStoriesStore.getState().articleIds;
+        const allRows = useForYouStore.getState().suggestions.map((s) => ({
+            id: s._id,
+            articleId: s.articleId,
+            title: s.title_en,
+            publication: s.publication_name,
+            country: s.country_code,
+            language: s.language_code,
+            pubDate: s.firstPubDate,
+            status: s.status,
+            relevance: s.relevance,
+            rawScore: s.rawScore,
+            note: s.reason,
+            topics: s.matchedTopics.map((m) => m.text),
+            cardState: fo.cardStates[s._id]?.state ?? null,
+            opened: openedIds.has(s.articleId),
+        }));
+        let facts: string[] | null = null;
+        try {
+            // Required at call time: the fact bank reads the database.
+            const { loadAllFactStatements } = require('@/lib/mera-protocol/stage-scoring') as typeof import('@/lib/mera-protocol/stage-scoring');
+            facts = await loadAllFactStatements(true);
+        } catch (err) {
+            logger.warn('[Observability] fact read for the dump failed', { error: String(err) });
+        }
+
         const payload = {
             scheduler: { status: schedulerStatus, runningCount, failedCount, pendingCount, tasks },
             feed: {
@@ -368,6 +399,8 @@ export function useObservabilityScreen() {
                 }
                 : null,
             settings: settingsMap,
+            facts,
+            all_rows: allRows,
         };
 
         await Share.share({ message: JSON.stringify(payload, null, 2) });

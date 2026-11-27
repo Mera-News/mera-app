@@ -259,35 +259,17 @@
       "helpStatus": "AI 服务商状态"
     },
     "fold": {
-      "upToDateTitle": "您已了解所有对您重要的内容。",
-      "upToDateBody_one": "另有 {{count}} 篇报道与您的关联较低。",
-      "upToDateBody_other": "另有 {{count}} 篇报道与您的关联较低。",
-      "nothingTitle": "目前没有对您重要的新内容。",
-      "nothingBody_one": "梅拉找到 {{count}} 篇您可能仍感兴趣的报道。",
-      "nothingBody_other": "梅拉找到 {{count}} 篇您可能仍感兴趣的报道。",
-      "showThem": "显示",
-      "label": "与您的关联较低",
-      "shownAnnounce_one": "正在显示另外 {{count}} 篇报道",
-      "shownAnnounce_other": "正在显示另外 {{count}} 篇报道",
+      "label": "值得了解",
       "held": "您阅读时，梅拉挑选了新的报道。",
       "stillReading": "梅拉仍在阅读。新的报道会出现在这里。",
       "endTitle": "目前就这些了。",
       "endBody": "梅拉会在后台继续阅读。请稍后再来看看。",
-      "seenBody_one": "另有 {{count}} 篇报道是您已经看过的。",
-      "seenBody_other": "另有 {{count}} 篇报道是您已经看过的。",
-      "mixedBody_one": "另有 {{count}} 篇报道是您已经看过的，或与您的关联较低。",
-      "mixedBody_other": "另有 {{count}} 篇报道是您已经看过的，或与您的关联较低。",
       "seenLabel": "您已经看过的报道"
     },
     "firstFeed": {
       "body": "梅拉正在为您阅读今天的新闻。您告诉梅拉的内容只保存在这部手机上，因此没有服务器保存关于您的动态。所以梅拉会在您打开应用时开始阅读。",
       "link": "梅拉如何保护这些隐私",
       "dismiss": "关闭"
-    },
-    "age": {
-      "yesterday": "来自昨天",
-      "fromDay": "来自{{day}}",
-      "fromDate": "来自{{date}}"
     },
     "moreReports_one": "另有 {{count}} 篇报道",
     "moreReports_other": "另有 {{count}} 篇报道",
