@@ -6,11 +6,12 @@
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Text } from '@/components/ui/text';
-import { canRequestMoreOptions } from '@/lib/chat-session/chat-session';
+import { canRegenerateWithWebSearch, canRequestMoreOptions } from '@/lib/chat-session/chat-session';
 import { hapticSuccess } from '@/lib/haptics';
 import type { StagedProposal } from '@/lib/llm/types';
 import { useMotionAllowed } from '@/lib/motion-gate';
 import { useFloatingChatIsGenerating, useFloatingChatStore } from '@/lib/stores/floating-chat-store';
+import { useWebSearchInChat } from '@/lib/stores/mera-protocol-store';
 import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useContext, useEffect, useRef, useState } from 'react';
@@ -26,7 +27,14 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { GlyphSafeButton } from './glyph-safe';
-import { addProfileOffer, askProfileImpact, dismissTrackCard, followTickedOptions, loadMoreTrackOptions } from './track-card-actions';
+import {
+  addProfileOffer,
+  askProfileImpact,
+  dismissTrackCard,
+  followTickedOptions,
+  loadMoreTrackOptions,
+  regenerateTrackOptions,
+} from './track-card-actions';
 import { MAX_TRACK_CARD_OPTIONS, normaliseTrackText, readPhraseHints, trackCardStatus, type TrackOutcome } from './track-options';
 import { OnboardingChatContext, type TrackCardSource } from './types';
 
@@ -59,13 +67,14 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
   const isGenerating = useFloatingChatIsGenerating();
   const motion = useMotionAllowed();
   const inOnboarding = useContext(OnboardingChatContext);
+  const webSearchOn = useWebSearchInChat();
   const storedTicks = useFloatingChatStore((s) => s.trackTicks[proposal.id]);
   const moreState = useFloatingChatStore((s) => s.trackMore[proposal.id]);
   const [busy, setBusy] = useState(false);
   const [wrapped, setWrapped] = useState<Record<string, boolean>>({});
   const [shown, setShown] = useState<Record<string, string>>({});
   const [shownFailed, setShownFailed] = useState<Record<string, boolean>>({});
-  const [pendingGrow, setPendingGrow] = useState<{ firstKey: string; added: number } | null>(null);
+  const [pendingGrow, setPendingGrow] = useState<{ firstKey: string; added: number; doneLine?: string } | null>(null);
   const [adding, setAdding] = useState(false);
   const rowRefs = useRef<Record<string, unknown>>({});
 
@@ -130,6 +139,19 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
     if (res.added > 0) setPendingGrow({ firstKey: `#${before}`, added: res.added });
   };
 
+  // Regenerate with web search: the phone searches, then the story rows are replaced.
+  const regenerate = async () => {
+    AccessibilityInfo.announceForAccessibility(t('trackedStories.regenerateLoading'));
+    const res = await regenerateTrackOptions(source, proposal);
+    if (res.added > 0) {
+      setPendingGrow({ firstKey: `#${res.firstNew}`, added: res.added, doneLine: t('trackedStories.regenerateDone') });
+    } else if (res.state === 'none' || res.state === 'failed') {
+      AccessibilityInfo.announceForAccessibility(
+        t(res.state === 'none' ? 'trackedStories.moreOptionsNone' : 'trackedStories.moreOptionsFailed'),
+      );
+    }
+  };
+
   const askImpact = () => {
     const question = t('trackedStories.impactQuestion');
     void askProfileImpact(source, question);
@@ -155,7 +177,7 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
     if (tag) AccessibilityInfo.setAccessibilityFocus(tag);
     onGrown?.();
     // After the focus change has spoken the row: an announcement sent with it is cut off.
-    const added = t('trackedStories.moreOptionsAdded', { count: pendingGrow.added });
+    const added = pendingGrow.doneLine ?? t('trackedStories.moreOptionsAdded', { count: pendingGrow.added });
     setTimeout(() => AccessibilityInfo.announceForAccessibility(added), ANNOUNCE_AFTER_FOCUS_MS);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingGrow, rows.length]);
@@ -334,13 +356,27 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
   }
 
   const expired = status === 'expired';
+  const loadingWeb = pending && moreState === 'webLoading';
+  const loadingMore = pending && moreState === 'loading';
   const showMore =
     pending &&
     canRequestMoreOptions() &&
     rows.length < MAX_TRACK_CARD_OPTIONS &&
     !isGenerating &&
-    moreState !== 'loading';
-  const loadingMore = pending && moreState === 'loading';
+    !loadingMore &&
+    !loadingWeb;
+  // The phone's own search: only with the setting on, on the cloud engine, and never
+  // while rows are being followed (they would be replaced under the batch). Hidden in
+  // onboarding, where the wait would lock the wizard's own buttons.
+  const showRegenerate =
+    pending &&
+    webSearchOn &&
+    canRegenerateWithWebSearch() &&
+    !inOnboarding &&
+    !isGenerating &&
+    !busy &&
+    !loadingMore &&
+    !loadingWeb;
 
   const followLabel = busy
     ? t('trackedStories.followingBusy')
@@ -350,7 +386,8 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
         ? t('trackedStories.tryAgain')
         : t('trackedStories.followTicked', { count: ticked.length });
   // While saving the button keeps its accent look: rows leave `ticked` as each one lands.
-  const followDisabled = ticked.length === 0 && !busy;
+  // While the web search runs the story rows are about to change, so Follow waits.
+  const followDisabled = (ticked.length === 0 && !busy) || loadingWeb;
   const stacked =
     PixelRatio.getFontScale() >= STACK_FONT_SCALE || wrapped.follow === true || wrapped.cancel === true;
   // LATCHED: once a label wrapped side by side the buttons stay stacked. Unlatched,
@@ -494,17 +531,33 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
           </Text>
         </GlyphSafeButton>
       )}
-      {loadingMore && (
+      {showRegenerate && (
+        <GlyphSafeButton
+          testID="track-regenerate"
+          onPress={regenerate}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: false }}
+          accessibilityLabel={t('trackedStories.regenerateWithWeb')}
+          style={styles.frame}
+          visualStyle={styles.moreRow}
+        >
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="travel-explore" size={18} color={colors.accentText} />
+          <Text size="sm" style={styles.moreText}>
+            {t('trackedStories.regenerateWithWeb')}
+          </Text>
+        </GlyphSafeButton>
+      )}
+      {(loadingMore || loadingWeb) && (
         <View
-          testID="track-more-loading"
+          testID={loadingWeb ? 'track-regenerate-loading' : 'track-more-loading'}
           accessible
-          accessibilityLabel={t('trackedStories.moreOptionsLoading')}
+          accessibilityLabel={t(loadingWeb ? 'trackedStories.regenerateLoading' : 'trackedStories.moreOptionsLoading')}
           accessibilityState={{ busy: true }}
           style={[styles.frame, styles.moreRow]}
         >
           <ActivityIndicator size="small" color={colors.accentMark} />
           <Text size="sm" style={styles.mutedText}>
-            {t('trackedStories.moreOptionsLoading')}
+            {t(loadingWeb ? 'trackedStories.regenerateLoading' : 'trackedStories.moreOptionsLoading')}
           </Text>
         </View>
       )}
@@ -591,7 +644,7 @@ const useStyles = themedStyles((c, mode) =>
     outcomeText: { color: c.ink2 },
     failedText: { color: c.ink2, fontStyle: 'italic' },
     moreRow: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: FRAME },
-    moreText: { color: c.accentText },
+    moreText: { color: c.accentText, flexShrink: 1 },
     mutedText: { color: c.ink3 },
     buttonRow: { flexDirection: 'row', gap: 10 },
     buttonStack: { gap: 10 },

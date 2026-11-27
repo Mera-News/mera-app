@@ -10,7 +10,7 @@ import { AccessibilityInfo, PixelRatio, StyleSheet } from 'react-native';
 import { growTrackCard } from '@/components/custom/floating-chat/track-card-actions';
 import TrackStoryCard from '@/components/custom/floating-chat/TrackStoryCard';
 import { deriveThreadItems } from '@/components/custom/floating-chat/deriveThreadItems';
-import type { TrackCardSource } from '@/components/custom/floating-chat/types';
+import { OnboardingChatContext, type TrackCardSource } from '@/components/custom/floating-chat/types';
 import { appendMessage, createConversation, fetchMessagesForConversation } from '@/lib/database/services/conversation-service';
 import { observeActive } from '@/lib/database/services/tracked-story-service';
 import i18n from '@/lib/i18n';
@@ -19,6 +19,7 @@ import { decideProposeTrack } from '@/lib/news-harness/article-feedback/agent-co
 import { makeFollowStorySubject } from '@/lib/news-harness/follow-story';
 import * as chatSession from '@/lib/chat-session/chat-session';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
+import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import * as trackActions from '@/lib/tracking/track-actions';
 import { initI18nEn } from '@/test/helpers';
 import { resetChatModules } from '@/test/integration/chat/_helpers';
@@ -32,6 +33,7 @@ const action = (label: string): Extract<ProposalAction, { type: 'track_story' }>
 const PLAIN = [
   'cardTitle', 'moreOptions', 'moreOptionsLoading', 'moreOptionsNone', 'moreOptionsFailed', 'follow', 'tryAgain',
   'rowFollowing', 'rowAlready', 'rowFailed', 'followFailedAll', 'optionsExpired', 'followingBusy', 'seeFollowedStories',
+  'regenerateWithWeb', 'regenerateLoading', 'regenerateDone',
 ];
 const PLURAL = ['moreOptionsAdded', 'followTicked', 'followingAll', 'followingSome'];
 function registerCopy() {
@@ -76,6 +78,7 @@ async function mount(labels: string[], opts: { superseded?: boolean; onGrown?: (
 }
 
 const checked = (v: Awaited<ReturnType<typeof render>>, i: number) => v.getByTestId(`track-option-${i}`).props.accessibilityState.checked;
+const spokenRow = (v: Awaited<ReturnType<typeof render>>, i: number): string => v.getByTestId(`track-option-${i}`).props.accessibilityLabel;
 const getActive = () => firstValueFrom(observeActive());
 /** A promise the test resolves itself, after asserting the in-flight state. */
 function held<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
@@ -105,6 +108,8 @@ beforeEach(() => {
   jest.spyOn(trackActions, 'syncFollowedStoryNow').mockResolvedValue();
   jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
   jest.spyOn(chatSession, 'canRequestMoreOptions').mockReturnValue(true);
+  jest.spyOn(chatSession, 'canRegenerateWithWebSearch').mockReturnValue(true);
+  useMeraProtocolStore.setState({ webSearchInChat: true });
 });
 afterEach(() => jest.restoreAllMocks());
 
@@ -285,6 +290,122 @@ describe('More options', () => {
     await waitFor(() => expect(view.getByTestId('track-more')).toBeTruthy());
     expect(view.queryByText(key('moreOptionsNone'))).toBeNull();
     expect(view.queryByText(key('moreOptionsFailed'))).toBeNull();
+  });
+});
+
+describe('Regenerate with web search', () => {
+  const OWN_WORDS = { phraseRoles: { 'us grocery stores thanksgiving': 'exact' }, defaultTick: 'grocery store hours' };
+  const CARD = ['us grocery stores thanksgiving', 'Grocery Store Hours', 'Retail Holiday Trends'];
+
+  it('shows on a pending card with a 44pt frame, and asks with the reader\'s own words', async () => {
+    const { view } = await mount(CARD, { hints: OWN_WORDS });
+    const button = view.getByTestId('track-regenerate');
+    expect(button.props.accessibilityLabel).toBe(key('regenerateWithWeb'));
+    expect(frameHeight(button)).toBeGreaterThanOrEqual(44);
+    const ask = jest.spyOn(chatSession, 'requestMoreOptions').mockResolvedValue({ actions: [], reason: 'stopped' });
+
+    await fireEvent.press(button);
+
+    await waitFor(() => expect(ask).toHaveBeenCalled());
+    const web = ask.mock.calls[0][2]!;
+    expect(web.query).toBe('us grocery stores thanksgiving');
+    expect(CARD.map((l) => web.keep(l))).toEqual([true, false, false]);
+  });
+
+  it('is hidden with web search off, on an engine that cannot search, while a turn runs and in onboarding', async () => {
+    useMeraProtocolStore.setState({ webSearchInChat: false });
+    const off = await mount(CARD);
+    expect(off.view.queryByTestId('track-regenerate')).toBeNull();
+    expect(off.view.getByTestId('track-more')).toBeTruthy();
+    await act(() => useMeraProtocolStore.setState({ webSearchInChat: true }));
+    expect(off.view.getByTestId('track-regenerate')).toBeTruthy();
+    await act(() => useFloatingChatStore.setState({ isGenerating: true }));
+    expect(off.view.queryByTestId('track-regenerate')).toBeNull();
+    await act(() => useFloatingChatStore.setState({ isGenerating: false }));
+    await off.view.unmount();
+
+    resetChatModules();
+    (chatSession.canRegenerateWithWebSearch as jest.Mock).mockReturnValue(false);
+    const local = await mount(CARD);
+    expect(local.view.queryByTestId('track-regenerate')).toBeNull();
+    await local.view.unmount();
+
+    resetChatModules();
+    (chatSession.canRegenerateWithWebSearch as jest.Mock).mockReturnValue(true);
+    const staged = await stage(CARD);
+    const history = await fetchMessagesForConversation(staged.conversationId);
+    const wizard = await render(
+      <OnboardingChatContext.Provider value>
+        <Thread history={history} />
+      </OnboardingChatContext.Provider>,
+    );
+    expect(wizard.queryByTestId('track-regenerate')).toBeNull();
+  });
+
+  it('while it searches, a spinner row shows, Follow waits and Not now stays', async () => {
+    const { view } = await mount(CARD, { hints: OWN_WORDS });
+    const load = held<Awaited<ReturnType<typeof chatSession.requestMoreOptions>>>();
+    jest.spyOn(chatSession, 'requestMoreOptions').mockImplementation(() => load.promise);
+
+    // Not awaited: an awaited press settles the handler, which waits on the held search.
+    const press = fireEvent.press(view.getByTestId('track-regenerate'));
+
+    await waitFor(() => expect(view.getByTestId('track-regenerate-loading')).toBeTruthy());
+    expect(view.getByText(key('regenerateLoading'))).toBeTruthy();
+    expect(view.queryByTestId('track-regenerate')).toBeNull();
+    expect(view.queryByTestId('track-more')).toBeNull();
+    expect(view.getByTestId('track-follow').props.accessibilityState.disabled).toBe(true);
+    expect(view.getByTestId('track-not-now').props.accessibilityState.disabled).toBe(false);
+    expect(frameHeight(view.getByTestId('track-regenerate-loading'))).toBeGreaterThanOrEqual(44);
+    load.resolve({ actions: [], reason: 'stopped' });
+    await press;
+    await waitFor(() => expect(view.getByTestId('track-follow').props.accessibilityState.disabled).toBe(false));
+  });
+
+  it('the story rows are replaced, the reader\'s words stay, and it says so after the focus has moved', async () => {
+    const order: string[] = [];
+    jest.spyOn(AccessibilityInfo, 'setAccessibilityFocus').mockImplementation(() => void order.push('focus'));
+    (AccessibilityInfo.announceForAccessibility as jest.Mock).mockImplementation((line: string) => void order.push(line));
+    jest.spyOn(require('react-native'), 'findNodeHandle').mockReturnValue(77);
+    const { view } = await mount(CARD, { hints: OWN_WORDS });
+    jest.spyOn(chatSession, 'requestMoreOptions').mockResolvedValue({ actions: [action('Walmart Thanksgiving Hours'), action('Kroger Holiday Closures')] });
+
+    await fireEvent.press(view.getByTestId('track-regenerate'));
+
+    await waitFor(() => expect(spokenRow(view, 1)).toContain('Walmart Thanksgiving Hours'));
+    expect(spokenRow(view, 0)).toContain('us grocery stores thanksgiving');
+    expect(spokenRow(view, 2)).toContain('Kroger Holiday Closures');
+    expect(view.queryByTestId('track-option-3')).toBeNull();
+    await waitFor(() => expect(order).toContain(key('regenerateDone')), { timeout: 2000 });
+    expect(order.filter((o) => o !== key('regenerateLoading'))).toEqual(['focus', key('regenerateDone')]);
+  });
+
+  it.each([
+    ['none', { actions: [], reason: 'none' as const }, 'moreOptionsNone'],
+    ['failed', { actions: [], reason: 'failed' as const }, 'moreOptionsFailed'],
+  ])('%s: the rows are unchanged and the line shows', async (_n, answer, line) => {
+    const { view } = await mount(CARD, { hints: OWN_WORDS });
+    jest.spyOn(chatSession, 'requestMoreOptions').mockResolvedValue(answer);
+
+    await fireEvent.press(view.getByTestId('track-regenerate'));
+
+    await waitFor(() => expect(view.getByText(key(line))).toBeTruthy());
+    expect(spokenRow(view, 1)).toContain('Grocery Store Hours');
+    expect(spokenRow(view, 2)).toContain('Retail Holiday Trends');
+    expect(view.getByTestId('track-regenerate')).toBeTruthy();
+  });
+
+  it('is hidden while Follow is saving', async () => {
+    const save = held<'followed' | 'already' | 'skipped'>();
+    jest.spyOn(trackActions, 'trackStoryWithProposal').mockImplementation(() => save.promise);
+    const { view } = await mount(CARD, { hints: OWN_WORDS });
+
+    const press = fireEvent.press(view.getByTestId('track-follow'));
+
+    await waitFor(() => expect(within(view.getByTestId('track-follow')).getByText(key('followingBusy'))).toBeTruthy());
+    expect(view.queryByTestId('track-regenerate')).toBeNull();
+    save.resolve('skipped');
+    await press;
   });
 });
 
