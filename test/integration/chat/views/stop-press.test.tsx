@@ -1,6 +1,7 @@
 // THE STOP BUTTON, PRESSED. Every other Stop test calls stopChatTurn or abort directly. These render
 // the real surface (MeraChatSession down to PromptInput, real session, real engine, real gateway
 // mock) and press `chat-stop` during a busy turn, on the persona loop and on the article chat.
+import { useChatPhaseStore } from '@/lib/llm/chat-phase-store';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import React from 'react';
 import MeraChatSession from '@/components/custom/floating-chat/MeraChatSession';
@@ -67,6 +68,12 @@ afterEach(async () => {
   await new Promise((r) => setTimeout(r, 100));
 });
 
+/** The leg's stream is open. Nothing the model writes is on screen while a turn runs, so the phase is the signal. */
+const legOpen = () => {
+  const view = useChatPhaseStore.getState().view;
+  return view.kind === 'phase' && view.id === 'thinking';
+};
+
 const stalledLeg = () =>
   server.use(...mockGateway((call) => (call.route === 'chat' ? { chunks: ['Looking ', 'never'], stallAfter: 1 } : defaultResponder(call))));
 
@@ -100,7 +107,7 @@ describe('pressing chat-stop', () => {
   it('persona chat, model leg stalled: the leg is cut and no answer lands', async () => {
     stalledLeg();
     await openChat({ kind: 'persona' });
-    await sendAndPressStop(() => texts().includes('Looking'));
+    await sendAndPressStop(legOpen);
 
     await endsNow();
     expectLegSignalsAborted();
@@ -110,7 +117,7 @@ describe('pressing chat-stop', () => {
     stalledLeg();
     await openChat({ kind: 'persona' });
     await sendToModel();
-    await until(() => texts().includes('Looking'), 10_000, 'partial text');
+    await until(legOpen, 10_000, 'the leg is streaming');
     await screen.unmount();
     await render(<MeraChatSession />);
 
@@ -136,7 +143,7 @@ describe('pressing chat-stop', () => {
   it('article chat, model leg stalled: the leg is cut and no answer lands', async () => {
     stalledLeg();
     await openChat(ARTICLE);
-    await sendAndPressStop(() => texts().includes('Looking'));
+    await sendAndPressStop(legOpen);
 
     await until(() => !useFloatingChatStore.getState().isGenerating, 3000, 'busy clears');
     expectLegSignalsAborted();

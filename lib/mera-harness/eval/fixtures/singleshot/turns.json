@@ -107,6 +107,17 @@
     "search": []
   },
   {
+    "id": "follow-us-grocery-thanksgiving",
+    "agent": "follow-story",
+    "message": "us grocery stores thanksgiving",
+    "expect": "proposeTrack",
+    "search": [
+      "Which grocery stores are open on Thanksgiving this year",
+      "Walmart and Target to close on Thanksgiving Day",
+      "Kroger sets holiday hours for Thanksgiving week"
+    ]
+  },
+  {
     "id": "article-follow-1",
     "agent": "article",
     "message": "Follow this story",

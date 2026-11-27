@@ -13,24 +13,12 @@
       "user": "I want to follow the DPDP law, Indian government wants to bring",
       "expect": {
         "tools": [
-          "searchNews",
           "proposeTrack"
         ],
         "track": {
           "staged": true,
           "minOptions": 2
         }
-      },
-      "fakeTools": {
-        "searchNews": [
-          {
-            "headlines": [
-              "India's data protection rules move closer to notification",
-              "Draft DPDP rules draw comments from tech firms",
-              "Data Protection Board of India to be set up under the law"
-            ]
-          }
-        ]
       }
     },
     {
@@ -38,24 +26,12 @@
       "user": "keep me updated on the EU AI Act",
       "expect": {
         "tools": [
-          "searchNews",
           "proposeTrack"
         ],
         "track": {
           "staged": true,
           "minOptions": 2
         }
-      },
-      "fakeTools": {
-        "searchNews": [
-          {
-            "headlines": [
-              "EU AI Office publishes guidance for general-purpose AI models",
-              "Brussels opens first AI Act compliance review",
-              "Tech firms lobby to delay AI Act high-risk rules"
-            ]
-          }
-        ]
       }
     },
     {
@@ -99,7 +75,6 @@
       "user": "okay, follow this",
       "expect": {
         "tools": [
-          "searchNews",
           "proposeTrack"
         ],
         "track": {
@@ -109,17 +84,6 @@
             "assam"
           ]
         }
-      },
-      "fakeTools": {
-        "searchNews": [
-          {
-            "headlines": [
-              "Assam floods displace thousands as Brahmaputra rises",
-              "Kaziranga park flooded, animals move to higher ground",
-              "Centre releases relief funds for flood-hit northeast"
-            ]
-          }
-        ]
       }
     },
     {

@@ -22,7 +22,6 @@
       "expect": {
         "tools": [
           "load_skill",
-          "searchNews",
           "proposeTrack"
         ],
         "noOffer": true,
@@ -38,13 +37,6 @@
         "replyExcludes": [
           "48",
           "index"
-        ]
-      },
-      "fakeTools": {
-        "searchNews": [
-          {
-            "headlines": []
-          }
         ]
       }
     }
