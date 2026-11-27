@@ -19,22 +19,12 @@ import { Text } from '@/components/ui/text';
 import { hapticLight } from '@/lib/haptics';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
+import { useAppearEntering } from '@/components/ui/appear/presets';
 import { useTranslation } from 'react-i18next';
 import { themedStyles, tint } from '@/lib/theme/tokens';
 
 
-function cardEntering() {
-  'worklet';
-  const duration = 240;
-  return {
-    initialValues: { opacity: 0, transform: [{ translateY: 8 }] },
-    animations: {
-      opacity: withTiming(1, { duration }),
-      transform: [{ translateY: withTiming(0, { duration }) }],
-    },
-  };
-}
 
 const SOMETHING_ELSE = 'askChoice.somethingElse';
 
@@ -65,11 +55,12 @@ export const AskChoiceCard: React.FC<AskChoiceCardProps> = ({
   onSaveAsWritten = null,
   onSomethingElse = null,
 }) => {
+  const appearIn = useAppearEntering();
   const styles = useStyles();
   const { t } = useTranslation();
 
   return (
-    <Animated.View entering={cardEntering} style={styles.wrap} testID="ask-choice-card">
+    <Animated.View entering={appearIn} style={styles.wrap} testID="ask-choice-card">
       {/* Only when the bubble did not already carry the question as prose. */}
       {question !== null && (
         <Text size="sm" style={styles.question}>

@@ -116,35 +116,35 @@ function AppRoot() {
               screenOptions={{
                 headerShown: false,
                 contentStyle: { backgroundColor: COLORS[themeMode].base },
-                animation: motion ? 'slide_from_right' : 'none',
+                animation: motion ? 'slide_from_right' : 'fade',
               }}
             >
               <Stack.Screen
                 name="index"
                 options={{
                   headerShown: false,
-                  animation: motion ? 'fade' : 'none'
+                  animation: 'fade'
                 }}
               />
               <Stack.Screen
                 name="login"
                 options={{
                   headerShown: false,
-                  animation: motion ? 'slide_from_left' : 'none'
+                  animation: motion ? 'slide_from_left' : 'fade'
                 }}
               />
               <Stack.Screen
                 name="logged-in"
                 options={{
                   headerShown: false,
-                  animation: motion ? 'fade' : 'none'
+                  animation: 'fade'
                 }}
               />
               <Stack.Screen
                 name="pin-lock"
                 options={{
                   headerShown: false,
-                  animation: motion ? 'fade' : 'none',
+                  animation: 'fade',
                   gestureEnabled: false,
                 }}
               />
@@ -152,7 +152,7 @@ function AppRoot() {
                 name="pin-setup"
                 options={{
                   headerShown: false,
-                  animation: motion ? 'fade' : 'none',
+                  animation: 'fade',
                   gestureEnabled: false,
                 }}
               />

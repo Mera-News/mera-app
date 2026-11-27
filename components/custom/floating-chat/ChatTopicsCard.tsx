@@ -48,7 +48,8 @@ import { GlyphSafeButton } from './glyph-safe';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
-import Animated, { withTiming, ZoomIn } from 'react-native-reanimated';
+import Animated, { ZoomIn } from 'react-native-reanimated';
+import { useAppearEntering } from '@/components/ui/appear/presets';
 import { SPRING } from '@/lib/motion';
 import { useTranslation } from 'react-i18next';
 import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
@@ -65,20 +66,6 @@ import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
  */
 export const OFFER_RETRY_AFTER_MS = 75_000;
 
-function cardEntering() {
-  'worklet';
-  const duration = 280;
-  return {
-    initialValues: { opacity: 0, transform: [{ translateY: 12 }, { scale: 0.97 }] },
-    animations: {
-      opacity: withTiming(1, { duration }),
-      transform: [
-        { translateY: withTiming(0, { duration }) },
-        { scale: withTiming(1, { duration }) },
-      ],
-    },
-  };
-}
 
 interface Chip {
   id: string;
@@ -98,6 +85,7 @@ const CHIP_STAGGER_MS = 60;
 const CHIP_STAGGER_MAX = 4;
 
 const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, topicSkillId }) => {
+  const appearIn = useAppearEntering();
   const styles = useStyles();
   const colors = useColors();
   const { t } = useTranslation();
@@ -343,7 +331,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
   // unexplained gap is harder to read than a plain sentence.
   if (status === 'gone') {
     return (
-      <Animated.View entering={cardEntering} style={styles.tombstone} testID="chat-topics-gone">
+      <Animated.View entering={appearIn} style={styles.tombstone} testID="chat-topics-gone">
         <Text size="xs" style={styles.statusText}>
           {t('chatTopics.goneTombstone')}
         </Text>
@@ -352,7 +340,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
   }
 
   return (
-    <Animated.View entering={cardEntering} style={styles.card} testID="chat-topics-card">
+    <Animated.View entering={appearIn} style={styles.card} testID="chat-topics-card">
       {/* ux2 batch 26: the toggle is a childless button over a hidden visual
           (a glyph inside a labelled button surfaced as its own StaticText),
           and Retry is its SIBLING. Nested inside the toggle, Retry was never

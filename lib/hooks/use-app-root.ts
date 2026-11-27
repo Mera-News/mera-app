@@ -39,7 +39,7 @@ import { startClient } from '@/lib/scheduler/start-client';
 
 export function useAppRoot() {
   const navigationRef = useNavigationContainerRef();
-  // Lite: every stack push and pop is instant (no motion, owner rule).
+  // Lite and Reduce Motion: a stack push fades in place, it never slides (owner rule).
   const motion = useMotionAllowed();
 
   // Install-boundary safety net (S12): app/index.tsx awaits this before its

@@ -181,7 +181,7 @@ const SecuritySettingsSection: React.FC = () => {
                 provider and an opaque page. */}
             <Modal
                 visible={flow !== 'none'}
-                animationType={motion ? 'slide' : 'none'}
+                animationType={motion ? 'slide' : 'fade'}
                 presentationStyle="overFullScreen"
                 transparent
                 statusBarTranslucent

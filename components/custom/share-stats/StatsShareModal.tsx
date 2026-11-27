@@ -32,7 +32,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, I18nManager, Modal, PixelRatio, StyleSheet, useWindowDimensions, View, type ViewInstance } from 'react-native';
-import { useMotionAllowed } from '@/lib/motion-gate';
 
 type Background = 'dark' | 'light';
 
@@ -77,8 +76,6 @@ function fitPortrait(maxW: number, maxH: number): { width: number; height: numbe
 
 const StatsShareModal: React.FC<Props> = ({ open, onClose, groups, stats, box }) => {
     useRestartHold(open, 'overlay:share', 'auto');
-    // Lite / Reduce Motion: the modal appears at once (lib/motion-gate.ts).
-    const motion = useMotionAllowed();
     const { t } = useTranslation();
     const c = useColors();
     const corner = useMeraCorner();
@@ -162,7 +159,7 @@ const StatsShareModal: React.FC<Props> = ({ open, onClose, groups, stats, box })
     });
 
     return (
-        <Modal visible={open} transparent animationType={motion ? 'fade' : 'none'} onRequestClose={onClose} statusBarTranslucent>
+        <Modal visible={open} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
             <Pressable
                 style={[StyleSheet.absoluteFill, { backgroundColor: c.scrim }]}
                 onPress={onClose}

@@ -30,29 +30,17 @@ import { GlyphSafeButton } from './glyph-safe';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
+import { useAppearEntering } from '@/components/ui/appear/presets';
 import { useTranslation } from 'react-i18next';
 import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
 
 
-function cardEntering() {
-  'worklet';
-  const duration = 280;
-  return {
-    initialValues: { opacity: 0, transform: [{ translateY: 12 }, { scale: 0.97 }] },
-    animations: {
-      opacity: withTiming(1, { duration }),
-      transform: [
-        { translateY: withTiming(0, { duration }) },
-        { scale: withTiming(1, { duration }) },
-      ],
-    },
-  };
-}
 
 type LoadState = 'loading' | 'ready' | 'empty';
 
 const OptimisationPlanCard: React.FC = () => {
+  const appearIn = useAppearEntering();
   const styles = useStyles();
   const colors = useColors();
   const { t } = useTranslation();
@@ -149,7 +137,7 @@ const OptimisationPlanCard: React.FC = () => {
   }
   if (loadState === 'empty') {
     return (
-      <Animated.View entering={cardEntering} style={styles.card}>
+      <Animated.View entering={appearIn} style={styles.card}>
         <Text size="sm" style={styles.emptyText}>
           {t('optimisationPlan.empty')}
         </Text>
@@ -158,7 +146,7 @@ const OptimisationPlanCard: React.FC = () => {
   }
   if (settledCount !== null) {
     return (
-      <Animated.View entering={cardEntering} style={[styles.card, styles.cardSettled]}>
+      <Animated.View entering={appearIn} style={[styles.card, styles.cardSettled]}>
         <View style={styles.headerRow}>
           <MaterialIcons {...DECORATIVE_ICON_A11Y} name="check-circle" size={18} color={colors.accentMark} />
           <Text size="sm" bold style={styles.title}>
@@ -175,7 +163,7 @@ const OptimisationPlanCard: React.FC = () => {
   if (!plan) return null;
 
   return (
-    <Animated.View entering={cardEntering} style={styles.card}>
+    <Animated.View entering={appearIn} style={styles.card}>
       <View style={styles.headerRow}>
         <MaterialIcons {...DECORATIVE_ICON_A11Y} name="auto-fix-high" size={18} color={colors.accentMark} />
         <Text size="sm" bold style={styles.title}>

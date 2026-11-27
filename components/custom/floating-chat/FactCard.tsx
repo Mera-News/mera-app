@@ -9,32 +9,13 @@ import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Button, ButtonText } from '@/components/ui/button';
-import Animated, { withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
+import { useAppearEntering } from '@/components/ui/appear/presets';
 import { useTranslation } from 'react-i18next';
 import type { FactCardAction, PendingDelete } from './types';
 import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
 
 
-// Fade + slide up with a slight scale-up (0.97 → 1). Custom entering builder so
-// the scale rides the same ~280ms curve as the fade/slide (FadeInDown alone
-// can't express scale).
-function factCardEntering() {
-  'worklet';
-  const duration = 280;
-  return {
-    initialValues: {
-      opacity: 0,
-      transform: [{ translateY: 12 }, { scale: 0.97 }],
-    },
-    animations: {
-      opacity: withTiming(1, { duration }),
-      transform: [
-        { translateY: withTiming(0, { duration }) },
-        { scale: withTiming(1, { duration }) },
-      ],
-    },
-  };
-}
 
 export interface FactCardProps {
   action: FactCardAction;
@@ -60,6 +41,7 @@ const TITLE_KEY_BY_ACTION = {
 } as const satisfies Record<FactCardAction, string>;
 
 const FactCard: React.FC<FactCardProps> = ({ action, statements, pendingDelete }) => {
+  const appearIn = useAppearEntering();
   const styles = useStyles();
   const colors = useColors();
   const { t } = useTranslation();
@@ -89,7 +71,7 @@ const FactCard: React.FC<FactCardProps> = ({ action, statements, pendingDelete }
   }
 
   return (
-    <Animated.View entering={factCardEntering} style={styles.card}>
+    <Animated.View entering={appearIn} style={styles.card}>
       <View style={styles.headerRow}>
         <MaterialIcons {...DECORATIVE_ICON_A11Y} name={ICON_BY_ACTION[action]} size={18} color={colors.accentMark} />
         <Text size="sm" bold style={styles.title}>

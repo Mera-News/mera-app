@@ -15,13 +15,15 @@ import IdentitySwitchWatcher from '@/components/custom/auth/IdentitySwitchWatche
 
 export default function LoggedInLayout() {
   const colors = useColors();
-  // Lite: every push and pop is instant (no motion, owner rule).
+  // Lite and Reduce Motion: a push fades in place, it never slides (owner rule).
+  // A restore rebuilds the stack with no animation at all.
   // A restore rebuilds the stacks with no animation.
   // Both hooks run on every render: `a() && b()` skips b when a is false (a
   // hook-order change the moment Lite flips).
   const motionAllowed = useMotionAllowed();
   const restoring = useRestoreInProgress();
-  const motion = motionAllowed && !restoring;
+  const push = restoring ? 'none' : motionAllowed ? 'slide_from_right' : 'fade';
+  const fade = restoring ? 'none' : 'fade';
 
   return (
     <View style={{ flex: 1 }}>
@@ -29,56 +31,56 @@ export default function LoggedInLayout() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: colors.base },
-          animation: motion ? 'slide_from_right' : 'none',
+          animation: push,
         }}
       >
         <Stack.Screen
           name="index"
           options={{
             headerShown: false,
-            animation: motion ? 'slide_from_right' : 'none'
+            animation: push
           }}
         />
         <Stack.Screen
           name="onboarding"
           options={{
             headerShown: false,
-            animation: motion ? 'slide_from_right' : 'none'
+            animation: push
           }}
         />
         <Stack.Screen
           name="app_container"
           options={{
             headerShown: false,
-            animation: motion ? 'slide_from_right' : 'none'
+            animation: push
           }}
         />
         <Stack.Screen
           name="suggestion-detail"
           options={{
             headerShown: false,
-            animation: motion ? 'slide_from_right' : 'none'
+            animation: push
           }}
         />
         <Stack.Screen
           name="sources-publishers"
           options={{
             headerShown: false,
-            animation: motion ? 'slide_from_right' : 'none'
+            animation: push
           }}
         />
         <Stack.Screen
           name="sources-articles"
           options={{
             headerShown: false,
-            animation: motion ? 'slide_from_right' : 'none'
+            animation: push
           }}
         />
         <Stack.Screen
           name="persona-articles"
           options={{
             headerShown: false,
-            animation: motion ? 'slide_from_right' : 'none'
+            animation: push
           }}
         />
         <Stack.Screen
@@ -90,35 +92,35 @@ export default function LoggedInLayout() {
           name="publisher-articles"
           options={{
             headerShown: false,
-            animation: motion ? 'slide_from_right' : 'none'
+            animation: push
           }}
         />
         <Stack.Screen
           name="publication"
           options={{
             headerShown: false,
-            animation: motion ? 'slide_from_right' : 'none'
+            animation: push
           }}
         />
         <Stack.Screen
           name="notifications"
           options={{
             headerShown: false,
-            animation: motion ? 'slide_from_right' : 'none'
+            animation: push
           }}
         />
         <Stack.Screen
           name="article-detail"
           options={{
             headerShown: false,
-            animation: motion ? 'slide_from_right' : 'none'
+            animation: push
           }}
         />
         <Stack.Screen
           name="config-panel"
           options={{
             headerShown: false,
-            animation: motion ? 'slide_from_right' : 'none'
+            animation: push
           }}
         />
         <Stack.Screen
@@ -140,7 +142,7 @@ export default function LoggedInLayout() {
           name="story-timeline"
           options={{
             headerShown: false,
-            animation: motion ? 'slide_from_right' : 'none'
+            animation: push
           }}
         />
         <Stack.Screen
@@ -168,7 +170,7 @@ export default function LoggedInLayout() {
           name="publication-history"
           options={{
             headerShown: false,
-            animation: motion ? 'slide_from_right' : 'none'
+            animation: push
           }}
         />
         {/* The app's first modal presentation. A route, not an in-tree Modal,
@@ -182,7 +184,7 @@ export default function LoggedInLayout() {
           options={{
             headerShown: false,
             presentation: 'transparentModal',
-            animation: motion ? 'fade' : 'none',
+            animation: fade,
             contentStyle: { backgroundColor: 'transparent' },
           }}
         />

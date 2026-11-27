@@ -43,25 +43,12 @@ import { GlyphSafeButton } from './glyph-safe';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
-import Animated, { withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
+import { useAppearEntering } from '@/components/ui/appear/presets';
 import { useTranslation } from 'react-i18next';
 import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
 
 
-function cardEntering() {
-  'worklet';
-  const duration = 280;
-  return {
-    initialValues: { opacity: 0, transform: [{ translateY: 12 }, { scale: 0.97 }] },
-    animations: {
-      opacity: withTiming(1, { duration }),
-      transform: [
-        { translateY: withTiming(0, { duration }) },
-        { scale: withTiming(1, { duration }) },
-      ],
-    },
-  };
-}
 
 interface TopicRow {
   id: string;
@@ -75,6 +62,7 @@ export interface TopicPlanCardProps {
 }
 
 const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) => {
+  const appearIn = useAppearEntering();
   const styles = useStyles();
   const colors = useColors();
   const { t } = useTranslation();
@@ -235,7 +223,7 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
   if (discarded) {
     return (
       <Animated.View
-        entering={cardEntering}
+        entering={appearIn}
         style={[styles.card, styles.cardSettled]}
         testID={`topic-plan-discarded-${factId}`}
       >
@@ -258,7 +246,7 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
   if (saved) {
     return (
       <Animated.View
-        entering={cardEntering}
+        entering={appearIn}
         style={[styles.card, styles.cardSettled]}
         testID={`topic-plan-saved-${factId}`}
       >
@@ -289,7 +277,7 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
   }
 
   return (
-    <Animated.View entering={cardEntering} style={styles.card}>
+    <Animated.View entering={appearIn} style={styles.card}>
       <View style={styles.headerRow}>
         <MaterialIcons {...DECORATIVE_ICON_A11Y} name="account-tree" size={18} color={colors.accentMark} />
         <Text size="sm" bold style={styles.title}>

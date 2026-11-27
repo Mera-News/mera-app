@@ -12,26 +12,25 @@ import { useColors } from '@/lib/theme/tokens';
 
 export default function FeedStackLayout() {
   const colors = useColors();
-  // Lite: pushes and pops are instant; the edge swipe still pops (lib/motion-gate.ts).
+  // Lite and Reduce Motion: a push fades in place; the edge swipe still pops (lib/motion-gate.ts).
   // A restore rebuilds the stacks with no animation.
   // Both hooks run on every render: `a() && b()` skips b when a is false (a
   // hook-order change the moment Lite flips).
   const motionAllowed = useMotionAllowed();
   const restoring = useRestoreInProgress();
-  const motion = motionAllowed && !restoring;
   const { ref, onLayout } = useReportTabBarClearance();
   return (
     <View ref={ref} onLayout={onLayout} style={{ flex: 1 }}>
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.base }, ...(motion ? null : { animation: 'none' }) }}>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.base }, ...(restoring ? { animation: 'none' } : motionAllowed ? null : { animation: 'fade' }) }}>
         <Stack.Screen name="index" />
         <Stack.Screen
           name="interest"
           // A hop from an interest's "Next" row (via: 'next') replaces the
           // screen with the next interest; it crossfades rather than sliding.
           options={({ route }) => ({
-            animation: !motion
+            animation: restoring
               ? 'none'
-              : (route.params as { via?: string } | undefined)?.via === 'next'
+              : !motionAllowed || (route.params as { via?: string } | undefined)?.via === 'next'
                 ? 'fade'
                 : 'slide_from_right',
           })}

@@ -33,25 +33,12 @@ import { GlyphSafeButton } from './glyph-safe';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
-import Animated, { withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
+import { useAppearEntering } from '@/components/ui/appear/presets';
 import { useTranslation } from 'react-i18next';
 import { themedStyles, tint, useColors, useThemeMode } from '@/lib/theme/tokens';
 
 
-function cardEntering() {
-  'worklet';
-  const duration = 280;
-  return {
-    initialValues: { opacity: 0, transform: [{ translateY: 12 }, { scale: 0.97 }] },
-    animations: {
-      opacity: withTiming(1, { duration }),
-      transform: [
-        { translateY: withTiming(0, { duration }) },
-        { scale: withTiming(1, { duration }) },
-      ],
-    },
-  };
-}
 
 export interface ConflictResolutionCardProps {
   conflict: FactConflict;
@@ -65,6 +52,7 @@ const STATUS_LABEL_KEY = {
 } as const satisfies Record<ConflictResolution, string>;
 
 const ConflictResolutionCard: React.FC<ConflictResolutionCardProps> = ({ conflict }) => {
+  const appearIn = useAppearEntering();
   const themeMode = useThemeMode();
   const styles = useStyles();
   const colors = useColors();
@@ -127,7 +115,7 @@ const ConflictResolutionCard: React.FC<ConflictResolutionCardProps> = ({ conflic
   const dimmed = resolved !== null;
 
   return (
-    <Animated.View entering={cardEntering} style={[styles.card, dimmed && styles.cardDimmed]}>
+    <Animated.View entering={appearIn} style={[styles.card, dimmed && styles.cardDimmed]}>
       <View style={styles.headerRow}>
         <MaterialIcons {...DECORATIVE_ICON_A11Y} name="compare-arrows" size={18} color={colors.warning} />
         <Text size="sm" bold style={styles.title}>

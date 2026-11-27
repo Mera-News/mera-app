@@ -10,17 +10,16 @@ import { useColors } from '@/lib/theme/tokens';
 
 export default function StackLayout() {
   const colors = useColors();
-  // Lite: pushes and pops are instant; the edge swipe still pops (lib/motion-gate.ts).
+  // Lite and Reduce Motion: a push fades in place; the edge swipe still pops (lib/motion-gate.ts).
   // A restore rebuilds the stacks with no animation.
   // Both hooks run on every render: `a() && b()` skips b when a is false (a
   // hook-order change the moment Lite flips).
   const motionAllowed = useMotionAllowed();
   const restoring = useRestoreInProgress();
-  const motion = motionAllowed && !restoring;
   const { ref, onLayout } = useReportTabBarClearance();
   return (
     <View ref={ref} onLayout={onLayout} style={{ flex: 1 }}>
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.base }, ...(motion ? null : { animation: 'none' }) }} />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.base }, ...(restoring ? { animation: 'none' } : motionAllowed ? null : { animation: 'fade' }) }} />
     </View>
   );
 }

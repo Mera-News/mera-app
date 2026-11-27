@@ -40,7 +40,8 @@ import {
   View,
 } from 'react-native';
 import { resolveGroup } from './fact-choice-actions';
-import Animated, { withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
+import { useAppearEntering } from '@/components/ui/appear/presets';
 import { useTranslation } from 'react-i18next';
 import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
 
@@ -62,17 +63,6 @@ function contradicts(a: string | null, b: string | null): boolean {
 // The overlap label on a Keep both card: readable (~9:1 on the card) and
 // deliberately not the destructive tint.
 
-function cardEntering() {
-  'worklet';
-  const duration = 280;
-  return {
-    initialValues: { opacity: 0, transform: [{ translateY: 12 }, { scale: 0.97 }] },
-    animations: {
-      opacity: withTiming(1, { duration }),
-      transform: [{ translateY: withTiming(0, { duration }) }, { scale: withTiming(1, { duration }) }],
-    },
-  };
-}
 
 export interface FactChoiceCardProps {
   /** `${messageId}::${toolCallIndex}` — the tool result this group lives in. */
@@ -108,6 +98,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   replacesFactId = null,
   topicSkillId = null,
 }) => {
+  const appearIn = useAppearEntering();
   const styles = useStyles();
   const colors = useColors();
   const { t } = useTranslation();
@@ -296,7 +287,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   if (dismissed) {
     return (
       <Animated.View
-        entering={cardEntering}
+        entering={appearIn}
         style={[styles.card, styles.cardSettled]}
         // NOT `accessible` (ux2 batch 26): as one element it swallowed the Undo
         // button, which VoiceOver could not reach, and exposed the header glyph.

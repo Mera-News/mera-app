@@ -34,30 +34,12 @@ import { GlyphSafeButton } from './glyph-safe';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
+import { useAppearEntering } from '@/components/ui/appear/presets';
 import { useTranslation } from 'react-i18next';
 import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
 
 
-// Mirror FactCard's entering (fade + slide + slight scale) so a freshly-staged
-// proposal lands with the same motion vocabulary as the fact cards.
-function proposalCardEntering() {
-  'worklet';
-  const duration = 280;
-  return {
-    initialValues: {
-      opacity: 0,
-      transform: [{ translateY: 12 }, { scale: 0.97 }],
-    },
-    animations: {
-      opacity: withTiming(1, { duration }),
-      transform: [
-        { translateY: withTiming(0, { duration }) },
-        { scale: withTiming(1, { duration }) },
-      ],
-    },
-  };
-}
 
 export interface ProposalCardProps {
   proposal: StagedProposal;
@@ -335,6 +317,7 @@ export function actionToRow(action: ProposalAction): ActionRow {
 }
 
 const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
+  const appearIn = useAppearEntering();
   const styles = useStyles();
   const colors = useColors();
   const { t } = useTranslation();
@@ -407,7 +390,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
 
   return (
     <Animated.View
-      entering={proposalCardEntering}
+      entering={appearIn}
       style={[styles.card, dimmed && styles.cardDimmed]}
     >
       <View style={styles.headerRow}>
