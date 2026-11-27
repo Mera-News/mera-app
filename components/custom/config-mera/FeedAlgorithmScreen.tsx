@@ -48,7 +48,7 @@ const FeedAlgorithmScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: endClearance }}
           >
-            <View style={{ marginBottom: 12 }}>
+            <View style={{ marginTop: 12, marginBottom: 12 }}>
               <Help>{t('feedAlgorithm.intro')}</Help>
             </View>
             <Group>
