@@ -322,7 +322,12 @@
       "held": "Mera picked new stories while you were reading.",
       "stillReading": "Mera is still reading. New stories will show up here.",
       "endTitle": "That's everything for now.",
-      "endBody": "Mera keeps reading in the background. Check back later."
+      "endBody": "Mera keeps reading in the background. Check back later.",
+      "seenBody_one": "{{count}} more story is one you already saw.",
+      "seenBody_other": "{{count}} more stories are ones you already saw.",
+      "mixedBody_one": "{{count}} more story is one you already saw or is less likely to matter to you.",
+      "mixedBody_other": "{{count}} more stories are ones you already saw or are less likely to matter to you.",
+      "seenLabel": "Stories you already saw"
     },
     "firstFeed": {
       "body": "Mera is reading today's news for you. What you tell Mera stays on this phone, so no server keeps a feed about you. That's why Mera starts reading when you open the app.",
@@ -3274,5 +3279,23 @@
   "chatSample": {
     "profileLabel": "Example profile",
     "storiesLabel": "Example stories"
+  },
+  "feedAlgorithm": {
+    "screenTitle": "Feed algorithm",
+    "intro": "Choose how long stories stay and how your Feed is ordered. After a change, your Feed starts again from the top.",
+    "skippedTitle": "Scrolled past counts as read",
+    "skippedHint": "A story that stayed on your screen for a moment counts as read, even if you did not open it.",
+    "keepTitle": "Keep important stories you missed",
+    "keepHint": "How long a High or Emergency story you have not read stays, counted from when it was published. Everything else leaves after 2 days. Stories removed by a shorter time do not come back.",
+    "keep2": "2 days",
+    "keep3": "3 days",
+    "keep7": "7 days",
+    "keepA11y": "Keep important stories, {{label}}",
+    "mediumTitle": "Keep older Medium stories in view",
+    "mediumHint": "On: a Medium story you have not seen stays in the main list at any age, below newer ones. Off: after 12 hours it moves behind Show them.",
+    "seenTitle": "Move stories you saw behind Show them",
+    "seenHint": "On: the main list holds only stories you have not seen. Off: stories you saw stay in the main list, after the new ones. Nothing moves while you are reading.",
+    "highTitle": "Keep unseen High stories on top",
+    "highHint": "On: a High story you have not seen stays at the top at any age. Off: it moves down after 12 hours and again after 24."
   }
 }

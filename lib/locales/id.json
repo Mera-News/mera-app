@@ -272,7 +272,12 @@
       "held": "Mera memilih cerita baru selagi Anda membaca.",
       "stillReading": "Mera masih membaca. Cerita baru akan muncul di sini.",
       "endTitle": "Itu saja untuk sekarang.",
-      "endBody": "Mera terus membaca di latar belakang. Periksa lagi nanti."
+      "endBody": "Mera terus membaca di latar belakang. Periksa lagi nanti.",
+      "seenBody_one": "{{count}} cerita lagi adalah cerita yang sudah Anda lihat.",
+      "seenBody_other": "{{count}} cerita lagi adalah cerita yang sudah Anda lihat.",
+      "mixedBody_one": "{{count}} cerita lagi adalah cerita yang sudah Anda lihat atau kemungkinan kecil penting bagi Anda.",
+      "mixedBody_other": "{{count}} cerita lagi adalah cerita yang sudah Anda lihat atau kemungkinan kecil penting bagi Anda.",
+      "seenLabel": "Cerita yang sudah Anda lihat"
     },
     "firstFeed": {
       "body": "Mera sedang membaca berita hari ini untuk Anda. Apa yang Anda ceritakan kepada Mera tetap di ponsel ini, jadi tidak ada server yang menyimpan feed tentang Anda. Itulah sebabnya Mera mulai membaca saat Anda membuka aplikasi.",
@@ -3252,5 +3257,23 @@
   "chatSample": {
     "profileLabel": "Contoh profil",
     "storiesLabel": "Contoh berita"
+  },
+  "feedAlgorithm": {
+    "screenTitle": "Algoritma Feed",
+    "intro": "Pilih berapa lama cerita tetap ada dan bagaimana Feed Anda diurutkan. Setelah ada perubahan, Feed Anda dimulai lagi dari atas.",
+    "skippedTitle": "Yang sudah digulir dihitung sebagai sudah dibaca",
+    "skippedHint": "Cerita yang tetap di layar Anda sebentar dihitung sebagai sudah dibaca, meskipun Anda tidak membukanya.",
+    "keepTitle": "Simpan cerita penting yang terlewat",
+    "keepHint": "Cerita Darurat atau Tinggi yang belum Anda baca tetap ada selama waktu ini, dihitung sejak diterbitkan. Cerita lain hilang setelah 2 hari. Cerita yang sudah dihapus karena waktu yang lebih singkat tidak akan kembali.",
+    "keep2": "2 hari",
+    "keep3": "3 hari",
+    "keep7": "7 hari",
+    "keepA11y": "Simpan cerita penting, {{label}}",
+    "mediumTitle": "Simpan cerita Sedang yang lebih lama tetap terlihat",
+    "mediumHint": "Aktif: cerita Sedang yang belum Anda lihat tetap di daftar utama berapa pun usianya, di bawah cerita yang lebih baru. Nonaktif: setelah 12 jam cerita itu pindah ke belakang Tampilkan.",
+    "seenTitle": "Pindahkan cerita yang sudah Anda lihat ke belakang Tampilkan",
+    "seenHint": "Aktif: daftar utama hanya berisi cerita yang belum Anda lihat. Nonaktif: cerita yang sudah Anda lihat tetap di daftar utama, setelah cerita yang baru. Tidak ada yang berpindah saat Anda sedang membaca.",
+    "highTitle": "Tampilkan cerita Tinggi yang belum Anda lihat di atas",
+    "highHint": "Aktif: cerita Tinggi yang belum Anda lihat tetap di atas berapa pun usianya. Nonaktif: setelah 12 jam cerita itu turun, dan turun lagi setelah 24 jam."
   }
 }

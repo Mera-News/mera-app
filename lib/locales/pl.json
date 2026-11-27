@@ -330,7 +330,16 @@
       "nothingBody_few": "Mera znalazła {{count}} historie, które mogą Cię nadal zainteresować.",
       "nothingBody_many": "Mera znalazła {{count}} historii, które mogą Cię nadal zainteresować.",
       "shownAnnounce_few": "Pokazuję jeszcze {{count}} historie",
-      "shownAnnounce_many": "Pokazuję jeszcze {{count}} historii"
+      "shownAnnounce_many": "Pokazuję jeszcze {{count}} historii",
+      "seenBody_one": "Jeszcze {{count}} historia jest taka, którą już widziałeś.",
+      "seenBody_few": "Jeszcze {{count}} historie to takie, które już widziałeś.",
+      "seenBody_many": "Jeszcze {{count}} historii to takie, które już widziałeś.",
+      "seenBody_other": "Jeszcze {{count}} historii to takie, które już widziałeś.",
+      "mixedBody_one": "Jeszcze {{count}} historia to taka, którą już widziałeś albo która raczej nie będzie dla Ciebie ważna.",
+      "mixedBody_few": "Jeszcze {{count}} historie to takie, które już widziałeś albo które raczej nie będą dla Ciebie ważne.",
+      "mixedBody_many": "Jeszcze {{count}} historii to takie, które już widziałeś albo które raczej nie będą dla Ciebie ważne.",
+      "mixedBody_other": "Jeszcze {{count}} historii to takie, które już widziałeś albo które raczej nie będą dla Ciebie ważne.",
+      "seenLabel": "Historie, które już widziałeś"
     },
     "firstFeed": {
       "body": "Mera czyta dla Ciebie dzisiejsze wiadomości. Twoje zainteresowania zostają w telefonie, więc żaden serwer nie przechowuje Twojego Strumienia. Dlatego Mera zaczyna czytać, gdy otwierasz aplikację.",
@@ -3417,5 +3426,23 @@
   "chatSample": {
     "profileLabel": "Przykładowy profil",
     "storiesLabel": "Przykładowe tematy"
+  },
+  "feedAlgorithm": {
+    "screenTitle": "Algorytm Kanału",
+    "intro": "Wybierz, jak długo historie zostają i w jakiej kolejności ustawiony jest Twój Kanał. Po zmianie Kanał zaczyna się od początku.",
+    "skippedTitle": "Przewinięte liczy się jako przeczytane",
+    "skippedHint": "Historia, która przez chwilę była widoczna na ekranie, liczy się jako przeczytana, nawet jeśli jej nie otworzyłeś.",
+    "keepTitle": "Zachowuj ważne historie, których nie przeczytałeś",
+    "keepHint": "Jak długo zostaje historia z priorytetem Wysoka lub Pilne, której nie przeczytałeś, liczone od publikacji. Pozostałe historie znikają po 2 dniach. Historie usunięte przez krótszy czas nie wracają.",
+    "keep2": "2 dni",
+    "keep3": "3 dni",
+    "keep7": "7 dni",
+    "keepA11y": "Zachowuj ważne historie, {{label}}",
+    "mediumTitle": "Trzymaj starsze historie Średnie na widoku",
+    "mediumHint": "Włączone: historia Średnia, której nie widziałeś, zostaje na głównej liście w każdym wieku, poniżej nowszych. Wyłączone: po 12 godzinach przenosi się za przycisk Pokaż je.",
+    "seenTitle": "Przenoś historie, które widziałeś, za przycisk Pokaż je",
+    "seenHint": "Włączone: na głównej liście są tylko historie, których nie widziałeś. Wyłączone: historie, które widziałeś, zostają na głównej liście, za nowymi. Podczas czytania nic się nie przesuwa.",
+    "highTitle": "Trzymaj na górze niewidziane historie Wysokie",
+    "highHint": "Włączone: historia Wysoka, której nie widziałeś, zostaje na górze w każdym wieku. Wyłączone: po 12 godzinach przesuwa się w dół, a po 24 godzinach jeszcze niżej."
   }
 }

@@ -286,7 +286,12 @@
       "held": "Mera ha scelto nuove storie mentre leggevi.",
       "stillReading": "Mera sta ancora leggendo. Le nuove storie compariranno qui.",
       "endTitle": "Per ora è tutto.",
-      "endBody": "Mera continua a leggere in secondo piano. Ricontrolla più tardi."
+      "endBody": "Mera continua a leggere in secondo piano. Ricontrolla più tardi.",
+      "seenBody_one": "{{count}} altra storia è una che hai già visto.",
+      "seenBody_other": "{{count}} altre storie sono quelle che hai già visto.",
+      "mixedBody_one": "{{count}} altra storia è una che hai già visto o che ha meno probabilità di contare per te.",
+      "mixedBody_other": "{{count}} altre storie sono quelle che hai già visto o che hanno meno probabilità di contare per te.",
+      "seenLabel": "Storie che hai già visto"
     },
     "firstFeed": {
       "body": "Mera legge le notizie di oggi per te. I tuoi interessi restano sul telefono, quindi nessun server conserva un feed su di te. Per questo Mera inizia a leggere quando apri l'app.",
@@ -3279,5 +3284,23 @@
   "chatSample": {
     "profileLabel": "Profilo di esempio",
     "storiesLabel": "Notizie di esempio"
+  },
+  "feedAlgorithm": {
+    "screenTitle": "Algoritmo del Feed",
+    "intro": "Scegli per quanto tempo restano le storie e come viene ordinato il tuo Feed. Dopo una modifica, il tuo Feed riparte dall'inizio.",
+    "skippedTitle": "Le storie scorse contano come lette",
+    "skippedHint": "Una storia rimasta sullo schermo per un attimo conta come letta, anche se non l'hai aperta.",
+    "keepTitle": "Tieni le storie importanti che ti sei perso",
+    "keepHint": "Per quanto tempo resta una storia Alta o di Emergenza che non hai letto, contando dalla pubblicazione. Tutte le altre se ne vanno dopo 2 giorni. Le storie eliminate con un tempo più breve non tornano.",
+    "keep2": "2 giorni",
+    "keep3": "3 giorni",
+    "keep7": "7 giorni",
+    "keepA11y": "Tieni le storie importanti, {{label}}",
+    "mediumTitle": "Tieni in vista le storie Medie più vecchie",
+    "mediumHint": "Attivo: una storia Media che non hai visto resta nella lista principale a qualsiasi età, sotto quelle più recenti. Disattivo: dopo 12 ore passa dietro a Mostrale.",
+    "seenTitle": "Sposta dietro a Mostrale le storie che hai visto",
+    "seenHint": "Attivo: la lista principale contiene solo storie che non hai visto. Disattivo: le storie che hai visto restano nella lista principale, dopo quelle nuove. Non si sposta nulla mentre leggi.",
+    "highTitle": "Tieni in cima le storie Alte non viste",
+    "highHint": "Attivo: una storia Alta che non hai visto resta in cima a qualsiasi età. Disattivo: dopo 12 ore scende, e di nuovo dopo 24."
   }
 }

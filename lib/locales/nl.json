@@ -284,7 +284,12 @@
       "held": "Mera koos nieuwe verhalen terwijl je aan het lezen was.",
       "stillReading": "Mera leest nog steeds. Nieuwe verhalen verschijnen hier.",
       "endTitle": "Dat is alles voor nu.",
-      "endBody": "Mera blijft op de achtergrond lezen. Kom later nog eens kijken."
+      "endBody": "Mera blijft op de achtergrond lezen. Kom later nog eens kijken.",
+      "seenBody_one": "Nog {{count}} verhaal is er een dat je al hebt gezien.",
+      "seenBody_other": "Nog {{count}} verhalen zijn er die je al hebt gezien.",
+      "mixedBody_one": "Nog {{count}} verhaal is er een dat je al hebt gezien of dat minder waarschijnlijk belangrijk voor je is.",
+      "mixedBody_other": "Nog {{count}} verhalen zijn er die je al hebt gezien of die minder waarschijnlijk belangrijk voor je zijn.",
+      "seenLabel": "Verhalen die je al hebt gezien"
     },
     "firstFeed": {
       "body": "Mera leest het nieuws van vandaag voor je. Je interesses blijven op je telefoon, dus geen server bewaart een feed over jou. Daarom begint Mera met lezen zodra je de app opent.",
@@ -3273,5 +3278,23 @@
   "chatSample": {
     "profileLabel": "Voorbeeldprofiel",
     "storiesLabel": "Voorbeeldverhalen"
+  },
+  "feedAlgorithm": {
+    "screenTitle": "Feedalgoritme",
+    "intro": "Kies hoe lang verhalen blijven staan en hoe je Feed is gesorteerd. Na een wijziging begint je Feed weer bovenaan.",
+    "skippedTitle": "Voorbij gescrolde verhalen tellen als gelezen",
+    "skippedHint": "Een verhaal dat even op je scherm stond, telt als gelezen, ook als je het niet hebt geopend.",
+    "keepTitle": "Belangrijke verhalen die je hebt gemist bewaren",
+    "keepHint": "Hoe lang een verhaal met prioriteit Hoog of Noodgeval dat je niet hebt gelezen blijft staan, gerekend vanaf de publicatie. Alle andere verhalen verdwijnen na 2 dagen. Verhalen die door een kortere termijn zijn verwijderd, komen niet terug.",
+    "keep2": "2 dagen",
+    "keep3": "3 dagen",
+    "keep7": "7 dagen",
+    "keepA11y": "Belangrijke verhalen bewaren, {{label}}",
+    "mediumTitle": "Oudere verhalen van prioriteit Gemiddeld in beeld houden",
+    "mediumHint": "Aan: een verhaal van prioriteit Gemiddeld dat je niet hebt gezien, blijft op elke leeftijd in de hoofdlijst, onder nieuwere verhalen. Uit: na 12 uur verhuist het naar de plek achter Toon ze.",
+    "seenTitle": "Verhalen die je zag achter Toon ze zetten",
+    "seenHint": "Aan: de hoofdlijst bevat alleen verhalen die je nog niet hebt gezien. Uit: verhalen die je zag blijven in de hoofdlijst, na de nieuwe. Tijdens het lezen verschuift er niets.",
+    "highTitle": "Ongeziene verhalen met prioriteit Hoog bovenaan houden",
+    "highHint": "Aan: een verhaal van prioriteit Hoog dat je niet hebt gezien, blijft op elke leeftijd bovenaan. Uit: na 12 uur zakt het, en na 24 uur nog een keer."
   }
 }

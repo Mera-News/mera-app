@@ -1,0 +1,595 @@
+{
+  "_comment": "Feed algorithm settings screen and the fold card's seen-story copy.",
+  "ar": {
+    "feedAlgorithm": {
+      "screenTitle": "خوارزمية الخلاصة",
+      "intro": "اختر المدة التي تبقى فيها القصص، وطريقة ترتيب خلاصتك. بعد أي تغيير، تبدأ خلاصتك من الأعلى مجددًا.",
+      "skippedTitle": "احتساب ما مررت عليه كمقروء",
+      "skippedHint": "تُحتسب القصة التي بقيت على شاشتك لحظة كمقروءة، حتى لو لم تفتحها.",
+      "keepTitle": "أبقِ القصص المهمة التي فاتتك",
+      "keepHint": "تبقى القصة المرتفعة أو الطارئة التي لم تقرأها للمدة المحددة، وتُحتسب من وقت نشرها. تغادر كل القصص الأخرى بعد 2 يومين. القصص التي تُزال بمدة أقصر لا تعود.",
+      "keep2": "2 يومين",
+      "keep3": "3 أيام",
+      "keep7": "7 أيام",
+      "keepA11y": "أبقِ القصص المهمة، {{label}}",
+      "mediumTitle": "أبقِ القصص المتوسطة الأقدم ظاهرة",
+      "mediumHint": "مفعّل: تبقى القصة المتوسطة التي لم تشاهدها في القائمة الرئيسية مهما كان عمرها، أسفل القصص الأحدث. متوقف: بعد 12 ساعة تنتقل خلف «عرضها».",
+      "seenTitle": "انقل القصص التي شاهدتها خلف «عرضها»",
+      "seenHint": "مفعّل: القائمة الرئيسية تحتوي فقط على القصص التي لم تشاهدها. متوقف: تبقى القصص التي شاهدتها في القائمة الرئيسية، بعد القصص الجديدة. لا يتحرك شيء أثناء قراءتك.",
+      "highTitle": "أبقِ القصص المرتفعة التي لم تشاهدها في الأعلى",
+      "highHint": "مفعّل: تبقى القصة المرتفعة التي لم تشاهدها في الأعلى مهما كان عمرها. متوقف: تنزل بعد 12 ساعة، ثم تنزل مرة أخرى بعد 24 ساعة."
+    },
+    "feed": {
+      "fold": {
+        "seenBody_one": "{{count}} قصة أخرى شاهدتها من قبل.",
+        "seenBody_other": "{{count}} قصص أخرى شاهدتها من قبل.",
+        "mixedBody_one": "{{count}} قصة أخرى شاهدتها من قبل أو من غير المرجح أن تهمك.",
+        "mixedBody_other": "{{count}} قصص أخرى شاهدتها من قبل أو من غير المرجح أن تهمك.",
+        "seenLabel": "قصص شاهدتها من قبل"
+      }
+    }
+  },
+  "de": {
+    "feedAlgorithm": {
+      "screenTitle": "Feed-Algorithmus",
+      "intro": "Wähle, wie lange Geschichten bleiben und wie dein Feed sortiert ist. Nach einer Änderung beginnt dein Feed wieder ganz oben.",
+      "skippedTitle": "Beim Scrollen übersprungen zählt als gelesen",
+      "skippedHint": "Eine Geschichte, die kurz auf deinem Bildschirm war, zählt als gelesen, auch wenn du sie nicht geöffnet hast.",
+      "keepTitle": "Wichtige Geschichten behalten, die du verpasst hast",
+      "keepHint": "Wie lange eine Geschichte mit Priorität Hoch oder Notfall, die du nicht gelesen hast, bleibt, wird ab dem Veröffentlichungsdatum gezählt. Alle anderen Geschichten verschwinden nach 2 Tagen. Geschichten, die vorher schon entfernt wurden, kommen nicht zurück.",
+      "keep2": "2 Tage",
+      "keep3": "3 Tage",
+      "keep7": "7 Tage",
+      "keepA11y": "Wichtige Geschichten behalten, {{label}}",
+      "mediumTitle": "Ältere Geschichten mit Priorität Mittel im Blick behalten",
+      "mediumHint": "An: Eine Geschichte mit Priorität Mittel, die du nicht gesehen hast, bleibt in jedem Alter in der Hauptliste, unter den neueren. Aus: Nach 12 Stunden wandert sie hinter „Anzeigen“.",
+      "seenTitle": "Geschichten, die du gesehen hast, hinter „Anzeigen“ verschieben",
+      "seenHint": "An: Die Hauptliste zeigt nur Geschichten, die du noch nicht gesehen hast. Aus: Gesehene Geschichten bleiben in der Hauptliste, nach den neuen. Während du liest, bewegt sich nichts.",
+      "highTitle": "Ungesehene Geschichten mit Priorität Hoch oben halten",
+      "highHint": "An: Eine Geschichte mit Priorität Hoch, die du nicht gesehen hast, bleibt in jedem Alter oben. Aus: Nach 12 Stunden wandert sie nach unten und nach 24 Stunden noch einmal."
+    },
+    "feed": {
+      "fold": {
+        "seenBody_one": "{{count}} weitere Geschichte hast du schon gesehen.",
+        "seenBody_other": "{{count}} weitere Geschichten hast du schon gesehen.",
+        "mixedBody_one": "{{count}} weitere Geschichte hast du schon gesehen oder sie ist für dich wahrscheinlich weniger wichtig.",
+        "mixedBody_other": "{{count}} weitere Geschichten hast du schon gesehen oder sie sind für dich wahrscheinlich weniger wichtig.",
+        "seenLabel": "Geschichten, die du schon gesehen hast"
+      }
+    }
+  },
+  "en": {
+    "feedAlgorithm": {
+      "screenTitle": "Feed algorithm",
+      "intro": "Choose how long stories stay and how your Feed is ordered. After a change, your Feed starts again from the top.",
+      "skippedTitle": "Scrolled past counts as read",
+      "skippedHint": "A story that stayed on your screen for a moment counts as read, even if you did not open it.",
+      "keepTitle": "Keep important stories you missed",
+      "keepHint": "How long a High or Emergency story you have not read stays, counted from when it was published. Everything else leaves after 2 days. Stories removed by a shorter time do not come back.",
+      "keep2": "2 days",
+      "keep3": "3 days",
+      "keep7": "7 days",
+      "keepA11y": "Keep important stories, {{label}}",
+      "mediumTitle": "Keep older Medium stories in view",
+      "mediumHint": "On: a Medium story you have not seen stays in the main list at any age, below newer ones. Off: after 12 hours it moves behind Show them.",
+      "seenTitle": "Move stories you saw behind Show them",
+      "seenHint": "On: the main list holds only stories you have not seen. Off: stories you saw stay in the main list, after the new ones. Nothing moves while you are reading.",
+      "highTitle": "Keep unseen High stories on top",
+      "highHint": "On: a High story you have not seen stays at the top at any age. Off: it moves down after 12 hours and again after 24."
+    },
+    "feed": {
+      "fold": {
+        "seenBody_one": "{{count}} more story is one you already saw.",
+        "seenBody_other": "{{count}} more stories are ones you already saw.",
+        "mixedBody_one": "{{count}} more story is one you already saw or is less likely to matter to you.",
+        "mixedBody_other": "{{count}} more stories are ones you already saw or are less likely to matter to you.",
+        "seenLabel": "Stories you already saw"
+      }
+    }
+  },
+  "es": {
+    "feedAlgorithm": {
+      "screenTitle": "Algoritmo del Feed",
+      "intro": "Elige cuánto tiempo permanecen las historias y cómo se ordena tu Feed. Después de un cambio, tu Feed vuelve a empezar desde arriba.",
+      "skippedTitle": "Lo que pasaste de largo cuenta como leído",
+      "skippedHint": "Una historia que estuvo en tu pantalla un momento cuenta como leída, aunque no la abriste.",
+      "keepTitle": "Conservar las noticias importantes que te perdiste",
+      "keepHint": "Cuánto tiempo se queda una historia Alta o de Emergencia que no has leído, contado desde su publicación. Todo lo demás se va después de 2 días. Las historias que se eliminan por un plazo más corto no vuelven.",
+      "keep2": "2 días",
+      "keep3": "3 días",
+      "keep7": "7 días",
+      "keepA11y": "Conservar noticias importantes, {{label}}",
+      "mediumTitle": "Mantener las historias Media antiguas a la vista",
+      "mediumHint": "Activado: una historia Media que no has visto se queda en la lista principal a cualquier edad, debajo de las más nuevas. Desactivado: después de 12 horas pasa detrás de Mostrarlas.",
+      "seenTitle": "Mover las historias que viste detrás de Mostrarlas",
+      "seenHint": "Activado: la lista principal solo tiene historias que no has visto. Desactivado: las historias que viste se quedan en la lista principal, después de las nuevas. Nada se mueve mientras lees.",
+      "highTitle": "Mantener arriba las historias Alta que no has visto",
+      "highHint": "Activado: una historia Alta que no has visto se queda arriba a cualquier edad. Desactivado: baja después de 12 horas y otra vez después de 24."
+    },
+    "feed": {
+      "fold": {
+        "seenBody_one": "{{count}} historia más es una que ya viste.",
+        "seenBody_other": "{{count}} historias más son las que ya viste.",
+        "mixedBody_one": "{{count}} historia más es una que ya viste o que tiene menos probabilidades de importarte.",
+        "mixedBody_other": "{{count}} historias más son las que ya viste o que tienen menos probabilidades de importarte.",
+        "seenLabel": "Historias que ya viste"
+      }
+    }
+  },
+  "fr": {
+    "feedAlgorithm": {
+      "screenTitle": "Algorithme du Fil d'actu",
+      "intro": "Choisissez combien de temps les articles restent et comment votre Fil d'actu est classé. Après un changement, votre Fil d'actu repart du haut.",
+      "skippedTitle": "Un article parcouru compte comme lu",
+      "skippedHint": "Un article resté un instant à l'écran compte comme lu, même si vous ne l'avez pas ouvert.",
+      "keepTitle": "Garder les articles importants que vous avez manqués",
+      "keepHint": "Un article Élevé ou Urgence que vous n'avez pas lu reste pendant la durée choisie, à partir de sa date de publication. Les autres articles disparaissent au bout de 2 jours. Les articles retirés par un délai plus court ne reviennent pas.",
+      "keep2": "2 jours",
+      "keep3": "3 jours",
+      "keep7": "7 jours",
+      "keepA11y": "Garder les articles importants, {{label}}",
+      "mediumTitle": "Garder les anciens articles Moyen visibles",
+      "mediumHint": "Activé : un article Moyen que vous n'avez pas vu reste dans la liste principale à tout âge, sous les plus récents. Désactivé : après 12 heures, il passe derrière Les afficher.",
+      "seenTitle": "Mettre les articles vus derrière Les afficher",
+      "seenHint": "Activé : la liste principale ne garde que les articles que vous n'avez pas vus. Désactivé : les articles vus restent dans la liste principale, après les nouveaux. Rien ne bouge pendant que vous lisez.",
+      "highTitle": "Garder en haut les articles Élevé non vus",
+      "highHint": "Activé : un article Élevé que vous n'avez pas vu reste en haut à tout âge. Désactivé : après 12 heures il descend, puis de nouveau après 24 heures."
+    },
+    "feed": {
+      "fold": {
+        "seenBody_one": "{{count}} article de plus que vous avez déjà vu.",
+        "seenBody_other": "{{count}} articles de plus que vous avez déjà vus.",
+        "mixedBody_one": "{{count}} article de plus que vous avez déjà vu ou qui compte probablement moins pour vous.",
+        "mixedBody_other": "{{count}} articles de plus que vous avez déjà vus ou qui comptent probablement moins pour vous.",
+        "seenLabel": "Articles que vous avez déjà vus"
+      }
+    }
+  },
+  "hi": {
+    "feedAlgorithm": {
+      "screenTitle": "फ़ीड एल्गोरिदम",
+      "intro": "चुनें कि स्टोरीज़ कितने समय तक रहें और आपकी फ़ीड किस क्रम में दिखे। बदलाव के बाद आपकी फ़ीड ऊपर से फिर शुरू होगी।",
+      "skippedTitle": "स्क्रॉल करके आगे बढ़ी स्टोरी को पढ़ा हुआ गिनें",
+      "skippedHint": "जो स्टोरी कुछ पल के लिए आपकी स्क्रीन पर रही, वह पढ़ी हुई गिनी जाएगी, भले ही आपने उसे खोला न हो।",
+      "keepTitle": "छूटी हुई ज़रूरी स्टोरीज़ रखें",
+      "keepHint": "उच्च या आपातकालीन स्टोरी, जिसे आपने नहीं पढ़ा, प्रकाशन के समय से गिनकर इतने समय तक बनी रहती है। बाकी सभी स्टोरीज़ 2 दिन बाद हट जाती हैं। कम समय के कारण हटाई गई स्टोरीज़ वापस नहीं आतीं।",
+      "keep2": "2 दिन",
+      "keep3": "3 दिन",
+      "keep7": "7 दिन",
+      "keepA11y": "ज़रूरी स्टोरीज़ रखें, {{label}}",
+      "mediumTitle": "पुरानी मध्यम स्टोरीज़ सामने रखें",
+      "mediumHint": "चालू: जो मध्यम स्टोरी आपने नहीं देखी, वह किसी भी उम्र की हो, मुख्य सूची में नई स्टोरीज़ के नीचे बनी रहती है। बंद: 12 घंटे बाद वह इन्हें दिखाएँ के पीछे चली जाती है।",
+      "seenTitle": "देखी हुई स्टोरीज़ को इन्हें दिखाएँ के पीछे ले जाएँ",
+      "seenHint": "चालू: मुख्य सूची में सिर्फ़ वे स्टोरीज़ रहती हैं जो आपने अभी नहीं देखीं। बंद: जो स्टोरीज़ आपने देखी हैं, वे नई स्टोरीज़ के बाद मुख्य सूची में बनी रहती हैं। पढ़ते समय कुछ नहीं हिलता।",
+      "highTitle": "नहीं देखी गई उच्च स्टोरीज़ सबसे ऊपर रखें",
+      "highHint": "चालू: जो उच्च स्टोरी आपने नहीं देखी, वह किसी भी उम्र की हो, सबसे ऊपर रहती है। बंद: 12 घंटे बाद वह नीचे खिसकती है और 24 घंटे बाद फिर नीचे चली जाती है।"
+    },
+    "feed": {
+      "fold": {
+        "seenBody_one": "{{count}} और स्टोरी है जो आप पहले देख चुके हैं।",
+        "seenBody_other": "{{count}} और स्टोरीज़ हैं जो आप पहले देख चुके हैं।",
+        "mixedBody_one": "{{count}} और स्टोरी है जो आप पहले देख चुके हैं या जो आपके लिए शायद कम काम की है।",
+        "mixedBody_other": "{{count}} और स्टोरीज़ हैं जो आप पहले देख चुके हैं या जो आपके लिए शायद कम काम की हैं।",
+        "seenLabel": "पहले देखी हुई स्टोरीज़"
+      }
+    }
+  },
+  "id": {
+    "feedAlgorithm": {
+      "screenTitle": "Algoritma Feed",
+      "intro": "Pilih berapa lama cerita tetap ada dan bagaimana Feed Anda diurutkan. Setelah ada perubahan, Feed Anda dimulai lagi dari atas.",
+      "skippedTitle": "Yang sudah digulir dihitung sebagai sudah dibaca",
+      "skippedHint": "Cerita yang tetap di layar Anda sebentar dihitung sebagai sudah dibaca, meskipun Anda tidak membukanya.",
+      "keepTitle": "Simpan cerita penting yang terlewat",
+      "keepHint": "Cerita Darurat atau Tinggi yang belum Anda baca tetap ada selama waktu ini, dihitung sejak diterbitkan. Cerita lain hilang setelah 2 hari. Cerita yang sudah dihapus karena waktu yang lebih singkat tidak akan kembali.",
+      "keep2": "2 hari",
+      "keep3": "3 hari",
+      "keep7": "7 hari",
+      "keepA11y": "Simpan cerita penting, {{label}}",
+      "mediumTitle": "Simpan cerita Sedang yang lebih lama tetap terlihat",
+      "mediumHint": "Aktif: cerita Sedang yang belum Anda lihat tetap di daftar utama berapa pun usianya, di bawah cerita yang lebih baru. Nonaktif: setelah 12 jam cerita itu pindah ke belakang Tampilkan.",
+      "seenTitle": "Pindahkan cerita yang sudah Anda lihat ke belakang Tampilkan",
+      "seenHint": "Aktif: daftar utama hanya berisi cerita yang belum Anda lihat. Nonaktif: cerita yang sudah Anda lihat tetap di daftar utama, setelah cerita yang baru. Tidak ada yang berpindah saat Anda sedang membaca.",
+      "highTitle": "Tampilkan cerita Tinggi yang belum Anda lihat di atas",
+      "highHint": "Aktif: cerita Tinggi yang belum Anda lihat tetap di atas berapa pun usianya. Nonaktif: setelah 12 jam cerita itu turun, dan turun lagi setelah 24 jam."
+    },
+    "feed": {
+      "fold": {
+        "seenBody_one": "{{count}} cerita lagi adalah cerita yang sudah Anda lihat.",
+        "seenBody_other": "{{count}} cerita lagi adalah cerita yang sudah Anda lihat.",
+        "mixedBody_one": "{{count}} cerita lagi adalah cerita yang sudah Anda lihat atau kemungkinan kecil penting bagi Anda.",
+        "mixedBody_other": "{{count}} cerita lagi adalah cerita yang sudah Anda lihat atau kemungkinan kecil penting bagi Anda.",
+        "seenLabel": "Cerita yang sudah Anda lihat"
+      }
+    }
+  },
+  "it": {
+    "feedAlgorithm": {
+      "screenTitle": "Algoritmo del Feed",
+      "intro": "Scegli per quanto tempo restano le storie e come viene ordinato il tuo Feed. Dopo una modifica, il tuo Feed riparte dall'inizio.",
+      "skippedTitle": "Le storie scorse contano come lette",
+      "skippedHint": "Una storia rimasta sullo schermo per un attimo conta come letta, anche se non l'hai aperta.",
+      "keepTitle": "Tieni le storie importanti che ti sei perso",
+      "keepHint": "Per quanto tempo resta una storia Alta o di Emergenza che non hai letto, contando dalla pubblicazione. Tutte le altre se ne vanno dopo 2 giorni. Le storie eliminate con un tempo più breve non tornano.",
+      "keep2": "2 giorni",
+      "keep3": "3 giorni",
+      "keep7": "7 giorni",
+      "keepA11y": "Tieni le storie importanti, {{label}}",
+      "mediumTitle": "Tieni in vista le storie Medie più vecchie",
+      "mediumHint": "Attivo: una storia Media che non hai visto resta nella lista principale a qualsiasi età, sotto quelle più recenti. Disattivo: dopo 12 ore passa dietro a Mostrale.",
+      "seenTitle": "Sposta dietro a Mostrale le storie che hai visto",
+      "seenHint": "Attivo: la lista principale contiene solo storie che non hai visto. Disattivo: le storie che hai visto restano nella lista principale, dopo quelle nuove. Non si sposta nulla mentre leggi.",
+      "highTitle": "Tieni in cima le storie Alte non viste",
+      "highHint": "Attivo: una storia Alta che non hai visto resta in cima a qualsiasi età. Disattivo: dopo 12 ore scende, e di nuovo dopo 24."
+    },
+    "feed": {
+      "fold": {
+        "seenBody_one": "{{count}} altra storia è una che hai già visto.",
+        "seenBody_other": "{{count}} altre storie sono quelle che hai già visto.",
+        "mixedBody_one": "{{count}} altra storia è una che hai già visto o che ha meno probabilità di contare per te.",
+        "mixedBody_other": "{{count}} altre storie sono quelle che hai già visto o che hanno meno probabilità di contare per te.",
+        "seenLabel": "Storie che hai già visto"
+      }
+    }
+  },
+  "ja": {
+    "feedAlgorithm": {
+      "screenTitle": "フィードのアルゴリズム",
+      "intro": "ストーリーをどのくらい残すか、フィードをどの順に並べるかを選べます。変更するとフィードは一番上から読み直されます。",
+      "skippedTitle": "スクロールで通り過ぎた記事も既読にする",
+      "skippedHint": "しばらく画面に表示されたストーリーは、開いていなくても既読として扱われます。",
+      "keepTitle": "読み逃した重要なストーリーを残す",
+      "keepHint": "優先度が高・緊急のストーリーのうち、まだ読んでいないものは、公開日から数えて何日間残るかを選べます。それ以外のストーリーは2日後に消えます。短い期間の設定で削除されたストーリーは戻ってきません。",
+      "keep2": "2日間",
+      "keep3": "3日間",
+      "keep7": "7日間",
+      "keepA11y": "重要なストーリーを残す、{{label}}",
+      "mediumTitle": "優先度が中の古いストーリーを一覧に残す",
+      "mediumHint": "オン：まだ見ていない中優先のストーリーは、古くても新しいものの下で一覧に残ります。オフ：12時間後に「表示する」の後ろへ移ります。",
+      "seenTitle": "見たストーリーを「表示する」の後ろに移す",
+      "seenHint": "オン：一覧にはまだ見ていないストーリーだけが表示されます。オフ：見たストーリーも一覧に残り、新しいものの後ろに並びます。読んでいる間は何も動きません。",
+      "highTitle": "まだ見ていない高優先のストーリーを上に残す",
+      "highHint": "オン：まだ見ていない高優先のストーリーは、古くても一番上に残ります。オフ：12時間後に下へ移り、24時間後にはさらに下へ移ります。"
+    },
+    "feed": {
+      "fold": {
+        "seenBody_one": "すでに見たストーリーが、あと{{count}}件あります。",
+        "seenBody_other": "すでに見たストーリーが、あと{{count}}件あります。",
+        "mixedBody_one": "すでに見たストーリー、またはあなたにとって重要である可能性が低いストーリーが、あと{{count}}件あります。",
+        "mixedBody_other": "すでに見たストーリー、またはあなたにとって重要である可能性が低いストーリーが、あと{{count}}件あります。",
+        "seenLabel": "すでに見たストーリー"
+      }
+    }
+  },
+  "ko": {
+    "feedAlgorithm": {
+      "screenTitle": "피드 알고리즘",
+      "intro": "기사를 얼마나 오래 둘지, 그리고 피드를 어떤 순서로 정렬할지 고르세요. 변경하면 피드가 맨 위에서부터 다시 시작됩니다.",
+      "skippedTitle": "스크롤로 지나친 기사도 읽은 것으로 봅니다",
+      "skippedHint": "화면에 잠깐이라도 머문 기사는 열어 보지 않았더라도 읽은 것으로 봅니다.",
+      "keepTitle": "놓친 중요한 기사 보관하기",
+      "keepHint": "읽지 않은 높음 또는 긴급 기사는 발행된 날부터 계산해 이 기간 동안 남아 있습니다. 나머지 기사는 2일 뒤에 사라집니다. 더 짧은 기간 때문에 지워진 기사는 다시 돌아오지 않습니다.",
+      "keep2": "2일",
+      "keep3": "3일",
+      "keep7": "7일",
+      "keepA11y": "중요한 기사 보관, {{label}}",
+      "mediumTitle": "오래된 중간 기사도 계속 보이게 하기",
+      "mediumHint": "켜기: 보지 않은 중간 기사는 나이와 관계없이 본 목록에 남되, 새 기사 아래에 놓입니다. 끄기: 12시간이 지나면 모두 보기 뒤로 넘어갑니다.",
+      "seenTitle": "본 기사는 모두 보기 뒤로 옮기기",
+      "seenHint": "켜기: 본 목록에는 아직 보지 않은 기사만 나타납니다. 끄기: 본 기사는 새 기사 뒤에 본 목록에 그대로 남습니다. 회원님이 읽는 동안에는 아무것도 옮겨지지 않습니다.",
+      "highTitle": "보지 않은 높음 기사를 위에 두기",
+      "highHint": "켜기: 보지 않은 높음 기사는 나이와 관계없이 맨 위에 남습니다. 끄기: 12시간이 지나면 아래로 내려가고, 24시간이 지나면 한 번 더 내려갑니다."
+    },
+    "feed": {
+      "fold": {
+        "seenBody_one": "이미 본 기사가 {{count}}개 더 있습니다.",
+        "seenBody_other": "이미 본 기사가 {{count}}개 더 있습니다.",
+        "mixedBody_one": "이미 본 기사나 회원님에게 중요할 가능성이 낮은 기사가 {{count}}개 더 있습니다.",
+        "mixedBody_other": "이미 본 기사나 회원님에게 중요할 가능성이 낮은 기사가 {{count}}개 더 있습니다.",
+        "seenLabel": "이미 본 기사"
+      }
+    }
+  },
+  "nl": {
+    "feedAlgorithm": {
+      "screenTitle": "Feedalgoritme",
+      "intro": "Kies hoe lang verhalen blijven staan en hoe je Feed is gesorteerd. Na een wijziging begint je Feed weer bovenaan.",
+      "skippedTitle": "Voorbij gescrolde verhalen tellen als gelezen",
+      "skippedHint": "Een verhaal dat even op je scherm stond, telt als gelezen, ook als je het niet hebt geopend.",
+      "keepTitle": "Belangrijke verhalen die je hebt gemist bewaren",
+      "keepHint": "Hoe lang een verhaal met prioriteit Hoog of Noodgeval dat je niet hebt gelezen blijft staan, gerekend vanaf de publicatie. Alle andere verhalen verdwijnen na 2 dagen. Verhalen die door een kortere termijn zijn verwijderd, komen niet terug.",
+      "keep2": "2 dagen",
+      "keep3": "3 dagen",
+      "keep7": "7 dagen",
+      "keepA11y": "Belangrijke verhalen bewaren, {{label}}",
+      "mediumTitle": "Oudere verhalen van prioriteit Gemiddeld in beeld houden",
+      "mediumHint": "Aan: een verhaal van prioriteit Gemiddeld dat je niet hebt gezien, blijft op elke leeftijd in de hoofdlijst, onder nieuwere verhalen. Uit: na 12 uur verhuist het naar de plek achter Toon ze.",
+      "seenTitle": "Verhalen die je zag achter Toon ze zetten",
+      "seenHint": "Aan: de hoofdlijst bevat alleen verhalen die je nog niet hebt gezien. Uit: verhalen die je zag blijven in de hoofdlijst, na de nieuwe. Tijdens het lezen verschuift er niets.",
+      "highTitle": "Ongeziene verhalen met prioriteit Hoog bovenaan houden",
+      "highHint": "Aan: een verhaal van prioriteit Hoog dat je niet hebt gezien, blijft op elke leeftijd bovenaan. Uit: na 12 uur zakt het, en na 24 uur nog een keer."
+    },
+    "feed": {
+      "fold": {
+        "seenBody_one": "Nog {{count}} verhaal is er een dat je al hebt gezien.",
+        "seenBody_other": "Nog {{count}} verhalen zijn er die je al hebt gezien.",
+        "mixedBody_one": "Nog {{count}} verhaal is er een dat je al hebt gezien of dat minder waarschijnlijk belangrijk voor je is.",
+        "mixedBody_other": "Nog {{count}} verhalen zijn er die je al hebt gezien of die minder waarschijnlijk belangrijk voor je zijn.",
+        "seenLabel": "Verhalen die je al hebt gezien"
+      }
+    }
+  },
+  "pl": {
+    "feedAlgorithm": {
+      "screenTitle": "Algorytm Kanału",
+      "intro": "Wybierz, jak długo historie zostają i w jakiej kolejności ustawiony jest Twój Kanał. Po zmianie Kanał zaczyna się od początku.",
+      "skippedTitle": "Przewinięte liczy się jako przeczytane",
+      "skippedHint": "Historia, która przez chwilę była widoczna na ekranie, liczy się jako przeczytana, nawet jeśli jej nie otworzyłeś.",
+      "keepTitle": "Zachowuj ważne historie, których nie przeczytałeś",
+      "keepHint": "Jak długo zostaje historia z priorytetem Wysoka lub Pilne, której nie przeczytałeś, liczone od publikacji. Pozostałe historie znikają po 2 dniach. Historie usunięte przez krótszy czas nie wracają.",
+      "keep2": "2 dni",
+      "keep3": "3 dni",
+      "keep7": "7 dni",
+      "keepA11y": "Zachowuj ważne historie, {{label}}",
+      "mediumTitle": "Trzymaj starsze historie Średnie na widoku",
+      "mediumHint": "Włączone: historia Średnia, której nie widziałeś, zostaje na głównej liście w każdym wieku, poniżej nowszych. Wyłączone: po 12 godzinach przenosi się za przycisk Pokaż je.",
+      "seenTitle": "Przenoś historie, które widziałeś, za przycisk Pokaż je",
+      "seenHint": "Włączone: na głównej liście są tylko historie, których nie widziałeś. Wyłączone: historie, które widziałeś, zostają na głównej liście, za nowymi. Podczas czytania nic się nie przesuwa.",
+      "highTitle": "Trzymaj na górze niewidziane historie Wysokie",
+      "highHint": "Włączone: historia Wysoka, której nie widziałeś, zostaje na górze w każdym wieku. Wyłączone: po 12 godzinach przesuwa się w dół, a po 24 godzinach jeszcze niżej."
+    },
+    "feed": {
+      "fold": {
+        "seenBody_one": "Jeszcze {{count}} historia jest taka, którą już widziałeś.",
+        "seenBody_few": "Jeszcze {{count}} historie to takie, które już widziałeś.",
+        "seenBody_many": "Jeszcze {{count}} historii to takie, które już widziałeś.",
+        "seenBody_other": "Jeszcze {{count}} historii to takie, które już widziałeś.",
+        "mixedBody_one": "Jeszcze {{count}} historia to taka, którą już widziałeś albo która raczej nie będzie dla Ciebie ważna.",
+        "mixedBody_few": "Jeszcze {{count}} historie to takie, które już widziałeś albo które raczej nie będą dla Ciebie ważne.",
+        "mixedBody_many": "Jeszcze {{count}} historii to takie, które już widziałeś albo które raczej nie będą dla Ciebie ważne.",
+        "mixedBody_other": "Jeszcze {{count}} historii to takie, które już widziałeś albo które raczej nie będą dla Ciebie ważne.",
+        "seenLabel": "Historie, które już widziałeś"
+      }
+    }
+  },
+  "pt-BR": {
+    "feedAlgorithm": {
+      "screenTitle": "Algoritmo do Feed",
+      "intro": "Escolha por quanto tempo as histórias ficam e como o seu Feed é ordenado. Depois de uma mudança, o seu Feed recomeça do início.",
+      "skippedTitle": "Histórias que passaram na tela contam como lidas",
+      "skippedHint": "Uma história que ficou na sua tela por um momento conta como lida, mesmo que você não tenha aberto.",
+      "keepTitle": "Manter as histórias importantes que você perdeu",
+      "keepHint": "Por quanto tempo uma história de prioridade Alta ou Emergência que você não leu continua aparecendo, contando a partir da data de publicação. As outras histórias saem depois de 2 dias. Histórias removidas por um prazo menor não voltam.",
+      "keep2": "2 dias",
+      "keep3": "3 dias",
+      "keep7": "7 dias",
+      "keepA11y": "Manter histórias importantes, {{label}}",
+      "mediumTitle": "Manter histórias de prioridade Média mais antigas à vista",
+      "mediumHint": "Ativado: uma história de prioridade Média que você não viu fica na lista principal, em qualquer idade, abaixo das mais novas. Desativado: depois de 12 horas ela passa para trás de Mostrar.",
+      "seenTitle": "Mover as histórias que você viu para trás de Mostrar",
+      "seenHint": "Ativado: a lista principal mostra só as histórias que você ainda não viu. Desativado: as histórias que você viu continuam na lista principal, depois das novas. Nada se move enquanto você estiver lendo.",
+      "highTitle": "Manter as histórias de prioridade Alta não vistas no topo",
+      "highHint": "Ativado: uma história de prioridade Alta que você não viu fica no topo, em qualquer idade. Desativado: ela desce depois de 12 horas e de novo depois de 24."
+    },
+    "feed": {
+      "fold": {
+        "seenBody_one": "Mais {{count}} história é uma que você já viu.",
+        "seenBody_other": "Mais {{count}} histórias são as que você já viu.",
+        "mixedBody_one": "Mais {{count}} história é uma que você já viu ou que tem menos chance de importar para você.",
+        "mixedBody_other": "Mais {{count}} histórias são as que você já viu ou que têm menos chance de importar para você.",
+        "seenLabel": "Histórias que você já viu"
+      }
+    }
+  },
+  "ru": {
+    "feedAlgorithm": {
+      "screenTitle": "Алгоритм ленты",
+      "intro": "Выберите, как долго хранятся истории и в каком порядке показывается лента. После изменения лента начинается сначала, с самого верха.",
+      "skippedTitle": "Пролистанное считается прочитанным",
+      "skippedHint": "История, которая некоторое время была на экране, считается прочитанной, даже если вы её не открывали.",
+      "keepTitle": "Сохранять важные истории, которые вы пропустили",
+      "keepHint": "Сколько времени остаётся история с приоритетом «Высокая» или «Экстренное», которую вы не читали, считая от даты публикации. Остальные истории уходят через 2 дня. Истории, удалённые из-за более короткого срока, не возвращаются.",
+      "keep2": "2 дня",
+      "keep3": "3 дня",
+      "keep7": "7 дней",
+      "keepA11y": "Сохранять важные истории, {{label}}",
+      "mediumTitle": "Показывать старые истории «Средняя» в ленте",
+      "mediumHint": "Включено: непросмотренная история «Средняя» остаётся в ленте в любом возрасте, ниже более новых. Выключено: через 12 часов она уходит под кнопку «Показать их».",
+      "seenTitle": "Переносить просмотренные истории под «Показать их»",
+      "seenHint": "Включено: в ленте остаются только непросмотренные истории. Выключено: просмотренные истории остаются в ленте, после новых. Пока вы читаете, ничего не перемещается.",
+      "highTitle": "Держать непросмотренные истории «Высокая» наверху",
+      "highHint": "Включено: непросмотренная история «Высокая» остаётся наверху в любом возрасте. Выключено: через 12 часов она опускается, а через 24 часа опускается ещё ниже."
+    },
+    "feed": {
+      "fold": {
+        "seenBody_one": "Ещё {{count}} история: вы уже её видели.",
+        "seenBody_few": "Ещё {{count}} истории: вы уже их видели.",
+        "seenBody_many": "Ещё {{count}} историй: вы уже их видели.",
+        "seenBody_other": "Ещё {{count}} истории: вы уже их видели.",
+        "mixedBody_one": "Ещё {{count}} история: вы уже её видели или она вряд ли важна для вас.",
+        "mixedBody_few": "Ещё {{count}} истории: вы уже их видели или они вряд ли важны для вас.",
+        "mixedBody_many": "Ещё {{count}} историй: вы уже их видели или они вряд ли важны для вас.",
+        "mixedBody_other": "Ещё {{count}} истории: вы уже их видели или они вряд ли важны для вас.",
+        "seenLabel": "Истории, которые вы уже видели"
+      }
+    }
+  },
+  "th": {
+    "feedAlgorithm": {
+      "screenTitle": "อัลกอริทึมของฟีด",
+      "intro": "เลือกได้ว่าเรื่องต่างๆ จะอยู่ในฟีดนานแค่ไหน และฟีดของคุณจัดเรียงอย่างไร เมื่อคุณเปลี่ยนค่าแล้ว ฟีดจะเริ่มใหม่จากด้านบนสุด.",
+      "skippedTitle": "การเลื่อนผ่านนับเป็นการอ่านแล้ว",
+      "skippedHint": "เรื่องที่อยู่บนหน้าจอของคุณสักครู่จะนับว่าอ่านแล้ว แม้คุณจะยังไม่ได้เปิดอ่านก็ตาม.",
+      "keepTitle": "เก็บเรื่องสำคัญที่คุณพลาดไว้",
+      "keepHint": "เรื่องความสำคัญสูงหรือเหตุฉุกเฉินที่คุณยังไม่ได้อ่านจะอยู่ในฟีดนานแค่ไหน นับจากวันที่เรื่องนั้นเผยแพร่. เรื่องอื่นทั้งหมดจะหายไปหลัง 2 วัน. เรื่องที่ถูกนำออกเพราะเวลาสั้นกว่าจะไม่กลับมาอีก.",
+      "keep2": "2 วัน",
+      "keep3": "3 วัน",
+      "keep7": "7 วัน",
+      "keepA11y": "เก็บเรื่องสำคัญ, {{label}}",
+      "mediumTitle": "เก็บเรื่องความสำคัญกลางที่เก่ากว่าไว้ให้เห็น",
+      "mediumHint": "เปิด: เรื่องความสำคัญกลางที่คุณยังไม่เคยเห็นจะอยู่ในรายการหลักไม่ว่าจะเก่าแค่ไหน แต่จะอยู่ต่ำกว่าเรื่องที่ใหม่กว่า. ปิด: หลัง 12 ชั่วโมง เรื่องนั้นจะถูกย้ายไปไว้หลังแสดงเรื่องเหล่านี้.",
+      "seenTitle": "ย้ายเรื่องที่คุณเห็นแล้วไปไว้หลังแสดงเรื่องเหล่านี้",
+      "seenHint": "เปิด: รายการหลักจะมีเฉพาะเรื่องที่คุณยังไม่เคยเห็นเท่านั้น. ปิด: เรื่องที่คุณเคยเห็นจะยังอยู่ในรายการหลัก โดยอยู่หลังเรื่องใหม่ๆ. ขณะที่คุณกำลังอ่าน จะไม่มีอะไรเลื่อนย้ายเลย.",
+      "highTitle": "เก็บเรื่องความสำคัญสูงที่ยังไม่เคยเห็นไว้ด้านบน",
+      "highHint": "เปิด: เรื่องความสำคัญสูงที่คุณยังไม่เคยเห็นจะอยู่ด้านบนสุดไม่ว่าจะเก่าแค่ไหน. ปิด: เรื่องนั้นจะเลื่อนลงหลัง 12 ชั่วโมง และเลื่อนลงอีกครั้งเมื่อครบ 24 ชั่วโมง."
+    },
+    "feed": {
+      "fold": {
+        "seenBody_one": "มีอีก {{count}} เรื่องที่คุณเคยเห็นแล้ว.",
+        "seenBody_other": "มีอีก {{count}} เรื่องที่คุณเคยเห็นแล้ว.",
+        "mixedBody_one": "มีอีก {{count}} เรื่องที่คุณเคยเห็นแล้วหรือมีแนวโน้มน้อยที่จะสำคัญกับคุณ.",
+        "mixedBody_other": "มีอีก {{count}} เรื่องที่คุณเคยเห็นแล้วหรือมีแนวโน้มน้อยที่จะสำคัญกับคุณ.",
+        "seenLabel": "เรื่องที่คุณเคยเห็นแล้ว"
+      }
+    }
+  },
+  "tr": {
+    "feedAlgorithm": {
+      "screenTitle": "Akış algoritması",
+      "intro": "Hikayelerin ne kadar kalacağını ve Akışının nasıl sıralanacağını seç. Bir değişiklikten sonra Akışın en baştan başlar.",
+      "skippedTitle": "Kaydırılıp geçilenler okunmuş sayılır",
+      "skippedHint": "Bir süre ekranında kalan bir haber, açmasan bile okunmuş sayılır.",
+      "keepTitle": "Kaçırdığın önemli haberleri tut",
+      "keepHint": "Okumadığın bir Yüksek ya da Acil haber, yayımlandığı andan itibaren bu süre boyunca kalır. Diğer tüm haberler 2 gün sonra çıkar. Kısa süre yüzünden silinen haberler geri gelmez.",
+      "keep2": "2 gün",
+      "keep3": "3 gün",
+      "keep7": "7 gün",
+      "keepA11y": "Önemli haberleri tut, {{label}}",
+      "mediumTitle": "Eski Orta haberleri listede tut",
+      "mediumHint": "Açık: Görmediğin bir Orta haber, yaşı ne olursa olsun ana listede kalır ve daha yeni haberlerin altında yer alır. Kapalı: 12 saat sonra Hepsini göster'in arkasına geçer.",
+      "seenTitle": "Gördüğün haberleri Hepsini göster'in arkasına taşı",
+      "seenHint": "Açık: Ana liste yalnızca görmediğin haberleri tutar. Kapalı: Gördüğün haberler ana listede, yeni haberlerin ardından kalır. Sen okurken hiçbir şey yer değiştirmez.",
+      "highTitle": "Görmediğin Yüksek haberleri en üstte tut",
+      "highHint": "Açık: Görmediğin bir Yüksek haber, yaşı ne olursa olsun en üstte kalır. Kapalı: 12 saat sonra aşağı iner, 24 saat sonra bir kez daha aşağı iner."
+    },
+    "feed": {
+      "fold": {
+        "seenBody_one": "{{count}} haber daha, zaten gördüğün bir haber.",
+        "seenBody_other": "{{count}} haber daha, zaten gördüğün haberler.",
+        "mixedBody_one": "{{count}} haber daha, zaten gördüğün ya da senin için önemli olma ihtimali daha düşük bir haber.",
+        "mixedBody_other": "{{count}} haber daha, zaten gördüğün ya da senin için önemli olma ihtimali daha düşük haberler.",
+        "seenLabel": "Zaten gördüğün haberler"
+      }
+    }
+  },
+  "uk": {
+    "feedAlgorithm": {
+      "screenTitle": "Алгоритм стрічки",
+      "intro": "Оберіть, як довго історії лишаються і в якому порядку показується ваша стрічка. Після зміни стрічка починається знову з початку.",
+      "skippedTitle": "Прогорнуті історії вважаються прочитаними",
+      "skippedHint": "Історія, яка якусь мить була на вашому екрані, вважається прочитаною, навіть якщо ви її не відкривали.",
+      "keepTitle": "Зберігати важливі історії, які ви пропустили",
+      "keepHint": "Історія з пріоритетом «Висока» або «Надзвичайна подія», яку ви не читали, лишається стільки, скільки вказано, відраховуючи від дати публікації. Решта історій зникає через 2 дні. Історії, які зникли через коротший строк, не повертаються.",
+      "keep2": "2 дні",
+      "keep3": "3 дні",
+      "keep7": "7 днів",
+      "keepA11y": "Зберігати важливі історії, {{label}}",
+      "mediumTitle": "Старіші історії з пріоритетом «Середня» лишаються на видноті",
+      "mediumHint": "Увімкнено: історія з пріоритетом «Середня», яку ви не бачили, лишається в основному списку в будь-якому віці, нижче за новіші. Вимкнено: після 12 годин вона переходить за «Показати їх».",
+      "seenTitle": "Переносити історії, які ви бачили, за «Показати їх»",
+      "seenHint": "Увімкнено: в основному списку лишаються лише історії, яких ви не бачили. Вимкнено: історії, які ви бачили, лишаються в основному списку, після нових. Під час читання нічого не переміщується.",
+      "highTitle": "Тримати нагорі історії «Висока», яких ви не бачили",
+      "highHint": "Увімкнено: історія з пріоритетом «Висока», яку ви не бачили, лишається нагорі в будь-якому віці. Вимкнено: через 12 годин вона опускається нижче, а через 24 години ще нижче."
+    },
+    "feed": {
+      "fold": {
+        "seenBody_one": "Ще {{count}} історія, яку ви вже бачили.",
+        "seenBody_few": "Ще {{count}} історії, які ви вже бачили.",
+        "seenBody_many": "Ще {{count}} історій, які ви вже бачили.",
+        "seenBody_other": "Ще {{count}} історії, які ви вже бачили.",
+        "mixedBody_one": "Ще {{count}} історія, яку ви вже бачили, або навряд чи важлива для вас.",
+        "mixedBody_few": "Ще {{count}} історії, які ви вже бачили, або навряд чи важливі для вас.",
+        "mixedBody_many": "Ще {{count}} історій, які ви вже бачили, або навряд чи важливі для вас.",
+        "mixedBody_other": "Ще {{count}} історії, які ви вже бачили, або навряд чи важливі для вас.",
+        "seenLabel": "Історії, які ви вже бачили"
+      }
+    }
+  },
+  "vi": {
+    "feedAlgorithm": {
+      "screenTitle": "Thuật toán Bảng tin",
+      "intro": "Chọn thời gian tin được giữ lại và cách Bảng tin của bạn được sắp xếp. Sau khi thay đổi, Bảng tin sẽ bắt đầu lại từ đầu.",
+      "skippedTitle": "Lướt qua được tính là đã đọc",
+      "skippedHint": "Tin nào hiện trên màn hình của bạn một lúc sẽ được tính là đã đọc, dù bạn không mở nó.",
+      "keepTitle": "Giữ lại các tin quan trọng bạn đã bỏ lỡ",
+      "keepHint": "Tin Cao hoặc Khẩn cấp mà bạn chưa đọc sẽ được giữ lại trong bao lâu, tính từ lúc tin được đăng. Các tin khác sẽ biến mất sau 2 ngày. Tin đã bị xóa do thời gian ngắn hơn sẽ không quay lại.",
+      "keep2": "2 ngày",
+      "keep3": "3 ngày",
+      "keep7": "7 ngày",
+      "keepA11y": "Giữ lại các tin quan trọng, {{label}}",
+      "mediumTitle": "Giữ các tin Trung bình cũ hơn trong danh sách",
+      "mediumHint": "Bật: tin Trung bình bạn chưa xem sẽ nằm trong danh sách chính ở mọi độ tuổi, bên dưới các tin mới hơn. Tắt: sau 12 giờ, tin đó chuyển xuống sau Hiện chúng.",
+      "seenTitle": "Chuyển các tin bạn đã xem xuống sau Hiện chúng",
+      "seenHint": "Bật: danh sách chính chỉ giữ các tin bạn chưa xem. Tắt: các tin bạn đã xem vẫn nằm trong danh sách chính, sau các tin mới. Không có gì di chuyển khi bạn đang đọc.",
+      "highTitle": "Giữ các tin Cao chưa xem ở trên cùng",
+      "highHint": "Bật: tin Cao bạn chưa xem sẽ nằm trên cùng ở mọi độ tuổi. Tắt: sau 12 giờ tin đó chuyển xuống, và sau 24 giờ lại xuống thêm."
+    },
+    "feed": {
+      "fold": {
+        "seenBody_one": "{{count}} tin nữa là tin bạn đã xem.",
+        "seenBody_other": "{{count}} tin nữa là tin bạn đã xem.",
+        "mixedBody_one": "{{count}} tin nữa là tin bạn đã xem hoặc ít có khả năng quan trọng với bạn.",
+        "mixedBody_other": "{{count}} tin nữa là tin bạn đã xem hoặc ít có khả năng quan trọng với bạn.",
+        "seenLabel": "Tin bạn đã xem"
+      }
+    }
+  },
+  "zh-CN": {
+    "feedAlgorithm": {
+      "screenTitle": "信息流排序",
+      "intro": "选择报道在信息流中停留多久，以及信息流如何排序。更改后，您的信息流会从顶部重新开始。",
+      "skippedTitle": "滑过的内容算作已读",
+      "skippedHint": "在屏幕上停留片刻的报道算作已读，即使您没有打开它。",
+      "keepTitle": "保留您错过的重要报道",
+      "keepHint": "您还没读的高优先级或紧急报道，会停留多久（从发布之时算起）。其他报道在 2 天后离开。因时间较短而被移除的报道不会再出现。",
+      "keep2": "2 天",
+      "keep3": "3 天",
+      "keep7": "7 天",
+      "keepA11y": "保留重要报道，{{label}}",
+      "mediumTitle": "让较早的中优先级报道保持可见",
+      "mediumHint": "开启：您还没看过的中优先级报道会一直留在主列表中，排在较新的报道之后，无论发布多久。关闭：12 小时后，它会移到“显示”之后。",
+      "seenTitle": "把您看过的报道移到“显示”之后",
+      "seenHint": "开启：主列表只保留您还没看过的报道。关闭：您看过的报道会留在主列表中，排在新报道之后。您阅读时，任何内容都不会移动。",
+      "highTitle": "让未看过的高优先级报道保持在顶部",
+      "highHint": "开启：您还没看过的高优先级报道会一直留在顶部，无论发布多久。关闭：12 小时后它会下移，24 小时后再次下移。"
+    },
+    "feed": {
+      "fold": {
+        "seenBody_one": "另有 {{count}} 篇报道是您已经看过的。",
+        "seenBody_other": "另有 {{count}} 篇报道是您已经看过的。",
+        "mixedBody_one": "另有 {{count}} 篇报道是您已经看过的，或与您的关联较低。",
+        "mixedBody_other": "另有 {{count}} 篇报道是您已经看过的，或与您的关联较低。",
+        "seenLabel": "您已经看过的报道"
+      }
+    }
+  },
+  "zh-TW": {
+    "feedAlgorithm": {
+      "screenTitle": "資訊流演算法",
+      "intro": "選擇報導保留多久，以及你的資訊流如何排序。變更後，你的資訊流會從頂端重新開始。",
+      "skippedTitle": "滑過的報導也算已讀",
+      "skippedHint": "停留在你螢幕上一段時間的報導會算作已讀，即使你沒有點開。",
+      "keepTitle": "保留你錯過的重要報導",
+      "keepHint": "你尚未閱讀的高優先級或緊急報導會保留，時間從發佈時開始計算。其他報導會在 2 天後離開。因較短期限而被移除的報導不會再回來。",
+      "keep2": "2 天",
+      "keep3": "3 天",
+      "keep7": "7 天",
+      "keepA11y": "保留重要報導，{{label}}",
+      "mediumTitle": "讓較舊的中優先級報導留在畫面中",
+      "mediumHint": "開啟：你尚未看過的中優先級報導，無論多舊都會留在主列表中，排在較新的報導下方。關閉：12 小時後，它會移到「顯示」後面。",
+      "seenTitle": "把你看過的報導移到「顯示」後面",
+      "seenHint": "開啟：主列表只保留你尚未看過的報導。關閉：你看過的報導會留在主列表中，排在新報導之後。你閱讀時，什麼都不會移動。",
+      "highTitle": "讓未看過的高優先級報導保持在頂端",
+      "highHint": "開啟：你尚未看過的高優先級報導，無論多舊都會留在頂端。關閉：12 小時後它會往下移，24 小時後會再往下移。"
+    },
+    "feed": {
+      "fold": {
+        "seenBody_one": "另有 {{count}} 則報導是您已經看過的。",
+        "seenBody_other": "另有 {{count}} 則報導是您已經看過的。",
+        "mixedBody_one": "另有 {{count}} 則報導是您已經看過的，或與您的關聯較低。",
+        "mixedBody_other": "另有 {{count}} 則報導是您已經看過的，或與您的關聯較低。",
+        "seenLabel": "您已看過的報導"
+      }
+    }
+  }
+}

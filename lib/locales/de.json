@@ -284,7 +284,12 @@
       "held": "Mera hat neue Geschichten ausgewählt, während du gelesen hast.",
       "stillReading": "Mera liest noch. Neue Geschichten erscheinen hier.",
       "endTitle": "Das war's fürs Erste.",
-      "endBody": "Mera liest im Hintergrund weiter. Schau später noch einmal vorbei."
+      "endBody": "Mera liest im Hintergrund weiter. Schau später noch einmal vorbei.",
+      "seenBody_one": "{{count}} weitere Geschichte hast du schon gesehen.",
+      "seenBody_other": "{{count}} weitere Geschichten hast du schon gesehen.",
+      "mixedBody_one": "{{count}} weitere Geschichte hast du schon gesehen oder sie ist für dich wahrscheinlich weniger wichtig.",
+      "mixedBody_other": "{{count}} weitere Geschichten hast du schon gesehen oder sie sind für dich wahrscheinlich weniger wichtig.",
+      "seenLabel": "Geschichten, die du schon gesehen hast"
     },
     "firstFeed": {
       "body": "Mera liest heute die Nachrichten für dich. Deine Interessen bleiben auf deinem Telefon, daher speichert kein Server einen Feed über dich. Deshalb beginnt Mera mit dem Lesen, sobald du die App öffnest.",
@@ -3273,5 +3278,23 @@
   "chatSample": {
     "profileLabel": "Beispielprofil",
     "storiesLabel": "Beispielgeschichten"
+  },
+  "feedAlgorithm": {
+    "screenTitle": "Feed-Algorithmus",
+    "intro": "Wähle, wie lange Geschichten bleiben und wie dein Feed sortiert ist. Nach einer Änderung beginnt dein Feed wieder ganz oben.",
+    "skippedTitle": "Beim Scrollen übersprungen zählt als gelesen",
+    "skippedHint": "Eine Geschichte, die kurz auf deinem Bildschirm war, zählt als gelesen, auch wenn du sie nicht geöffnet hast.",
+    "keepTitle": "Wichtige Geschichten behalten, die du verpasst hast",
+    "keepHint": "Wie lange eine Geschichte mit Priorität Hoch oder Notfall, die du nicht gelesen hast, bleibt, wird ab dem Veröffentlichungsdatum gezählt. Alle anderen Geschichten verschwinden nach 2 Tagen. Geschichten, die vorher schon entfernt wurden, kommen nicht zurück.",
+    "keep2": "2 Tage",
+    "keep3": "3 Tage",
+    "keep7": "7 Tage",
+    "keepA11y": "Wichtige Geschichten behalten, {{label}}",
+    "mediumTitle": "Ältere Geschichten mit Priorität Mittel im Blick behalten",
+    "mediumHint": "An: Eine Geschichte mit Priorität Mittel, die du nicht gesehen hast, bleibt in jedem Alter in der Hauptliste, unter den neueren. Aus: Nach 12 Stunden wandert sie hinter „Anzeigen“.",
+    "seenTitle": "Geschichten, die du gesehen hast, hinter „Anzeigen“ verschieben",
+    "seenHint": "An: Die Hauptliste zeigt nur Geschichten, die du noch nicht gesehen hast. Aus: Gesehene Geschichten bleiben in der Hauptliste, nach den neuen. Während du liest, bewegt sich nichts.",
+    "highTitle": "Ungesehene Geschichten mit Priorität Hoch oben halten",
+    "highHint": "An: Eine Geschichte mit Priorität Hoch, die du nicht gesehen hast, bleibt in jedem Alter oben. Aus: Nach 12 Stunden wandert sie nach unten und nach 24 Stunden noch einmal."
   }
 }

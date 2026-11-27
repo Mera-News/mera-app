@@ -291,7 +291,12 @@
       "held": "Mera a sélectionné de nouveaux articles pendant que vous lisiez.",
       "stillReading": "Mera est toujours en train de lire. Les nouveaux articles apparaîtront ici.",
       "endTitle": "C'est tout pour le moment.",
-      "endBody": "Mera continue de lire en arrière-plan. Revenez plus tard."
+      "endBody": "Mera continue de lire en arrière-plan. Revenez plus tard.",
+      "seenBody_one": "{{count}} article de plus que vous avez déjà vu.",
+      "seenBody_other": "{{count}} articles de plus que vous avez déjà vus.",
+      "mixedBody_one": "{{count}} article de plus que vous avez déjà vu ou qui compte probablement moins pour vous.",
+      "mixedBody_other": "{{count}} articles de plus que vous avez déjà vus ou qui comptent probablement moins pour vous.",
+      "seenLabel": "Articles que vous avez déjà vus"
     },
     "firstFeed": {
       "body": "Mera lit les actualités du jour pour vous. Vos centres d'intérêt restent sur votre téléphone, donc aucun serveur ne conserve de fil vous concernant. C'est pourquoi Mera commence à lire dès que vous ouvrez l'application.",
@@ -3285,5 +3290,23 @@
   "chatSample": {
     "profileLabel": "Exemple de profil",
     "storiesLabel": "Exemples de sujets"
+  },
+  "feedAlgorithm": {
+    "screenTitle": "Algorithme du Fil d'actu",
+    "intro": "Choisissez combien de temps les articles restent et comment votre Fil d'actu est classé. Après un changement, votre Fil d'actu repart du haut.",
+    "skippedTitle": "Un article parcouru compte comme lu",
+    "skippedHint": "Un article resté un instant à l'écran compte comme lu, même si vous ne l'avez pas ouvert.",
+    "keepTitle": "Garder les articles importants que vous avez manqués",
+    "keepHint": "Un article Élevé ou Urgence que vous n'avez pas lu reste pendant la durée choisie, à partir de sa date de publication. Les autres articles disparaissent au bout de 2 jours. Les articles retirés par un délai plus court ne reviennent pas.",
+    "keep2": "2 jours",
+    "keep3": "3 jours",
+    "keep7": "7 jours",
+    "keepA11y": "Garder les articles importants, {{label}}",
+    "mediumTitle": "Garder les anciens articles Moyen visibles",
+    "mediumHint": "Activé : un article Moyen que vous n'avez pas vu reste dans la liste principale à tout âge, sous les plus récents. Désactivé : après 12 heures, il passe derrière Les afficher.",
+    "seenTitle": "Mettre les articles vus derrière Les afficher",
+    "seenHint": "Activé : la liste principale ne garde que les articles que vous n'avez pas vus. Désactivé : les articles vus restent dans la liste principale, après les nouveaux. Rien ne bouge pendant que vous lisez.",
+    "highTitle": "Garder en haut les articles Élevé non vus",
+    "highHint": "Activé : un article Élevé que vous n'avez pas vu reste en haut à tout âge. Désactivé : après 12 heures il descend, puis de nouveau après 24 heures."
   }
 }

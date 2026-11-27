@@ -286,7 +286,12 @@
       "held": "A Mera escolheu novas histórias enquanto você lia.",
       "stillReading": "A Mera ainda está lendo. As novas histórias vão aparecer aqui.",
       "endTitle": "Por enquanto é só isso.",
-      "endBody": "A Mera continua lendo em segundo plano. Volte mais tarde."
+      "endBody": "A Mera continua lendo em segundo plano. Volte mais tarde.",
+      "seenBody_one": "Mais {{count}} história é uma que você já viu.",
+      "seenBody_other": "Mais {{count}} histórias são as que você já viu.",
+      "mixedBody_one": "Mais {{count}} história é uma que você já viu ou que tem menos chance de importar para você.",
+      "mixedBody_other": "Mais {{count}} histórias são as que você já viu ou que têm menos chance de importar para você.",
+      "seenLabel": "Histórias que você já viu"
     },
     "firstFeed": {
       "body": "A Mera está lendo as notícias de hoje para você. O que você conta à Mera fica neste celular, então nenhum servidor guarda um feed sobre você. Por isso a Mera começa a ler quando você abre o app.",
@@ -3279,5 +3284,23 @@
   "chatSample": {
     "profileLabel": "Perfil de exemplo",
     "storiesLabel": "Histórias de exemplo"
+  },
+  "feedAlgorithm": {
+    "screenTitle": "Algoritmo do Feed",
+    "intro": "Escolha por quanto tempo as histórias ficam e como o seu Feed é ordenado. Depois de uma mudança, o seu Feed recomeça do início.",
+    "skippedTitle": "Histórias que passaram na tela contam como lidas",
+    "skippedHint": "Uma história que ficou na sua tela por um momento conta como lida, mesmo que você não tenha aberto.",
+    "keepTitle": "Manter as histórias importantes que você perdeu",
+    "keepHint": "Por quanto tempo uma história de prioridade Alta ou Emergência que você não leu continua aparecendo, contando a partir da data de publicação. As outras histórias saem depois de 2 dias. Histórias removidas por um prazo menor não voltam.",
+    "keep2": "2 dias",
+    "keep3": "3 dias",
+    "keep7": "7 dias",
+    "keepA11y": "Manter histórias importantes, {{label}}",
+    "mediumTitle": "Manter histórias de prioridade Média mais antigas à vista",
+    "mediumHint": "Ativado: uma história de prioridade Média que você não viu fica na lista principal, em qualquer idade, abaixo das mais novas. Desativado: depois de 12 horas ela passa para trás de Mostrar.",
+    "seenTitle": "Mover as histórias que você viu para trás de Mostrar",
+    "seenHint": "Ativado: a lista principal mostra só as histórias que você ainda não viu. Desativado: as histórias que você viu continuam na lista principal, depois das novas. Nada se move enquanto você estiver lendo.",
+    "highTitle": "Manter as histórias de prioridade Alta não vistas no topo",
+    "highHint": "Ativado: uma história de prioridade Alta que você não viu fica no topo, em qualquer idade. Desativado: ela desce depois de 12 horas e de novo depois de 24."
   }
 }

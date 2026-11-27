@@ -284,7 +284,12 @@
       "held": "Sen okurken Mera yeni haberler seçti.",
       "stillReading": "Mera hâlâ okuyor. Yeni haberler burada görünecek.",
       "endTitle": "Şimdilik hepsi bu.",
-      "endBody": "Mera arka planda okumaya devam ediyor. Daha sonra tekrar bak."
+      "endBody": "Mera arka planda okumaya devam ediyor. Daha sonra tekrar bak.",
+      "seenBody_one": "{{count}} haber daha, zaten gördüğün bir haber.",
+      "seenBody_other": "{{count}} haber daha, zaten gördüğün haberler.",
+      "mixedBody_one": "{{count}} haber daha, zaten gördüğün ya da senin için önemli olma ihtimali daha düşük bir haber.",
+      "mixedBody_other": "{{count}} haber daha, zaten gördüğün ya da senin için önemli olma ihtimali daha düşük haberler.",
+      "seenLabel": "Zaten gördüğün haberler"
     },
     "firstFeed": {
       "body": "Mera bugünün haberlerini senin için okuyor. İlgi alanların telefonunda kalır, bu yüzden hiçbir sunucu senin hakkında bir akış tutmaz. Bu yüzden Mera uygulamayı açtığında okumaya başlar.",
@@ -3275,5 +3280,23 @@
   "chatSample": {
     "profileLabel": "Örnek profil",
     "storiesLabel": "Örnek haberler"
+  },
+  "feedAlgorithm": {
+    "screenTitle": "Akış algoritması",
+    "intro": "Hikayelerin ne kadar kalacağını ve Akışının nasıl sıralanacağını seç. Bir değişiklikten sonra Akışın en baştan başlar.",
+    "skippedTitle": "Kaydırılıp geçilenler okunmuş sayılır",
+    "skippedHint": "Bir süre ekranında kalan bir haber, açmasan bile okunmuş sayılır.",
+    "keepTitle": "Kaçırdığın önemli haberleri tut",
+    "keepHint": "Okumadığın bir Yüksek ya da Acil haber, yayımlandığı andan itibaren bu süre boyunca kalır. Diğer tüm haberler 2 gün sonra çıkar. Kısa süre yüzünden silinen haberler geri gelmez.",
+    "keep2": "2 gün",
+    "keep3": "3 gün",
+    "keep7": "7 gün",
+    "keepA11y": "Önemli haberleri tut, {{label}}",
+    "mediumTitle": "Eski Orta haberleri listede tut",
+    "mediumHint": "Açık: Görmediğin bir Orta haber, yaşı ne olursa olsun ana listede kalır ve daha yeni haberlerin altında yer alır. Kapalı: 12 saat sonra Hepsini göster'in arkasına geçer.",
+    "seenTitle": "Gördüğün haberleri Hepsini göster'in arkasına taşı",
+    "seenHint": "Açık: Ana liste yalnızca görmediğin haberleri tutar. Kapalı: Gördüğün haberler ana listede, yeni haberlerin ardından kalır. Sen okurken hiçbir şey yer değiştirmez.",
+    "highTitle": "Görmediğin Yüksek haberleri en üstte tut",
+    "highHint": "Açık: Görmediğin bir Yüksek haber, yaşı ne olursa olsun en üstte kalır. Kapalı: 12 saat sonra aşağı iner, 24 saat sonra bir kez daha aşağı iner."
   }
 }

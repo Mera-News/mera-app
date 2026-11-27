@@ -272,7 +272,12 @@
       "held": "Mera đã chọn tin mới trong lúc bạn đọc.",
       "stillReading": "Mera vẫn đang đọc. Tin mới sẽ hiện ở đây.",
       "endTitle": "Hiện tại chỉ có vậy thôi.",
-      "endBody": "Mera tiếp tục đọc ở chế độ nền. Bạn quay lại sau nhé."
+      "endBody": "Mera tiếp tục đọc ở chế độ nền. Bạn quay lại sau nhé.",
+      "seenBody_one": "{{count}} tin nữa là tin bạn đã xem.",
+      "seenBody_other": "{{count}} tin nữa là tin bạn đã xem.",
+      "mixedBody_one": "{{count}} tin nữa là tin bạn đã xem hoặc ít có khả năng quan trọng với bạn.",
+      "mixedBody_other": "{{count}} tin nữa là tin bạn đã xem hoặc ít có khả năng quan trọng với bạn.",
+      "seenLabel": "Tin bạn đã xem"
     },
     "firstFeed": {
       "body": "Mera đang đọc tin tức hôm nay cho bạn. Sở thích của bạn chỉ nằm trên điện thoại này, nên không máy chủ nào giữ một bảng tin về bạn. Vì vậy Mera bắt đầu đọc khi bạn mở ứng dụng.",
@@ -3252,5 +3257,23 @@
   "chatSample": {
     "profileLabel": "Hồ sơ mẫu",
     "storiesLabel": "Tin mẫu"
+  },
+  "feedAlgorithm": {
+    "screenTitle": "Thuật toán Bảng tin",
+    "intro": "Chọn thời gian tin được giữ lại và cách Bảng tin của bạn được sắp xếp. Sau khi thay đổi, Bảng tin sẽ bắt đầu lại từ đầu.",
+    "skippedTitle": "Lướt qua được tính là đã đọc",
+    "skippedHint": "Tin nào hiện trên màn hình của bạn một lúc sẽ được tính là đã đọc, dù bạn không mở nó.",
+    "keepTitle": "Giữ lại các tin quan trọng bạn đã bỏ lỡ",
+    "keepHint": "Tin Cao hoặc Khẩn cấp mà bạn chưa đọc sẽ được giữ lại trong bao lâu, tính từ lúc tin được đăng. Các tin khác sẽ biến mất sau 2 ngày. Tin đã bị xóa do thời gian ngắn hơn sẽ không quay lại.",
+    "keep2": "2 ngày",
+    "keep3": "3 ngày",
+    "keep7": "7 ngày",
+    "keepA11y": "Giữ lại các tin quan trọng, {{label}}",
+    "mediumTitle": "Giữ các tin Trung bình cũ hơn trong danh sách",
+    "mediumHint": "Bật: tin Trung bình bạn chưa xem sẽ nằm trong danh sách chính ở mọi độ tuổi, bên dưới các tin mới hơn. Tắt: sau 12 giờ, tin đó chuyển xuống sau Hiện chúng.",
+    "seenTitle": "Chuyển các tin bạn đã xem xuống sau Hiện chúng",
+    "seenHint": "Bật: danh sách chính chỉ giữ các tin bạn chưa xem. Tắt: các tin bạn đã xem vẫn nằm trong danh sách chính, sau các tin mới. Không có gì di chuyển khi bạn đang đọc.",
+    "highTitle": "Giữ các tin Cao chưa xem ở trên cùng",
+    "highHint": "Bật: tin Cao bạn chưa xem sẽ nằm trên cùng ở mọi độ tuổi. Tắt: sau 12 giờ tin đó chuyển xuống, và sau 24 giờ lại xuống thêm."
   }
 }
