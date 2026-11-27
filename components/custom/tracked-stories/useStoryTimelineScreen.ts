@@ -80,6 +80,8 @@ async function hydrateSource(
                 countryCode: r.country_code ?? undefined,
                 storyKey: r.storyKey ?? undefined,
                 titleOriginal: r.title_original ?? undefined,
+                // Never a reason to read a row (an unscored card is not bare); taken when the row is read anyway.
+                readingScore: typeof r.readingScore === 'number' ? r.readingScore : undefined,
             };
             if (Object.values(patch).some(Boolean)) patches.set(bare[i].articleId, patch);
         });
@@ -96,6 +98,7 @@ async function hydrateSource(
                 countryCode: c.countryCode ?? p.countryCode,
                 storyKey: c.storyKey ?? p.storyKey,
                 titleOriginal: c.titleOriginal ?? p.titleOriginal,
+                readingScore: c.readingScore ?? p.readingScore,
             };
         });
     } catch (err) {

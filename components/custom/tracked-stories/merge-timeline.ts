@@ -29,6 +29,8 @@ export interface TimelineCard {
   articleUrl?: string;
   /** The server's story key, when the snapshot carries one. */
   storyKey?: string;
+  /** The publication's phone reading score when the article was snapshotted; absent means unscored. */
+  readingScore?: number;
 }
 
 export function localToCard(snap: TrackedStoryMemberSnapshot): TimelineCard {
@@ -42,6 +44,7 @@ export function localToCard(snap: TrackedStoryMemberSnapshot): TimelineCard {
     languageCode: snap.languageCode,
     countryCode: snap.countryCode,
     storyKey: snap.storyKey,
+    readingScore: snap.readingScore,
   };
 }
 
@@ -118,6 +121,7 @@ export function foldTimeline(
       country_code: c.countryCode ?? null,
       language_code: c.languageCode ?? null,
       image_url: c.imageUrl ?? null,
+      readingScore: c.readingScore ?? null,
     },
   });
   return [...groups.values()]

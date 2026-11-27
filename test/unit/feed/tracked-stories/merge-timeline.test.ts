@@ -199,4 +199,32 @@ describe('foldTimeline', () => {
       ),
     ).toHaveLength(2);
   });
+
+  describe('the reading score picks the head', () => {
+    const fr = { homeCountryAlpha3: null, otherCountriesAlpha3: [], appLanguageBase: 'fr' };
+    const copies = (inLangScore: number | undefined, otherScore: number | undefined) => [
+      card({ articleId: 'fr', storyKey: 'K', languageCode: 'fr', readingScore: inLangScore }),
+      card({ articleId: 'en', storyKey: 'K', languageCode: 'en', readingScore: otherScore, pubDateMs: DAY - 5 }),
+    ];
+
+    it("fronts the reader's language at 50 or more, over a higher score in another language", () => {
+      expect(heads(foldTimeline(copies(60, 95), fr))).toEqual(['fr']);
+    });
+
+    it("fronts the best score in any language when the reader's language scores under 50", () => {
+      expect(heads(foldTimeline(copies(40, 95), fr))).toEqual(['en']);
+    });
+
+    it('with nothing scored keeps the head the other keys pick', () => {
+      const unscored = heads(foldTimeline(copies(undefined, undefined), fr));
+      const scored = heads(foldTimeline(copies(60, 95), fr));
+      expect(unscored).toEqual(['fr']); // the language key alone fronts the French copy
+      expect(heads(foldTimeline(copies(undefined, undefined), null))).toEqual(['en']); // null ctx: oldest fronts
+      expect(scored).toEqual(unscored);
+    });
+
+    it('carries the snapshot score onto the card', () => {
+      expect(buildTimeline([local({ articleId: 'x', readingScore: 77 })])[0].readingScore).toBe(77);
+    });
+  });
 });
