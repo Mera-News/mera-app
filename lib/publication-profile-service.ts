@@ -48,6 +48,8 @@ interface PublicationProfile {
   sourceNames: string[];
   /** The publisher's own subscribe page, or null when it has none. */
   subscriptionUri: string | null;
+  /** The phone reading score, a whole number 0..100, or null when it has none. */
+  readingScore: number | null;
 }
 
 /** How the page was opened: a publisher id, or the name + country a feed row carries. */
@@ -69,6 +71,8 @@ interface PublicationProfileResult {
   profile: PublicationProfile | null;
   /** Ask again (after `error`, or `offline` once the link is back). */
   retry: () => void;
+  /** This server lacks `readingScore` (older than the app): no score line is reserved. */
+  scoreLatched: boolean;
 }
 
 /** The server does not know `publicationProfile` (an app ahead of its server). */
@@ -90,8 +94,40 @@ export interface PublicationProfilePorts {
   onReconnect(listener: () => void): () => void;
 }
 
-const PUBLICATION_PROFILE = gql`
+// shortcut: call form until the client pin carries PublicationProfile.readingScore; switch to the gql tag at the pin bump.
+const PUBLICATION_PROFILE = gql(`
   query PublicationProfile(
+    $newsPublisherId: ID
+    $name: String
+    $countryCode: String
+    $language: String
+  ) {
+    publicationProfile(
+      newsPublisherId: $newsPublisherId
+      name: $name
+      countryCode: $countryCode
+      language: $language
+    ) {
+      newsPublisherId
+      name
+      displayName
+      homepageUrl
+      publicationType
+      categories
+      languages
+      isOfficial
+      countryCode
+      countryName
+      sourceNames
+      subscriptionUri
+      readingScore
+    }
+  }
+`);
+
+/** Today's document, for a server that has no `readingScore` yet. */
+const PUBLICATION_PROFILE_LEGACY = gql`
+  query PublicationProfileLegacy(
     $newsPublisherId: ID
     $name: String
     $countryCode: String
@@ -137,8 +173,13 @@ function str(v: unknown): string | null {
   return typeof v === 'string' && v.length > 0 ? v : null;
 }
 
+/** A trust boundary: only a finite number in 0..100 is a score. */
+function scoreOf(v: unknown): number | null {
+  return typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 100 ? Math.round(v) : null;
+}
+
 /** Defensive shape check: a partial or malformed row is "not found", never a crash. */
-function toPublicationProfile(raw: unknown): PublicationProfile | null {
+function toPublicationProfile(raw: unknown, withScore: boolean): PublicationProfile | null {
   if (!raw || typeof raw !== 'object') return null;
   const r = raw as Record<string, unknown>;
   const id = str(r.newsPublisherId);
@@ -157,6 +198,7 @@ function toPublicationProfile(raw: unknown): PublicationProfile | null {
     countryName: str(r.countryName),
     sourceNames: strings(r.sourceNames),
     subscriptionUri: str(r.subscriptionUri),
+    readingScore: withScore ? scoreOf(r.readingScore) : null,
   };
 }
 
@@ -184,21 +226,33 @@ async function fetchPublicationProfile(
   const client = (require('@/lib/apollo-client') as typeof import('@/lib/apollo-client')).default;
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { serverLocaleFor } = require('@/lib/publication-display-service') as typeof import('@/lib/publication-display-service');
-  try {
-    const { data } = await client.query<{ publicationProfile: unknown }>({
-      query: PUBLICATION_PROFILE,
-      variables: profileVariables(key, serverLocaleFor(appLanguage)),
+  const variables = profileVariables(key, serverLocaleFor(appLanguage));
+  const run = (query: typeof PUBLICATION_PROFILE) =>
+    client.query<{ publicationProfile: unknown }>({
+      query,
+      variables,
       fetchPolicy: 'no-cache',
       // Not the feed sync: a failure must never paint "sync failed". A server
       // without the query answers GRAPHQL_VALIDATION_FAILED, which is handled
       // below (unsupported), so it is a breadcrumb, not a Sentry event.
       context: { noSyncStatus: true, expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] },
     });
-    return toPublicationProfile(data?.publicationProfile);
-  } catch (err) {
-    if (graphQLErrorCodes(err).includes('GRAPHQL_VALIDATION_FAILED')) {
-      throw new PublicationProfileUnsupportedError();
+  const invalid = (err: unknown) => graphQLErrorCodes(err).includes('GRAPHQL_VALIDATION_FAILED');
+  if (!scoreUnsupportedThisSession) {
+    try {
+      const { data } = await run(PUBLICATION_PROFILE);
+      return toPublicationProfile(data?.publicationProfile, true);
+    } catch (err) {
+      if (!invalid(err)) throw err;
+      scoreUnsupportedThisSession = true;
+      logger.info('[publication-profile] server has no readingScore; asking without it this session');
     }
+  }
+  try {
+    const { data } = await run(PUBLICATION_PROFILE_LEGACY);
+    return toPublicationProfile(data?.publicationProfile, false);
+  } catch (err) {
+    if (invalid(err)) throw new PublicationProfileUnsupportedError();
     throw err;
   }
 }
@@ -221,10 +275,13 @@ const defaultPublicationProfilePorts: PublicationProfilePorts = {
 
 /** Session flag: set by the first unsupported answer, never persisted. */
 let unsupportedThisSession = false;
+/** Session flag: the server has `publicationProfile` but not `readingScore`. */
+let scoreUnsupportedThisSession = false;
 
 /** Test seam. */
 export function __resetPublicationProfileSession(): void {
   unsupportedThisSession = false;
+  scoreUnsupportedThisSession = false;
 }
 
 function isUnsupported(err: unknown): boolean {
@@ -309,7 +366,7 @@ function makeUsePublicationProfile(ports: PublicationProfilePorts) {
     }, [state]);
 
     const retry = useCallback(() => setAttempt((a) => a + 1), []);
-    return { state, profile, retry };
+    return { state, profile, retry, scoreLatched: scoreUnsupportedThisSession };
   };
 }
 

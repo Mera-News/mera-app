@@ -348,6 +348,9 @@ query<'publicationSourcesForNewsPublisher'>('PublicationSourcesForNewsPublisher'
 query<'publicationProfile'>('PublicationProfile', (c) => ({
     publicationProfile: publicationProfileFor(c.variables),
 }));
+query<'publicationProfile'>('PublicationProfileLegacy', (c) => ({
+    publicationProfile: publicationProfileFor(c.variables),
+}));
 query<'publicationDisplayNames'>('PublicationDisplayNames', (c) => ({
     publicationDisplayNames: displayNamesFor(c.variables.names ?? []),
 }));

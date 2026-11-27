@@ -189,6 +189,7 @@ describe('when the publication is not found or the server is old', () => {
 
   it('an unsupported server, opened by id: the news still loads (Top headlines)', async () => {
     server.use(mockGqlError('PublicationProfile', 'GRAPHQL_VALIDATION_FAILED', { message: 'Cannot query field' }));
+    server.use(mockGqlError('PublicationProfileLegacy', 'GRAPHQL_VALIDATION_FAILED', { message: 'Cannot query field' }));
     // A server this old has no `order` either: it answers the plain document, which is top headlines.
     server.use(mockGqlError('GetArticlesForPublisher', 'GRAPHQL_VALIDATION_FAILED', { message: 'Unknown argument "order"' }));
     const sent = record('GetArticlesForPublisher', 'GetArticlesForPublisherNoOrder');
@@ -204,6 +205,7 @@ describe('when the publication is not found or the server is old', () => {
 
   it('an unsupported server, opened by name: no news at all (there is no publisher id to ask with)', async () => {
     server.use(mockGqlError('PublicationProfile', 'GRAPHQL_VALIDATION_FAILED', { message: 'Cannot query field' }));
+    server.use(mockGqlError('PublicationProfileLegacy', 'GRAPHQL_VALIDATION_FAILED', { message: 'Cannot query field' }));
     const sent = record('GetArticlesForPublisher', 'GetArticlesForPublisherNoOrder');
     const { result } = await open({ rawName: PUB.name, countryCode: PUB.countryCode });
     await waitFor(() => expect(result.current.state).toBe('unsupported'));
@@ -215,13 +217,77 @@ describe('when the publication is not found or the server is old', () => {
 
   it('the unsupported answer is remembered for the session: the next page does not ask again', async () => {
     server.use(mockGqlError('PublicationProfile', 'GRAPHQL_VALIDATION_FAILED'));
+    server.use(mockGqlError('PublicationProfileLegacy', 'GRAPHQL_VALIDATION_FAILED'));
     const first = await open({ rawName: PUB.name, countryCode: PUB.countryCode });
     await waitFor(() => expect(first.result.current.state).toBe('unsupported'));
 
-    const sent = record('PublicationProfile');
+    const sent = record('PublicationProfile', 'PublicationProfileLegacy');
     const second = await open({ rawName: OTHER.name, countryCode: OTHER.countryCode });
     await waitFor(() => expect(second.result.current.state).toBe('unsupported'));
     expect(sent).toEqual([]);
+  });
+});
+
+describe('the phone reading score', () => {
+  it('opened by id: the score is read, the latch is off, only the scored document is sent', async () => {
+    const sent = record('PublicationProfile', 'PublicationProfileLegacy');
+    const { result } = await open({ publisherId: PUB.publisherId });
+    await waitFor(() => expect(result.current.state).toBe('ready'));
+    expect(result.current.profile?.readingScore).toBe(92);
+    expect(result.current.scoreLatched).toBe(false);
+    expect(opsOf(sent)).toEqual(['PublicationProfile']);
+  });
+
+  it('a server without readingScore: retried once without it, and the session remembers', async () => {
+    server.use(mockGqlError('PublicationProfile', 'GRAPHQL_VALIDATION_FAILED'));
+    const sent = record('PublicationProfile', 'PublicationProfileLegacy');
+    const first = await open({ publisherId: PUB.publisherId });
+    await waitFor(() => expect(first.result.current.state).toBe('ready'));
+    expect(first.result.current.profile?.readingScore).toBeNull();
+    expect(first.result.current.scoreLatched).toBe(true);
+    expect(opsOf(sent)).toEqual(['PublicationProfile', 'PublicationProfileLegacy']);
+
+    sent.length = 0;
+    const second = await open({ publisherId: OTHER.publisherId });
+    await waitFor(() => expect(second.result.current.state).toBe('ready'));
+    expect(opsOf(sent)).toEqual(['PublicationProfileLegacy']);
+  });
+
+  it('both documents refused: unsupported, and the next page sends nothing', async () => {
+    server.use(mockGqlError('PublicationProfile', 'GRAPHQL_VALIDATION_FAILED'));
+    server.use(mockGqlError('PublicationProfileLegacy', 'GRAPHQL_VALIDATION_FAILED'));
+    const first = await open({ publisherId: PUB.publisherId });
+    await waitFor(() => expect(first.result.current.state).toBe('unsupported'));
+    expect(first.result.current.scoreLatched).toBe(true);
+    const sent = record('PublicationProfile', 'PublicationProfileLegacy');
+    const second = await open({ publisherId: OTHER.publisherId });
+    await waitFor(() => expect(second.result.current.state).toBe('unsupported'));
+    expect(sent).toEqual([]);
+  });
+
+  it('any other error is an error: no legacy request, no latch', async () => {
+    server.use(mockGqlError('PublicationProfile', 'INTERNAL_SERVER_ERROR'));
+    const sent = record('PublicationProfile', 'PublicationProfileLegacy');
+    const { result } = await open({ publisherId: PUB.publisherId });
+    await waitFor(() => expect(result.current.state).toBe('error'));
+    expect(result.current.scoreLatched).toBe(false);
+    expect(opsOf(sent)).toEqual(['PublicationProfile']);
+  });
+
+  it.each([
+    [91.6, 92],
+    [140, null],
+    [-1, null],
+    ['92', null],
+  ])('a raw score of %p reads as %p', async (raw, expected) => {
+    server.use(
+      mockGql('PublicationProfile', (vars) => ({
+        publicationProfile: { ...publicationProfileFor(vars as never), readingScore: raw },
+      })),
+    );
+    const { result } = await open({ publisherId: PUB.publisherId });
+    await waitFor(() => expect(result.current.state).toBe('ready'));
+    expect(result.current.profile?.readingScore).toBe(expected);
   });
 });
 
@@ -329,6 +395,7 @@ describe('history', () => {
 
   it('without a profile (unsupported server) the page opened by name still lists visits under its raw name', async () => {
     server.use(mockGqlError('PublicationProfile', 'GRAPHQL_VALIDATION_FAILED'));
+    server.use(mockGqlError('PublicationProfileLegacy', 'GRAPHQL_VALIDATION_FAILED'));
     await visit(PUB.name, 'art-1');
     const { result } = await open({ rawName: PUB.name, countryCode: PUB.countryCode, order: 'HISTORY' });
     await waitFor(() => expect(result.current.history.state).toBe('ready'));

@@ -2,14 +2,28 @@ import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import { Appear } from '@/components/ui/appear';
+import { TYPE_SCALE } from '@/lib/algorithms/scale';
+import { WEBSITE_URL } from '@/lib/config/branding';
 import logger from '@/lib/logger';
-import { openInAppBrowser } from '@/lib/web-browser-utils';
+import { inlineSign } from '@/lib/motion';
+import { useColors, useThemeMode } from '@/lib/theme/tokens';
+import { scaledTypeStyle, useTextScale } from '@/lib/typography/TextScaleContext';
+import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
+import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useColors } from '@/lib/theme/tokens';
 import { StyleSheet, View } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
 
-import { homepageUrlOf, hostOf, monogramHueOf, monogramInks, monogramOf } from './publication-format';
+import {
+    homepageUrlOf,
+    hostOf,
+    monogramHueOf,
+    monogramInks,
+    monogramOf,
+    readingScoreInk,
+} from './publication-format';
 
 /** Every header size is here. The letter and each text line carry an
  *  explicit lineHeight: an inline fontSize on the ui Text without one keeps
@@ -30,11 +44,21 @@ const PUBLICATION_HEADER_METRICS = {
 
 const LINK_FRAME = {
     minHeight: PUBLICATION_HEADER_METRICS.linkTarget,
-    marginVertical: -(PUBLICATION_HEADER_METRICS.linkTarget - PUBLICATION_HEADER_METRICS.detailsLine) / 2,
+    marginTop: -(PUBLICATION_HEADER_METRICS.linkTarget - PUBLICATION_HEADER_METRICS.detailsLine) / 2,
+    marginBottom: -(PUBLICATION_HEADER_METRICS.linkTarget - PUBLICATION_HEADER_METRICS.detailsLine) / 2,
     justifyContent: 'center',
     alignSelf: 'center',
 } as const;
 
+
+/** With the score line below, the link's target gives 5 (not 13) to the line
+ *  under it: 13 + 18 + 5 = 36. */
+const LINK_FRAME_WITH_SCORE = {
+    ...LINK_FRAME,
+    marginTop: -13,
+    marginBottom: -5,
+    minHeight: 36,
+} as const;
 
 interface PublicationHeaderBadge {
     readonly label: string;
@@ -53,7 +77,41 @@ interface PublicationHeaderProps {
     /** The profile is loading: hold the details line's height with a bar, so
      *  the bar and everything under it do not move when the details land. */
     readonly detailsLoading?: boolean;
+    /** The phone reading score (0..100), or null when the publication has none. */
+    readonly readingScore?: number | null;
+    /** The 24-hex news-publisher id the report URL uses. */
+    readonly reportPublisherId?: string | null;
+    /** Reserve the score line's height, so the controls below do not move. */
+    readonly scoreReserved?: boolean;
 }
+
+const ARC = { size: 14, r: 6, stroke: 2 } as const;
+
+/** Decorative: a ring with the score drawn clockwise from 12 o'clock. Never
+ *  mirrored in right-to-left. Colour comes from the helper, never a class. */
+const ScoreArc: React.FC<{ readonly score: number }> = ({ score }) => {
+    const colors = useColors();
+    const mode = useThemeMode();
+    const c = 2 * Math.PI * ARC.r;
+    const mid = ARC.size / 2;
+    return (
+        <Svg width={ARC.size} height={ARC.size} testID="publication-score-arc">
+            <Circle cx={mid} cy={mid} r={ARC.r} strokeWidth={ARC.stroke} stroke={colors.trackFill} fill="none" />
+            <Circle
+                cx={mid}
+                cy={mid}
+                r={ARC.r}
+                strokeWidth={ARC.stroke}
+                stroke={readingScoreInk(score, mode)}
+                fill="none"
+                strokeDasharray={[(c * score) / 100, c]}
+                strokeLinecap="round"
+                rotation={-90}
+                origin={`${mid}, ${mid}`}
+            />
+        </Svg>
+    );
+};
 
 /**
  * The page's identity block, at the top of the page body (NOT in the top bar:
@@ -70,6 +128,12 @@ interface PublicationHeaderProps {
  * The host opens the in-app browser and records NO publication visit: the
  * Visited tab is "articles you opened at the publisher", and a homepage is
  * not an article.
+ *
+ * Under the details line sits the phone reading score line: a small arc, the
+ * score and a chevron, which opens the publication's report on mera.news. Its
+ * height is reserved (also while the profile loads or the publication has no
+ * score) so the buttons below do not move when the score lands. It is not
+ * reserved once the server is latched as lacking the field (`scoreReserved`).
  */
 const PublicationHeader: React.FC<PublicationHeaderProps> = ({
     displayName,
@@ -77,6 +141,9 @@ const PublicationHeader: React.FC<PublicationHeaderProps> = ({
     details,
     badge,
     detailsLoading = false,
+    readingScore = null,
+    reportPublisherId = null,
+    scoreReserved = false,
 }) => {
     const { t } = useTranslation();
     const colors = useColors();
@@ -90,6 +157,14 @@ const PublicationHeader: React.FC<PublicationHeaderProps> = ({
             logger.captureException(error, { tags: { screen: 'PublicationPage', method: 'openWebsite' } });
         });
     }, [url]);
+
+    const lineHeight = scaledTypeStyle('xs', useTextScale())?.lineHeight ?? TYPE_SCALE.xs.lineHeight;
+    const openReport = useCallback(() => {
+        if (!reportPublisherId) return;
+        openInAppBrowser(withAppLanguage(`${WEBSITE_URL}/publications/${reportPublisherId}`)).catch((error) => {
+            logger.captureException(error, { tags: { screen: 'PublicationPage', method: 'openReport' } });
+        });
+    }, [reportPublisherId]);
 
     const showDetails = !!details || !!badge || !!host;
 
@@ -169,7 +244,7 @@ const PublicationHeader: React.FC<PublicationHeaderProps> = ({
                             // visual sits UNDER a childless labelled link (the
                             // glyph-leak pattern); its 44pt frame is given back by
                             // negative margins so the line keeps its height.
-                            <View style={LINK_FRAME} testID="publication-website-frame">
+                            <View style={scoreReserved ? LINK_FRAME_WITH_SCORE : LINK_FRAME} testID="publication-website-frame">
                                 <Text
                                     size="xs"
                                     numberOfLines={1}
@@ -200,6 +275,48 @@ const PublicationHeader: React.FC<PublicationHeaderProps> = ({
                             </Text>
                         ) : null}
                     </HStack>
+                ) : null}
+                {scoreReserved ? (
+                    <View testID="publication-score-slot" style={{ marginTop: 6, minHeight: lineHeight }}>
+                        {readingScore != null && reportPublisherId ? (
+                            <Appear rise={0}>
+                                <View
+                                    testID="publication-score-frame"
+                                    style={{ marginTop: -5, paddingTop: 5, marginBottom: -21, paddingBottom: 21 }}
+                                >
+                                    <View
+                                        accessible={false}
+                                        accessibilityElementsHidden
+                                        importantForAccessibility="no-hide-descendants"
+                                        style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}
+                                    >
+                                        <View style={{ height: lineHeight, justifyContent: 'center' }}>
+                                            <ScoreArc score={readingScore} />
+                                        </View>
+                                        <Text size="xs" numberOfLines={2} style={{ color: colors.ink2, flexShrink: 1 }}>
+                                            {t('publicationPage.readingScore', { score: readingScore })}
+                                        </Text>
+                                        <View style={{ height: lineHeight, justifyContent: 'center' }}>
+                                            <MaterialIcons
+                                                name="chevron-right"
+                                                size={14}
+                                                color={colors.ink3}
+                                                style={{ transform: [{ scaleX: inlineSign() }] }}
+                                            />
+                                        </View>
+                                    </View>
+                                    <Pressable
+                                        testID="publication-reading-score"
+                                        onPress={openReport}
+                                        accessibilityRole="link"
+                                        accessibilityLabel={t('publicationPage.readingScoreA11y', { score: readingScore })}
+                                        accessibilityHint={t('publicationPage.readingScoreHint')}
+                                        style={StyleSheet.absoluteFill}
+                                    />
+                                </View>
+                            </Appear>
+                        ) : null}
+                    </View>
                 ) : null}
             </VStack>
         </View>

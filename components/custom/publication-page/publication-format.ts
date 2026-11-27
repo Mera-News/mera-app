@@ -97,3 +97,19 @@ export function formatCategories(categories: readonly string[] | null | undefine
     const parts = (categories ?? []).filter((c) => c && c.trim()).map(humanizeSlug);
     return parts.length > 0 ? parts.join(', ') : null;
 }
+
+export type ReadingScoreBand = 'top' | 'good' | 'fair' | 'low';
+
+export function readingScoreBand(score: number): ReadingScoreBand {
+    return score >= 90 ? 'top' : score >= 75 ? 'good' : score >= 50 ? 'fair' : 'low';
+}
+
+/** The score arc's ink per theme mode and band; the site's colours. Never red. */
+export const READING_SCORE_INK = {
+    dark: { top: '#34D399', good: '#A3E635', fair: '#FBBF24', low: '#F97316' },
+    light: { top: '#059669', good: '#65A30D', fair: '#D97706', low: '#C2410C' },
+} as const;
+
+export function readingScoreInk(score: number, mode: 'dark' | 'light'): string {
+    return READING_SCORE_INK[mode][readingScoreBand(score)];
+}

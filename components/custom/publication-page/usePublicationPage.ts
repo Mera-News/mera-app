@@ -47,7 +47,7 @@ export function usePublicationPage({
         if (rawName) return { rawName, countryCode: countryCode ?? null };
         return null;
     }, [publisherId, rawName, countryCode]);
-    const { state, profile, retry } = usePublicationProfile(key);
+    const { state, profile, retry, scoreLatched } = usePublicationProfile(key);
 
     const newsPublisherId = publisherId || profile?.newsPublisherId || null;
 
@@ -219,6 +219,7 @@ export function usePublicationPage({
         state,
         retry,
         profile,
+        scoreLatched,
         newsPublisherId,
         pref,
         newsAvailable,

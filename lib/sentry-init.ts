@@ -169,7 +169,7 @@ export function scrubPublicationPageCrumb<T extends ScrubbableCrumb>(crumb: T): 
   if (!crumb) return crumb;
   const data = crumb.data;
   const concernsPage =
-    data?.operationName === PUBLICATION_PROFILE_OPERATION ||
+    (typeof data?.operationName === 'string' && data.operationName.startsWith(PUBLICATION_PROFILE_OPERATION)) ||
     (typeof crumb.message === 'string' &&
       (crumb.message.includes(PUBLICATION_PROFILE_OPERATION) ||
         PUBLICATION_ROUTE_MENTION.test(crumb.message))) ||

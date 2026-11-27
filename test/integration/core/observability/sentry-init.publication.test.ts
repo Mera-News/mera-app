@@ -52,6 +52,14 @@ describe('publication page scrub', () => {
     expect(out.data).toEqual({ operationName: 'PublicationProfile' });
   });
 
+  it('beforeBreadcrumb scrubs the PublicationProfileLegacy operation the same way', () => {
+    const out = config.beforeBreadcrumb({
+      category: 'graphql',
+      data: { operationName: 'PublicationProfileLegacy', variables: { name: 'Times of India' }, newsPublisherId: 'p1' },
+    });
+    expect(out.data).toEqual({ operationName: 'PublicationProfileLegacy' });
+  });
+
   it('strips the page route query string from messages and data, anywhere', () => {
     const out = scrub({
       category: 'navigation',
