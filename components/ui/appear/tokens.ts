@@ -10,5 +10,9 @@ export const APPEAR = {
   rise: 8,
 } as const;
 
-/** cubic-bezier(0.16, 1, 0.3, 1): the arrive curve of lib/motion.ts, as plain numbers. */
-export const ARRIVE_BEZIER = [0.16, 1, 0.3, 1] as const;
+/**
+ * cubic-bezier(0.33, 1, 0.68, 1), an ease-out cubic. Gentler than lib/motion.ts's arrive curve on
+ * purpose: that one is nine tenths done in a third of its time, which suits movement but makes an
+ * opacity fade read as a cut.
+ */
+export const ARRIVE_BEZIER = [0.33, 1, 0.68, 1] as const;

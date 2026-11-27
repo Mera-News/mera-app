@@ -236,15 +236,13 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
             originX.value = bubbleCenter.x;
             originY.value = bubbleCenter.y;
             setPhase('opening');
-            progress.value = withTiming(
-                1,
-                reduceMotion
-                    ? { duration: MOTION.chat.reduce, reduceMotion: ReduceMotion.Never }
-                    : { duration: MOTION.chat.open, easing: EASE.arrive },
-                (finished) => {
+            // The fade in place waits for the panel to mount (the effect below): started here it is
+            // spent before the first frame is drawn, and the panel cuts in.
+            if (!reduceMotion) {
+                progress.value = withTiming(1, { duration: MOTION.chat.open, easing: EASE.arrive }, (finished) => {
                     if (finished) runOnJS(finishOpen)();
-                },
-            );
+                });
+            }
         } else if (!isExpanded && (phase === 'open' || phase === 'opening')) {
             // Every collapse lands here, from requestClose or from the store
             // (navigation): animate back into the bubble.
@@ -252,6 +250,14 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
             startClosing();
         }
     }, [isExpanded, phase, originX, originY, progress, finishOpen, startClosing, reduceMotion]);
+
+    // Lite and Reduce Motion: fade in place once the panel has mounted.
+    useEffect(() => {
+        if (phase !== 'opening' || !reduceMotion) return;
+        progress.value = withTiming(1, { duration: MOTION.chat.reduce, reduceMotion: ReduceMotion.Never }, (finished) => {
+            if (finished) runOnJS(finishOpen)();
+        });
+    }, [phase, reduceMotion, progress, finishOpen]);
 
     // The Mera button hides for as long as the panel is on screen, motion
     // included, so its mark and the panel's are never both shown.

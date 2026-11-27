@@ -4,6 +4,7 @@
 // `ReduceMotion.Never` is deliberate and belongs only here: Lite mounts Reanimated's reduced-motion
 // switch at the root, which would otherwise land these fades at once (owner: Lite keeps fades).
 // Every library call sits inside the worklet, so a test's cut-down Reanimated mock still loads this.
+// The curve is tokens.ts's ARRIVE_BEZIER, written out because a worklet cannot spread a tuple.
 import { useMemo } from 'react';
 import { Easing, ReduceMotion, withDelay, withTiming } from 'react-native-reanimated';
 import { useMotionAllowed } from '@/lib/motion-gate';
@@ -21,7 +22,7 @@ export function appearEntering(moves: boolean, opts: EnterOpts = {}) {
   const duration = APPEAR.in;
   return () => {
     'worklet';
-    const config = { duration, easing: Easing.bezier(0.16, 1, 0.3, 1), reduceMotion: ReduceMotion.Never };
+    const config = { duration, easing: Easing.bezier(0.33, 1, 0.68, 1), reduceMotion: ReduceMotion.Never };
     return {
       initialValues: { opacity: 0, transform: [{ translateY: rise }] },
       animations: {
