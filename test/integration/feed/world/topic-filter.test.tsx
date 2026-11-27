@@ -77,6 +77,8 @@ const TOPICS = [
     { __typename: 'CanonicalTopic', id: 'ct-ref', path: '/Reference', label: 'Reference', level: 1, parentId: null },
 ];
 const facet = (topicId: string, count: number) => ({ __typename: 'CanonicalTopicFacet', topicId, count });
+/** Both World documents: with the reader's language (sent first) and the one without it. */
+const WORLD_DOCS = /^GetWorldHeadlines(ForLanguage)?$/;
 let facetsFor: (code: string) => unknown[];
 let sent: { code: string; ids?: string[] }[];
 
@@ -84,7 +86,7 @@ function install() {
     server.use(
         mockGql('GetCanonicalTopics', { canonicalTopics: TOPICS }),
         graphql.operation(({ operationName, variables }) => {
-            if (operationName !== 'GetWorldHeadlines') return undefined;
+            if (!WORLD_DOCS.test(operationName)) return undefined;
             sent.push({ code: variables.countryCode as string, ids: variables.canonicalTopicIds as string[] | undefined });
             return HttpResponse.json({
                 data: {
@@ -163,7 +165,7 @@ it('clear returns to All', async () => {
 it('the latch hides the pill', async () => {
     server.use(
         graphql.operation(({ operationName }) =>
-            operationName === 'GetWorldHeadlines'
+            WORLD_DOCS.test(operationName)
                 ? HttpResponse.json({ errors: [{ message: 'x', extensions: { code: 'GRAPHQL_VALIDATION_FAILED' } }] })
                 : undefined,
         ),
@@ -181,7 +183,7 @@ it('the latch firing under a pick resets to All', async () => {
     await screen.findByTestId('world-topic-clear');
     server.use(
         graphql.operation(({ operationName, variables }) =>
-            operationName === 'GetWorldHeadlines' && variables.countryCode === 'NLD'
+            WORLD_DOCS.test(operationName) && variables.countryCode === 'NLD'
                 ? HttpResponse.json({ errors: [{ message: 'x', extensions: { code: 'GRAPHQL_VALIDATION_FAILED' } }] })
                 : undefined,
         ),
@@ -213,7 +215,7 @@ it('a page still loading never shows the previous page counts', async () => {
     const gate = new Promise<void>((r) => (release = r));
     server.use(
         graphql.operation(async ({ operationName, variables }) => {
-            if (operationName !== 'GetWorldHeadlines' || variables.countryCode !== 'NLD') return undefined;
+            if (!WORLD_DOCS.test(operationName) || variables.countryCode !== 'NLD') return undefined;
             await gate;
             return undefined; // fall through to install()'s handler
         }),
@@ -259,17 +261,20 @@ it('a picked row applies even if the sheet never reports it has gone', async () 
     expect(await screen.findByTestId('world-topic-clear')).toBeTruthy();
 });
 
-it('an app-language change asks for a fresh first page', async () => {
-    const afters: unknown[] = [];
+it('an app-language change asks for a fresh first page in the new language', async () => {
+    const asked: { op: string; after: unknown; language: unknown }[] = [];
     server.use(
         graphql.operation(({ operationName, variables }) => {
-            if (operationName === 'GetWorldHeadlines') afters.push(variables.after);
+            if (WORLD_DOCS.test(operationName)) asked.push({ op: operationName, after: variables.after, language: variables.language });
             return undefined;
         }),
     );
     await render(<WorldPages />);
-    await waitFor(() => expect(afters.length).toBe(1));
+    await waitFor(() => expect(asked.length).toBe(1));
     await act(() => useAppLanguageStore.setState({ appLanguage: 'fr' }));
-    await waitFor(() => expect(afters.length).toBe(2));
-    expect(afters[1]).toBeUndefined();
+    await waitFor(() => expect(asked.length).toBe(2));
+    expect(asked).toEqual([
+        { op: 'GetWorldHeadlinesForLanguage', after: undefined, language: 'en' },
+        { op: 'GetWorldHeadlinesForLanguage', after: undefined, language: 'fr' },
+    ]);
 });

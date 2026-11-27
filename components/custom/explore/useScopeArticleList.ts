@@ -56,12 +56,15 @@ export function useScopeArticleList({
     enabled,
     windowHours,
     topicId,
+    language,
 }: {
     scope: ExploreScope;
     enabled: boolean;
     windowHours?: number;
     /** A canonical topic to filter by; the caller keys the list by it, like windowHours. Never logged. */
     topicId?: string | null;
+    /** The reader's base language, sent with World headlines; the caller keys the list by it. */
+    language?: string | null;
 }) {
     const isOnline = useIsOnline();
     // `isOnline` (device link + Mera reachable) already gates the empty state
@@ -110,6 +113,7 @@ export function useScopeArticleList({
                 after,
                 windowHours,
                 canonicalTopicIds: topicId ? [topicId] : undefined,
+                language,
             });
             if (!after) {
                 setFacets(page.facets);
@@ -121,7 +125,7 @@ export function useScopeArticleList({
                 more: page.pageInfo.hasNextPage,
             };
         },
-        [scope, windowHours, topicId],
+        [scope, windowHours, topicId, language],
     );
 
     useEffect(() => {

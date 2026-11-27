@@ -140,6 +140,7 @@ export function WorldPages() {
                     // cursor and generation. The pager keys the panel by page id.
                     key={`${hours}:${topicId ?? ''}:${language}`}
                     topicId={topicId}
+                    language={language}
                     pickLabel={pickName}
                     leading={page.scope.kind === 'world' ? <WorldHomeRow /> : undefined}
                     onFacets={reportFacets(pageId)}

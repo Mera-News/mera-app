@@ -126,6 +126,9 @@ interface ScopeArticleListProps {
     /** World topic filter: the canonical topic this page asks for (the parent
      *  keys the list by it, so a change is a fresh first page). */
     readonly topicId?: string | null;
+    /** The reader's base language: the server picks each story's publication and the order by it
+     *  (the parent keys the list by it too). */
+    readonly language?: string | null;
     /** The reader's pick, by label, for the header line. With `topicId` set the
      *  line counts its stories; with `topicId` null it says the page fell back to all. */
     readonly pickLabel?: string | null;
@@ -176,6 +179,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     onWindowChange,
     bottomClearance,
     topicId,
+    language,
     pickLabel,
     leading,
     onFacets,
@@ -202,7 +206,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
         firstLoad,
         facets,
         topicsSupported,
-    } = useScopeArticleList({ scope, enabled, windowHours, topicId });
+    } = useScopeArticleList({ scope, enabled, windowHours, topicId, language });
 
     const answered = enabled && !isLoading && !loadFailed;
     useEffect(() => {
