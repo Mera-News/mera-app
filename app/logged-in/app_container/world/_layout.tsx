@@ -20,7 +20,7 @@ export default function StackLayout() {
   const { ref, onLayout } = useReportTabBarClearance();
   return (
     <View ref={ref} onLayout={onLayout} style={{ flex: 1 }}>
-      <TabArrive>
+      <TabArrive index={1}>
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.base }, ...(restoring ? { animation: 'none' } : motionAllowed ? null : { animation: 'fade' }) }} />
       </TabArrive>
     </View>
