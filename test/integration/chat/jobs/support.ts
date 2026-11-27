@@ -8,7 +8,6 @@ import { addFact } from '@/lib/database/services/fact-service';
 import { persistAndLinkV2Suggestions } from '@/lib/database/services/article-suggestion-persist';
 import { createTopics } from '@/lib/database/services/topic-service';
 import { prepareE2EEContext, type E2EEContext } from '@/lib/e2ee/e2ee-service';
-import { SMALL_MODEL } from '@/lib/llm/constants';
 import type { ArticleWithClusters } from '@/lib/generated/graphql-types';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
@@ -20,6 +19,7 @@ import { runBackgroundCycle } from '@/lib/background/run-inference-handler';
 import { getPipeline } from '@/lib/database/services/scoring-pipeline-store';
 import { advanceUntil, advanceUntilDone as drive, defaultResponder, gatewayCalls, mockGateway, server, setAppState, signInFixtureAccount } from '@/test/helpers';
 import { resetChatModules, useStrictClock as strictClock } from '@/test/integration/chat/_helpers';
+import { SCORING_HEAD } from '@/test/helpers/models';
 
 export const PUSH_TOKEN = 'ExponentPushToken[test]';
 export const JOBS_URL = '/v1/inference/jobs';
@@ -55,7 +55,7 @@ export function bundleOf(n = 1, system = 'shared relevance system'): { calls: Te
   return { calls: Array.from({ length: n }, (_, i) => ({ id: `score:${i}`, system, prompt: `${article(i * 2 + 1)}\n${article(i * 2 + 2)}` })) };
 }
 
-export const context = (model = SMALL_MODEL): Promise<E2EEContext> => prepareE2EEContext(model);
+export const context = (model = SCORING_HEAD): Promise<E2EEContext> => prepareE2EEContext(model);
 
 export interface JobPost {
   headers: Record<string, string>;

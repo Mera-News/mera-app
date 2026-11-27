@@ -25,7 +25,7 @@
 // WIRE PARITY with the production chat path (lib/hooks/useCloudPersonaChat.ts
 // cloudChatStream call + lib/llm/cloudComplete.ts cloudChatStream), because
 // measuring a different gear measures a prompt we do not ship:
-//   - model BIG_MODEL (--model to try another), no temperature
+//   - model CHAT_HEAD (--model to try another), no temperature
 //   - chat_template_kwargs.enable_thinking = ArticleFeedbackAgent.chatThinking,
 //     which is FALSE (--thinking on to measure the other gear)
 //   - max_tokens CHAT_MAX_OUTPUT_TOKENS, plus CHAT_REASONING_HEADROOM_TOKENS only
@@ -49,11 +49,8 @@ import {
   buildFeedbackContext,
   getArticleFeedbackToolDefinitions,
 } from '@/lib/news-harness/article-feedback/agent-core';
-import {
-  BIG_MODEL,
-  CHAT_MAX_OUTPUT_TOKENS,
-  CHAT_REASONING_HEADROOM_TOKENS,
-} from '@/lib/llm/constants';
+import { CHAT_MAX_OUTPUT_TOKENS, CHAT_REASONING_HEADROOM_TOKENS } from '@/lib/llm/constants';
+import { CHAT_HEAD } from '../lib/model-catalog';
 /** Prompt guidance is ≤6 words; this is the reporting threshold for a pill that
  *  will visibly wrap on a card. */
 const LABEL_WORD_LIMIT = 6;
@@ -175,7 +172,7 @@ interface Args {
 }
 
 function parseArgs(argv: string[]): Args {
-  const args: Args = { runs: 3, label: 'v1', only: null, model: BIG_MODEL, thinking: false };
+  const args: Args = { runs: 3, label: 'v1', only: null, model: CHAT_HEAD, thinking: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--runs') args.runs = Number(argv[++i] ?? args.runs);

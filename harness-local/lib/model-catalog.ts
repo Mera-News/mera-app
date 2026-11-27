@@ -11,6 +11,12 @@
 //
 // Node-only. Imports nothing from expo/react-native.
 
+import { CHAT_MODELS, PROFILES, SCORING_MODELS } from '@/lib/llm/profiles';
+
+/** The model ids at the head of the chat and scoring lanes (lib/llm/profiles), the runners' defaults. */
+export const CHAT_HEAD = PROFILES[CHAT_MODELS[0]].model;
+export const SCORING_HEAD = PROFILES[SCORING_MODELS[0]].model;
+
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -19,7 +25,7 @@ import { join } from 'node:path';
 export const CHAT_ARM_MODELS = ['Qwen/Qwen3.8-27B'] as const;
 
 /** Harness scoring and reasons. JSON-shaped prompts, thinking off, never
- *  function tools. Qwen3.6 is the control (what ships today as SMALL_MODEL);
+ *  function tools. Qwen3.6 is the control (what heads SCORING_MODELS today);
  *  GLM 5.3 Flash is the cheaper candidate at 0.5 against 1.1 per million
  *  output, which is the axis that decides this path. */
 export const HARNESS_ARM_MODELS = ['Qwen/Qwen3.6-35B-A3B-FP8', 'z-ai/glm-5.3-flash'] as const;

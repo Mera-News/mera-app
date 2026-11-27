@@ -7,7 +7,6 @@ import { ed25519 } from '@noble/curves/ed25519.js';
 import { bytesToHex } from '@/lib/e2ee/e2ee-crypto';
 import { clearAttestationCache } from '@/lib/e2ee/e2ee-cache';
 import { fetchModelPublicKey } from '@/lib/e2ee/e2ee-service';
-import { SMALL_MODEL } from '@/lib/llm/constants';
 import { invalidateJwtCache } from '@/lib/auth-client';
 import { addFact } from '@/lib/database/services/fact-service';
 import { loadSuggestions } from '@/lib/database/services/article-suggestion-reads';
@@ -41,6 +40,7 @@ import {
   type GatewayCall,
   type GatewayResponder,
 } from '@/test/helpers';
+import { SCORING_HEAD } from '@/test/helpers/models';
 
 export const NOW = new Date('2026-10-09T10:00:00.000Z').getTime();
 export const PUSH_TOKEN = 'ExponentPushToken[test]';
@@ -198,7 +198,7 @@ export function later(ms = 1_100): void {
 
 /** Fetch the model attestation now, then wait out the slot it took: the next submit goes at once. */
 export async function warmAttestation(): Promise<void> {
-  await drive(fetchModelPublicKey(SMALL_MODEL));
+  await drive(fetchModelPublicKey(SCORING_HEAD));
   later();
 }
 
@@ -207,7 +207,7 @@ export function gateway(script: Script = {}, opts: { pendingPolls?: number; curv
   server.use(
     ...mockGateway(scripted(script), {
       pendingPolls: opts.pendingPolls ?? 0,
-      curve: opts.curve ? { [SMALL_MODEL]: opts.curve } : undefined,
+      curve: opts.curve ? { [SCORING_HEAD]: opts.curve } : undefined,
     }),
   );
 }

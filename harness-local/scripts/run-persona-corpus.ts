@@ -9,7 +9,7 @@
 // through four scripted cohorts, repeated, with persona state carried ACROSS
 // turns so the cohorts that depend on history mean something.
 //
-// The model default is BIG_MODEL, unchanged: the chat path needs function tool
+// The model default is CHAT_HEAD, unchanged: the chat path needs function tool
 // calling with schema-conformant arguments, which is a different requirement
 // from the scoring path, so it keeps its own roster.
 //
@@ -51,7 +51,6 @@ import {
   renderKnownFacts,
   type CorpusPersona,
 } from '../lib/corpus';
-import { BIG_MODEL } from '@/lib/llm/constants';
 import { assertEngineReady, onDeviceChatTurn, parseEngine, type LocalEngine } from '../lib/engine';
 import {
   buildPersonaChatPrompt,
@@ -96,7 +95,7 @@ function parseArgs(argv: string[]): Args {
   const args: Args = {
     label: 'persona',
     cohorts: [...COHORTS],
-    models: [BIG_MODEL],
+    models: [CHAT_HEAD],
     repeat: 3,
     variants: ['baseline'],
     dryRun: false,

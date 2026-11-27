@@ -22,11 +22,8 @@ import {
   buildToolDefinitions,
   buildPersonaUpdateContext,
 } from '@/lib/news-harness/prompts/prompts';
-import {
-  BIG_MODEL,
-  CHAT_MAX_OUTPUT_TOKENS,
-  CHAT_REASONING_HEADROOM_TOKENS,
-} from '@/lib/llm/constants';
+import { CHAT_MAX_OUTPUT_TOKENS, CHAT_REASONING_HEADROOM_TOKENS } from '@/lib/llm/constants';
+import { CHAT_HEAD } from '../lib/model-catalog';
 
 /** The exact CLOUD fact-extraction text as it stood BEFORE the r14 edits. */
 const REVERT_TO_PRE_R14: { from: string; to: string }[] = [
@@ -55,7 +52,7 @@ const USER_TURN = "I'm an expat from India";
 interface Args {
   runs: number;
   arm: 'before' | 'after';
-  /** Model id to post. Defaults to the shipped BIG_MODEL; override to probe a
+  /** Model id to post. Defaults to the shipped CHAT_HEAD; override to probe a
    *  candidate primary or fallback on the one thing the confirm/decline
    *  fixtures cannot show — whether a fact-worthy turn yields real facts. */
   model: string;
@@ -66,7 +63,7 @@ interface Args {
 }
 
 function parseArgs(argv: string[]): Args {
-  const args: Args = { runs: 6, arm: 'after', model: BIG_MODEL, thinking: true };
+  const args: Args = { runs: 6, arm: 'after', model: CHAT_HEAD, thinking: true };
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--runs') args.runs = Number(argv[++i] ?? args.runs);
     else if (argv[i] === '--arm') args.arm = (argv[++i] as Args['arm']) ?? args.arm;
@@ -164,7 +161,7 @@ async function main(): Promise<number> {
   const env = loadHarnessEnv();
   console.log(`arm  : ${args.arm}\nruns : ${args.runs}\nuser : "${USER_TURN}"`);
   console.log(
-    `known: ${KNOWN_FACTS}\nmodel: ${args.model}${args.model === BIG_MODEL ? ' (BIG_MODEL)' : ' (override)'}\n` +
+    `known: ${KNOWN_FACTS}\nmodel: ${args.model}${args.model === CHAT_HEAD ? ' (CHAT_HEAD)' : ' (override)'}\n` +
       `thinking: ${args.thinking ? 'on' : 'off'}\n`,
   );
 

@@ -6,8 +6,8 @@ import {
   postGatewayCompletion,
   prepareContext,
 } from '@/harness-local/adapters/gateway-e2ee-llm';
-import { BIG_MODEL } from '@/lib/llm/constants';
 import { gatewayCalls, mockGateway, server, takeGatewayViolations } from '@/test/helpers';
+import { CHAT_HEAD } from '@/test/helpers/models';
 
 const cfg = { inferenceEndpoint: 'https://inference.test', jwt: 'harness-jwt' };
 
@@ -17,10 +17,10 @@ afterEach(() => {
 
 it('sends no cleartext tools field even when a caller hands it tools', async () => {
   server.use(...mockGateway(() => 'OK'));
-  const ctx = prepareContext(await fetchModelKey(cfg, BIG_MODEL));
+  const ctx = prepareContext(await fetchModelKey(cfg, CHAT_HEAD));
   // A plain-JS runner can still pass these; the lane must drop them, not forward them.
   const req = {
-    model: BIG_MODEL,
+    model: CHAT_HEAD,
     messages: [{ role: 'user', content: 'Store SENTINEL-TOOLS-7c1 with the tool.' }],
     enableThinking: false,
     tools: [{ type: 'function', function: { name: 'store', parameters: {} } }],

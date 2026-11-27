@@ -44,7 +44,7 @@ import {
   type TextToolDefinition,
   type ToolFormat,
 } from '@/lib/llm/text-tool-protocol';
-import { BIG_MODEL, SMALL_MODEL } from '@/lib/llm/constants';
+import { CHAT_HEAD, SCORING_HEAD } from '../lib/model-catalog';
 
 const TOOL: TextToolDefinition = {
   type: 'function',
@@ -208,7 +208,7 @@ async function main(): Promise<number> {
   requireStagingTarget(env);
   if (!env.inferenceEndpoint) throw new Error('harness-local: no inference endpoint resolved.');
   const mi = argv.indexOf('--models');
-  const models = mi === -1 ? [BIG_MODEL, SMALL_MODEL] : (argv[mi + 1] ?? '').split(',').filter(Boolean);
+  const models = mi === -1 ? [CHAT_HEAD, SCORING_HEAD] : (argv[mi + 1] ?? '').split(',').filter(Boolean);
   const ri = argv.indexOf('--repeat');
   const repeat = ri === -1 ? 2 : Number(argv[ri + 1]);
   const fi = argv.indexOf('--format');

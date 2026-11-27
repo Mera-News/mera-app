@@ -7,13 +7,12 @@ import React from 'react';
 import { act, fireEvent, render, within } from '@testing-library/react-native';
 import * as Clipboard from 'expo-clipboard';
 import { AttestationVerificationRow } from '@/components/custom/config-mera/AttestationVerificationRow';
-import { BIG_MODEL, SMALL_MODEL } from '@/lib/llm/constants';
 import * as e2eeService from '@/lib/e2ee/e2ee-service';
 import { initI18nEn } from '@/test/helpers';
 import { invalidateJwtCache } from '@/lib/auth-client';
 import { clearAttestationCache } from '@/lib/e2ee/e2ee-cache';
 import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
-import { __resetRouterForTests as resetModelFallback } from '@/lib/llm/router';
+import { __resetRouterForTests as resetModelFallback, applyRoutingTable } from '@/lib/llm/router';
 import { http, HttpResponse, server, signInFixtureAccount } from '@/test/helpers';
 import { driveUntilDone, useStrictClock } from '@/test/integration/chat/_helpers';
 import capturedReport from '@/test/fixtures/attestation-report.json';
@@ -33,11 +32,27 @@ interface Seen {
 }
 let seen: Seen[] = [];
 
+// The checks below need two distinct active models. The seed table heads both lanes on Qwen3.6,
+// so a table with Qwen3.8 on the chat lanes is pinned for every test.
+const CHAT_HEAD = 'Qwen/Qwen3.8-27B';
+const SCORING_HEAD = 'Qwen/Qwen3.6-35B-A3B-FP8';
+const twoHeads = () => {
+  const lane = (id: string) => ({ state: 'ok', profiles: [id] });
+  applyRoutingTable({
+    version: 99,
+    lanes: {
+      'chat-tools': lane('near/qwen3.8-27b'), 'chat-single': lane('near/qwen3.8-27b'),
+      scoring: lane('near/qwen3.6-35b-a3b'), topics: lane('near/qwen3.6-35b-a3b'), background: lane('near/qwen3.6-35b-a3b'),
+    },
+  });
+};
+
 const run = <T,>(p: Promise<T>) => driveUntilDone(p);
 
 beforeEach(() => {
   resetLimiter();
   resetModelFallback();
+  twoHeads();
   clearAttestationCache();
   invalidateJwtCache();
   seen = [];
@@ -164,7 +179,7 @@ describe('AttestationVerificationRow: proxy identity', () => {
 
     expect(view.getByTestId('attestation-deployed-software-notice')).toBeTruthy();
     expect(
-      within(view.getByTestId(`attestation-model-${SMALL_MODEL}`)).getByText(
+      within(view.getByTestId(`attestation-model-${SCORING_HEAD}`)).getByText(
         "Proxy matches NEAR's public configuration",
       ),
     ).toBeTruthy();
@@ -205,8 +220,8 @@ describe('AttestationVerificationRow: proxy identity', () => {
   it('asks for both models, and shows each one its own section and card', async () => {
     const view = await tapVerify();
 
-    expect(new Set(seen.map(s => s.model))).toEqual(new Set([BIG_MODEL, SMALL_MODEL]));
-    for (const model of [BIG_MODEL, SMALL_MODEL]) {
+    expect(new Set(seen.map(s => s.model))).toEqual(new Set([CHAT_HEAD, SCORING_HEAD]));
+    for (const model of [CHAT_HEAD, SCORING_HEAD]) {
       const section = within(view.getByTestId(`attestation-model-${model}`));
       expect(section.getByText(`NEAR AI · ${model}`)).toBeTruthy();
       expect(section.getByTestId(`attestation-details-${model}`)).toBeTruthy();
@@ -219,7 +234,7 @@ describe('AttestationVerificationRow: proxy identity', () => {
 
   it('shows the full image digest, file and commit that started the proxy', async () => {
     const view = await tapVerify();
-    const card = within(view.getByTestId(`attestation-details-${SMALL_MODEL}`));
+    const card = within(view.getByTestId(`attestation-details-${SCORING_HEAD}`));
 
     expect(card.getByTestId('attestation-detail-proxyImage')).toHaveTextContent(
       'nearaidev/vllm-proxy-rs@sha256:0be4ee8f40a2bf71a6e2fab1e780ad1a6e738ffb2085553f1ed4b85fcb944207',
@@ -241,7 +256,7 @@ describe('AttestationVerificationRow: proxy identity', () => {
   it('a model that can not be fetched does not hide the other, and the summary stays partial', async () => {
     server.use(
       http.get(ROUTE, ({ request }) =>
-        new URL(request.url).searchParams.get('model') === BIG_MODEL
+        new URL(request.url).searchParams.get('model') === CHAT_HEAD
           ? HttpResponse.json({ error: 'x' }, { status: 503 })
           : HttpResponse.json({ model_attestations: [report] }),
       ),
@@ -249,9 +264,9 @@ describe('AttestationVerificationRow: proxy identity', () => {
     const view = await tapVerify();
 
     expect(
-      within(view.getByTestId(`attestation-model-${BIG_MODEL}`)).getByTestId('attestation-model-error'),
+      within(view.getByTestId(`attestation-model-${CHAT_HEAD}`)).getByTestId('attestation-model-error'),
     ).toBeTruthy();
-    expect(view.getByTestId(`attestation-details-${SMALL_MODEL}`)).toBeTruthy();
+    expect(view.getByTestId(`attestation-details-${SCORING_HEAD}`)).toBeTruthy();
     expect(view.getByText('Partly verified')).toBeTruthy();
   });
 
@@ -260,12 +275,12 @@ describe('AttestationVerificationRow: proxy identity', () => {
     const view = await tapVerify();
 
     await act(async () => {
-      fireEvent.press(view.getByTestId(`attestation-copy-${SMALL_MODEL}`));
+      fireEvent.press(view.getByTestId(`attestation-copy-${SCORING_HEAD}`));
       await run(Promise.resolve());
     });
 
     const json = JSON.parse(copied.mock.calls[0][0]);
-    expect(json.model).toBe(SMALL_MODEL);
+    expect(json.model).toBe(SCORING_HEAD);
     expect(json.nonce).toBe(report.request_nonce);
     expect(json.proxyImage).toContain('vllm-proxy-rs@sha256:');
     expect(json.checks).toHaveLength(12);
@@ -274,7 +289,7 @@ describe('AttestationVerificationRow: proxy identity', () => {
 
   it('reads each check\'s status to a screen reader', async () => {
     const view = await tapVerify();
-    const section = within(view.getByTestId(`attestation-model-${SMALL_MODEL}`));
+    const section = within(view.getByTestId(`attestation-model-${SCORING_HEAD}`));
 
     expect(section.getByLabelText('Quote signature is valid, passed')).toBeTruthy();
     expect(section.getByLabelText('Platform patch level is current, not checked')).toBeTruthy();

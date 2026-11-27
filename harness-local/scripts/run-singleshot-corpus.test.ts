@@ -10,12 +10,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { countMatched, harnessVerdict, liveSystem, loadPrePrompts, parseArgs, prePostVerdict, runTool, runTurnHarness, type HarnessCaller } from './run-singleshot-corpus';
-import { BIG_MODEL } from '@/lib/llm/constants';
 import { sentModel } from '../lib/model-catalog';
 
-test('defaults: BIG_MODEL and the on, on-twin, off arms', () => {
+test('defaults: CHAT_HEAD and the on, on-twin, off arms', () => {
   const a = parseArgs([]);
-  assert.equal(a.model, BIG_MODEL);
+  assert.equal(a.model, CHAT_HEAD);
   assert.deepEqual(a.arms.map((x) => x.id), ['on', 'on-twin', 'off']);
 });
 

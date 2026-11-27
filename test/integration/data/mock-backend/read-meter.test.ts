@@ -5,12 +5,12 @@
 import { prepareE2EEContext } from '@/lib/e2ee/e2ee-service';
 import { invalidateJwtCache } from '@/lib/auth-client';
 import { clearAttestationCache } from '@/lib/e2ee/e2ee-cache';
-import { SMALL_MODEL } from '@/lib/llm/constants';
 import { sendInferenceRequest } from '@/lib/llm/submitInferenceJob';
 import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
 import { assertNoGatewayViolations, gatewayCalls, server, signInFixtureAccount, useFakeClock } from '@/test/helpers';
 import { OLD_CLIENT_QUOTA_STATUS } from '@/test/mock-backend/gateway/handlers';
 import { setReadMeter } from '@/test/mock-backend/gateway/state';
+import { SCORING_HEAD } from '@/test/helpers/models';
 
 const JOBS = 'http://127.0.0.1:8790/v1/inference/jobs';
 const NOW = Date.UTC(2026, 9, 15, 23, 59, 0);
@@ -24,12 +24,12 @@ const post = (headers: Record<string, string>) =>
   });
 
 async function submit(idempotencyKey: string) {
-  const ctx = await prepareE2EEContext(SMALL_MODEL);
+  const ctx = await prepareE2EEContext(SCORING_HEAD);
   return sendInferenceRequest({
     bundle: { calls: [{ id: 'score:0', system: 's', prompt: 'p' }] } as never,
     ctx,
     token: null,
-    model: SMALL_MODEL,
+    model: SCORING_HEAD,
     context: 'foreground',
     idempotencyKey,
   });

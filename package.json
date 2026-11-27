@@ -88,7 +88,7 @@
     "llama.rn": "0.13.0-rc.9",
     "lottie-react-native": "~7.5.0",
     "lucide-react-native": "^1.66.0",
-    "mera-news-client": "git+https://github.com/Mera-News/mera-news-client.git#5ffcc76a426578e14953f7425a99db206e9b44f9",
+    "mera-news-client": "git+https://github.com/Mera-News/mera-news-client.git#9a2f79b58d400702ccd085bc0af69f911b375e26",
     "nativewind": "4.2.7",
     "pako": "^3.0.3",
     "react": "19.3.0",

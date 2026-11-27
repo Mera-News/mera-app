@@ -5,7 +5,7 @@
 //     --inference-endpoint <staging> [--repeat 3] [--dry-run] < /dev/null
 //
 // Runs the production request and decoder (stakeCheckRequest, decodeStakeCheck,
-// SMALL_MODEL, STAKE_CHECK_CALL, thinking off) over fixtures/stake-check/cases.json.
+// SCORING_HEAD, STAKE_CHECK_CALL, thinking off) over fixtures/stake-check/cases.json.
 // A no-stake fact must decode to no stake with a subject; a stake must not decode
 // to an offer. --dry-run prints the prompt and makes no network call.
 
@@ -16,12 +16,12 @@ import { loadHarnessEnv } from '../config/env';
 import { applyEndpointOverrides, applyTargetOverride, requireStagingTarget } from '../lib/staging-guard';
 import { createRunWriter } from '../lib/run-writer';
 import { postCompletion } from '../lib/near-call';
-import { SMALL_MODEL } from '@/lib/llm/constants';
 import {
   STAKE_CHECK_CALL,
   decodeStakeCheck,
   stakeCheckRequest,
 } from '@/lib/news-harness/persona-management/stake-check';
+import { SCORING_HEAD } from '../lib/model-catalog';
 
 async function main(): Promise<number> {
   const argv = process.argv.slice(2);
@@ -55,7 +55,7 @@ async function main(): Promise<number> {
         const res = await postCompletion({
           baseUrl: env.nearAiBaseUrl,
           apiKey: env.nearAiApiKey,
-          model: SMALL_MODEL,
+          model: SCORING_HEAD,
           messages: [{ role: 'system', content: req.systemPrompt }, { role: 'user', content: req.prompt }],
           temperature: STAKE_CHECK_CALL.temperature,
           maxTokens: STAKE_CHECK_CALL.maxTokens,
@@ -84,7 +84,7 @@ async function main(): Promise<number> {
   console.log(`tokens: ${promptTokens} in, ${completionTokens} out`);
   const run = createRunWriter({ label: 'stake-check' });
   run.writeJson('rows', rows);
-  run.finish({ model: SMALL_MODEL, repeat, rates, promptTokens, completionTokens });
+  run.finish({ model: SCORING_HEAD, repeat, rates, promptTokens, completionTokens });
   return rates.failed > 0 ? 1 : 0;
 }
 

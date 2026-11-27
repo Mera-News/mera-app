@@ -2,7 +2,6 @@
 // lib/e2ee/e2ee-crypto, SSE with one envelope per chunk, async jobs, fault injection.
 
 import { clearAttestationCache } from '@/lib/e2ee/e2ee-cache';
-import { BIG_MODEL, SMALL_MODEL } from '@/lib/llm/constants';
 import { invalidateJwtCache } from '@/lib/auth-client';
 import { prepareE2EEContext } from '@/lib/e2ee/e2ee-service';
 import {
@@ -38,6 +37,7 @@ import {
   type GatewayResponder,
 } from '@/test/helpers';
 import { TEST_MODEL_KEYS } from '@/test/mock-backend/gateway/keys';
+import { CHAT_HEAD, SCORING_HEAD } from '@/test/helpers/models';
 
 const ORIGIN = 'http://127.0.0.1:8790';
 const SECRET_SYSTEM = 'SENTINEL-SYSTEM-7f3a you are the test model';
@@ -89,7 +89,7 @@ describe('chat: streamed', () => {
     server.events.on('request:start', ({ request }) => {
       if (request.url.endsWith('/v1/chat/completions')) void request.clone().text().then((t) => rawBodies.push(t));
     });
-    server.use(...mockGateway(respond({ chunks: ['Hello ', 'there, ', 'world.'] }), { curve: { [SMALL_MODEL]: curve } }));
+    server.use(...mockGateway(respond({ chunks: ['Hello ', 'there, ', 'world.'] }), { curve: { [SCORING_HEAD]: curve } }));
 
     const events = await collect(cloudChatStream({ messages: MESSAGES, route: 'topics', enableThinking: false }));
 
@@ -97,11 +97,11 @@ describe('chat: streamed', () => {
     expect(events[events.length - 1]).toEqual({ type: 'finish', reason: 'stop' });
     const [call] = gatewayCalls('chat');
     expect(gatewayCalls('chat')).toHaveLength(1);
-    expect(call).toMatchObject({ model: SMALL_MODEL, stream: true, algo: curve, aborted: false });
+    expect(call).toMatchObject({ model: SCORING_HEAD, stream: true, algo: curve, aborted: false });
     expect(call.messages.map((m) => m.content)).toEqual([SECRET_SYSTEM, SECRET_USER]);
     expect(rawBodies).toHaveLength(1);
     expect(rawBodies[0]).not.toContain('SENTINEL');
-    expect(attestationRequests(SMALL_MODEL)).toBe(1);
+    expect(attestationRequests(SCORING_HEAD)).toBe(1);
     // The curve rules the mock enforced: version header iff ed25519, 65-byte point for ecdsa.
     if (curve === 'ecdsa') {
       expect(call.headers).not.toHaveProperty('x-encryption-version');
@@ -208,7 +208,7 @@ describe('chat: faults', () => {
     const events = await onFakeClock(() => collect(cloudChatStream({ messages: MESSAGES, route: 'topics' })));
     expect(text(events)).toBe('recovered');
     expect(gatewayCalls('chat')).toHaveLength(2);
-    expect(attestationRequests(SMALL_MODEL)).toBe(2);
+    expect(attestationRequests(SCORING_HEAD)).toBe(2);
   });
 
   it('429 with Retry-After 1s on the interactive lane: one retry, then RateLimitedError', async () => {
@@ -281,7 +281,7 @@ describe('chat: fake clock', () => {
 describe('chat: first-token deadline', () => {
   it('a head silent past its 30s deadline is aborted and the next profile answers', async () => {
     server.use(
-      ...mockGateway((c) => (c.model === BIG_MODEL ? { chunks: ['slow'], headerDelayMs: 60_000 } : 'fast')),
+      ...mockGateway((c) => (c.model === CHAT_HEAD ? { chunks: ['slow'], headerDelayMs: 60_000 } : 'fast')),
     );
     fakeClock('2026-10-09T00:00:00Z');
     const seen: string[] = [];
@@ -294,9 +294,11 @@ describe('chat: first-token deadline', () => {
     await outcome;
     expect(seen).toEqual(['fast']);
     const [head, next] = gatewayCalls('chat');
-    expect(head).toMatchObject({ model: BIG_MODEL, aborted: true });
-    expect(next).toMatchObject({ model: SMALL_MODEL, aborted: false });
-    expect(attestationRequests()).toBe(2);
+    expect(head).toMatchObject({ model: CHAT_HEAD, aborted: true });
+    // RedPill fails the mock's NEAR-shaped attestation, so the next profile that answers is NEAR Qwen3.8.
+    expect(next).toMatchObject({ model: 'Qwen/Qwen3.8-27B', aborted: false });
+    // One key fetch per profile tried: the head, the two RedPill profiles, then NEAR Qwen3.8.
+    expect(attestationRequests()).toBe(4);
   });
 });
 
@@ -322,7 +324,7 @@ describe('async jobs', () => {
     server.use(...mockGateway((c) => (c.callId?.startsWith('score:') ? '[0.9,0.9]' : ''), { pendingPolls: 1 }));
     await onFakeClock(async () => {
       // The default responder is covered below; this one pins the text so the decode is exact.
-      const ctx = await prepareE2EEContext(SMALL_MODEL);
+      const ctx = await prepareE2EEContext(SCORING_HEAD);
       const calls = [
         { id: 'score:0', system: 'shared relevance system', prompt: `${article(1)}\n${article(2)}` },
         { id: 'score:1', system: 'shared relevance system', prompt: `${article(3)}\n${article(4)}` },
@@ -331,7 +333,7 @@ describe('async jobs', () => {
         bundle: { calls } as never,
         ctx,
         token: null,
-        model: SMALL_MODEL,
+        model: SCORING_HEAD,
         context: 'foreground',
         idempotencyKey: 'key-1',
       });
@@ -349,7 +351,7 @@ describe('async jobs', () => {
 
       // A replay of the same Idempotency-Key is the same job.
       const again = await sendInferenceRequest({
-        bundle: { calls } as never, ctx, token: null, model: SMALL_MODEL, context: 'foreground', idempotencyKey: 'key-1',
+        bundle: { calls } as never, ctx, token: null, model: SCORING_HEAD, context: 'foreground', idempotencyKey: 'key-1',
       });
       expect(again).toMatchObject({ status: 'ok', requestId: sent.requestId });
       expect(gatewayCalls('job')).toHaveLength(2);
@@ -357,10 +359,10 @@ describe('async jobs', () => {
   });
 
   it('the default responder counts the article fences', () => onFakeClock(async () => {
-    const ctx = await prepareE2EEContext(SMALL_MODEL);
+    const ctx = await prepareE2EEContext(SCORING_HEAD);
     const sent = await sendInferenceRequest({
       bundle: { calls: [{ id: 'score:0', system: 's', prompt: [1, 2, 3].map(article).join('\n') }] } as never,
-      ctx, token: null, model: SMALL_MODEL, context: 'foreground',
+      ctx, token: null, model: SCORING_HEAD, context: 'foreground',
     });
     if (sent.status !== 'ok') throw new Error(`submit ${sent.status}`);
     const results = (await fetchResults(sent.requestId, 'foreground', sent.capabilityToken)) as ServerResults;
@@ -370,10 +372,10 @@ describe('async jobs', () => {
 
   it('unknown id is not-found; a capability token for another job is unauthorized', () => onFakeClock(async () => {
     expect(await fetchResults('0'.repeat(24), 'foreground')).toBe('not-found');
-    const ctx = await prepareE2EEContext(SMALL_MODEL);
+    const ctx = await prepareE2EEContext(SCORING_HEAD);
     const sent = await sendInferenceRequest({
       bundle: { calls: [{ id: 'reason:x', system: 's', prompt: 'p' }] } as never,
-      ctx, token: null, model: SMALL_MODEL, context: 'background', capabilityToken: 'cap.someone-else',
+      ctx, token: null, model: SCORING_HEAD, context: 'background', capabilityToken: 'cap.someone-else',
     });
     // background submit authenticates with the capability token alone, which the mock accepts for any bearer.
     expect(sent.status).toBe('ok');
@@ -424,7 +426,7 @@ describe('attestation', () => {
 
   it('a per-test override replaces the route', async () => {
     server.use(http.get('*/api/attestation/report', () => HttpResponse.text('nope', { status: 403 })));
-    await expect(prepareE2EEContext(BIG_MODEL)).rejects.toThrow(/403/);
+    await expect(prepareE2EEContext(CHAT_HEAD)).rejects.toThrow(/403/);
   });
 });
 
@@ -441,7 +443,7 @@ describe('violation detector (positive controls)', () => {
     fetch(`${ORIGIN}/v1/chat/completions`, { method: 'POST', headers, body: JSON.stringify(body) });
 
   it('a cleartext tool field is refused and recorded', async () => {
-    const res = await post(validHeaders, { model: SMALL_MODEL, messages: [], tools: [{ type: 'function' }] });
+    const res = await post(validHeaders, { model: SCORING_HEAD, messages: [], tools: [{ type: 'function' }] });
     expect(res.status).toBe(500);
     expect(takeGatewayViolations()).toEqual([
       { route: 'chat', rule: 'cleartext tool field "tools" in the request body' },
@@ -449,17 +451,17 @@ describe('violation detector (positive controls)', () => {
   });
 
   it('plaintext message content is refused like NEAR does and recorded', async () => {
-    const res = await post(validHeaders, { model: SMALL_MODEL, messages: [{ role: 'user', content: 'hello in the clear' }] });
+    const res = await post(validHeaders, { model: SCORING_HEAD, messages: [{ role: 'user', content: 'hello in the clear' }] });
     expect(res.status).toBe(400);
-    expect(await res.json()).toEqual({ error: `Provider failed for model '${SMALL_MODEL}': Decryption failed` });
+    expect(await res.json()).toEqual({ error: `Provider failed for model '${SCORING_HEAD}': Decryption failed` });
     expect(takeGatewayViolations()).toHaveLength(1);
   });
 
   it('a version header on an ecdsa request is refused', async () => {
-    server.use(...mockGateway(respond('x'), { curve: { [SMALL_MODEL]: 'ecdsa' } }));
+    server.use(...mockGateway(respond('x'), { curve: { [SCORING_HEAD]: 'ecdsa' } }));
     const res = await post(
       { ...validHeaders, 'X-Signing-Algo': 'ecdsa', 'X-Model-Pub-Key': TEST_MODEL_KEYS.ecdsa.publicKeyHex },
-      { model: SMALL_MODEL, messages: [] },
+      { model: SCORING_HEAD, messages: [] },
     );
     expect(res.status).toBe(500);
     expect(takeGatewayViolations()[0].rule).toMatch(/X-Encryption-Version/);

@@ -14,7 +14,7 @@
 // WHAT IT MEASURES. One turn of FollowStoryAgent or ArticleFeedbackAgent the way
 // useCloudPersonaChat's single-shot path runs it: the agent's real system prompt,
 // context prepended to the last user message, the app's text tool wire (xml),
-// streamed, BIG_MODEL (or --model), a first pass and ONE continuation when a knowledge tool
+// streamed, CHAT_HEAD (or --model), a first pass and ONE continuation when a knowledge tool
 // ran or no text came back. Tool results are canned per fixture, like the agent
 // corpus's fakes, so the arms differ only in the thinking gear.
 //
@@ -52,7 +52,7 @@ import { loadHarnessEnv } from '../config/env';
 import { applyEndpointOverrides, applyTargetOverride, requireStagingTarget } from '../lib/staging-guard';
 import { createRunWriter } from '../lib/run-writer';
 import { applyProviderOverride, postBodyStreamTextTools, SpendLimitError, type NearToolCall } from '../lib/near-call';
-import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS, CHAT_REASONING_HEADROOM_TOKENS } from '@/lib/llm/constants';
+import { CHAT_MAX_OUTPUT_TOKENS, CHAT_REASONING_HEADROOM_TOKENS } from '@/lib/llm/constants';
 import { APP_TOOL_FORMAT } from '@/lib/llm/text-tool-protocol';
 import {
   buildFollowStoryContext,
@@ -93,6 +93,7 @@ import {
 } from '@/lib/news-harness/on-device/article-feedback';
 import type { OnDeviceTurnResult } from '@/lib/news-harness/on-device/shared';
 import { assertEngineReady, isTransportError, onDeviceChatTurn, parseEngine, type LocalEngine } from '../lib/engine';
+import { CHAT_HEAD } from '../lib/model-catalog';
 
 interface Fixture {
   id: string;
@@ -130,7 +131,7 @@ export function parseArgs(argv: string[]): { repeat: number; dryRun: boolean; la
   let repeat = 3;
   let dryRun = false;
   let label = 'singleshot';
-  let model = BIG_MODEL;
+  let model = CHAT_HEAD;
   let arms = ARMS.slice(0, 3);
   let prePrompts: string | undefined;
   let models: string[] = [];

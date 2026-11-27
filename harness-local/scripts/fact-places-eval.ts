@@ -4,7 +4,7 @@
 //     harness-local/scripts/fact-places-eval.ts [--repeat 3] [--dry-run] [--label x]
 //
 // Runs the production place call (buildFactPlacesRequest / decodeFactPlaces,
-// SMALL_MODEL, FACT_PLACES_CALL gear, thinking off) over
+// SCORING_HEAD, FACT_PLACES_CALL gear, thinking off) over
 // fixtures/fact-places/cases.json, repeated, and scores each answer against the
 // labelled place. --dry-run prints the prompts and makes no network call.
 // Scorer test: fact-places-eval.test.ts (node --test).
@@ -17,13 +17,13 @@ import { loadHarnessEnv } from '../config/env';
 import { applyTargetOverride, requireStagingTarget } from '../lib/staging-guard';
 import { createRunWriter } from '../lib/run-writer';
 import { postCompletion } from '../lib/near-call';
-import { SMALL_MODEL } from '@/lib/llm/constants';
 import { parsePlace, type ReaderPlace } from '@/lib/news-harness/persona-management/fact-places';
 import {
   FACT_PLACES_CALL,
   buildFactPlacesRequest,
   decodeFactPlaces,
 } from '@/lib/news-harness/persona-management/geo-derivation';
+import { SCORING_HEAD } from '../lib/model-catalog';
 
 export const BAR = { country: 0.95, level: 0.85, wrong: 0.02 } as const;
 
@@ -160,7 +160,7 @@ async function main(): Promise<number> {
           const res = await postCompletion({
             baseUrl: env!.nearAiBaseUrl,
             apiKey: env!.nearAiApiKey,
-            model: SMALL_MODEL,
+            model: SCORING_HEAD,
             messages: [{ role: 'system', content: req.systemPrompt }, { role: 'user', content: req.prompt }],
             temperature: FACT_PLACES_CALL.temperature,
             maxTokens: FACT_PLACES_CALL.maxTokens,
@@ -188,7 +188,7 @@ async function main(): Promise<number> {
   const run = createRunWriter({ label });
   run.writeJson('scores', scores);
   run.writeJson('rates', summarize(scores));
-  run.finish({ model: SMALL_MODEL, repeat, rates: summarize(scores), failedCalls, truncatedCalls });
+  run.finish({ model: SCORING_HEAD, repeat, rates: summarize(scores), failedCalls, truncatedCalls });
   if (failedCalls > 0) return 1;
   return summarize(scores).pass ? 0 : 2;
 }

@@ -6,7 +6,6 @@
 
 import { clearAttestationCache } from '@/lib/e2ee/e2ee-cache';
 import { invalidateJwtCache } from '@/lib/auth-client';
-import { SMALL_MODEL } from '@/lib/llm/constants';
 import { cloudChatStream, type SseEvent } from '@/lib/llm/cloudComplete';
 import { _resetForTests as resetLimiter } from '@/lib/llm/gateway-rate-limiter';
 import { __resetRouterForTests as resetModelFallback } from '@/lib/llm/router';

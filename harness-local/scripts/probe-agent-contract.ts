@@ -22,8 +22,8 @@
 import { loadHarnessEnv } from '../config/env';
 import { applyEndpointOverrides, applyTargetOverride, requireStagingTarget } from '../lib/staging-guard';
 import { postBody, postBodyStream, SpendLimitError } from '../lib/near-call';
-import { BIG_MODEL } from '@/lib/llm/constants';
 import { HARNESS_TOOLS } from '@/lib/mera-harness/core/tool-contracts';
+import { CHAT_HEAD } from '../lib/model-catalog';
 
 const PROMPTS = [
   'I live in Nieuw-West Amsterdam',
@@ -70,7 +70,7 @@ async function main(): Promise<number> {
   applyEndpointOverrides(argv);
   const env = loadHarnessEnv({ require: 'staging' });
   requireStagingTarget(env);
-  const model = BIG_MODEL;
+  const model = CHAT_HEAD;
 
   let calls = 0;
   let streamedToolCalls = 0;

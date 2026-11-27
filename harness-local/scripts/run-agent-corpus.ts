@@ -29,9 +29,8 @@ import { addOnly, erroredCells, loadTier, runPool, selectTurns, type TurnSelecti
 import { createJsonlWriter, hashMessages, newRowId, type CallType, type RunRow } from '../lib/jsonl-writer';
 import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
 import { estimateRunCost, formatCostEstimate, type PlannedCall } from '../lib/cost-estimate';
-import { costOf, fetchModelCatalog, rosterWarnings } from '../lib/model-catalog';
+import { CHAT_HEAD, costOf, fetchModelCatalog, rosterWarnings } from '../lib/model-catalog';
 import { applyProviderOverride, DEFAULT_STALL_TIMEOUT_MS, postBodyStream, postBodyStreamTextTools, SpendLimitError } from '../lib/near-call';
-import { BIG_MODEL } from '@/lib/llm/constants';
 // The AGENT's arms live in the harness's own module, not in
 // news-harness/prompts/prompt-variants: adding them there reddened a test
 // outside P1's write set, and they belong to the folder that is meant to lift
@@ -143,7 +142,7 @@ function parseArgs(argv: string[]): Args {
   const a: Args = {
     label: 'agent',
     scriptsDir: 'lib/mera-harness/eval/fixtures/scripts',
-    models: [BIG_MODEL],
+    models: [CHAT_HEAD],
     repeat: 3,
     repeatStart: 0,
     variants: ['baseline'],

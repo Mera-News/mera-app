@@ -1,7 +1,7 @@
 // Test-facing API of the inference gateway mock (test/mock-backend/gateway/).
 //
 //   server.use(...mockGateway((call) => 'hello'));               // streamed or buffered, sealed both ways
-//   server.use(...mockGateway(respond, { curve: { [BIG_MODEL]: 'ecdsa' } }));
+//   server.use(...mockGateway(respond, { curve: { [CHAT_HEAD]: 'ecdsa' } }));
 //   gatewayCalls('chat')[0].messages                             // what the model saw, decrypted
 //
 // The default handler set already serves the default responder, so a test only
@@ -15,6 +15,7 @@ import type { RequestHandler } from 'msw';
 import { createGatewayHandlers } from '../mock-backend/gateway/handlers';
 import { defaultResponder } from '../mock-backend/gateway/responders';
 import { gatewayState } from '../mock-backend/gateway/state';
+import { CHAT_HEAD } from '@/test/helpers/models';
 
 export type GatewayRoute = 'chat' | 'batch' | 'job' | 'web-search' | 'fact-check-claims';
 

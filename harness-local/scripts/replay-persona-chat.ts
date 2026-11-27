@@ -5,7 +5,7 @@
 //     harness-local/scripts/replay-persona-chat.ts \
 //     --fixture calibration-confirm --runs 20 --arm after [--model <id>]
 //
-// `--model` overrides BIG_MODEL for the run. That is how a CANDIDATE primary or
+// `--model` overrides CHAT_HEAD for the run. That is how a CANDIDATE primary or
 // fallback is probed before it goes into lib/llm/constants.ts: same prompt,
 // same tool schema, same thinking gear as the app, pass rate over N runs. Every
 // run prints finish_reason, completion tokens and the raw tool arguments, so an
@@ -38,11 +38,7 @@ import {
   buildToolDefinitions,
   buildPersonaUpdateContext,
 } from '@/lib/news-harness/prompts/prompts';
-import {
-  BIG_MODEL,
-  CHAT_MAX_OUTPUT_TOKENS,
-  CHAT_REASONING_HEADROOM_TOKENS,
-} from '@/lib/llm/constants';
+import { CHAT_MAX_OUTPUT_TOKENS, CHAT_REASONING_HEADROOM_TOKENS } from '@/lib/llm/constants';
 import { buildChatTurnBody } from '../lib/chat-turn';
 import { assertEngineReady, isTransportError, onDeviceChatTurn, parseEngine, type LocalEngine } from '../lib/engine';
 import { createRunWriter } from '../lib/run-writer';
@@ -57,6 +53,7 @@ import {
   type PersonaChatReply,
   type PersonaSurface,
 } from '@/lib/news-harness/on-device/persona-chat';
+import { CHAT_HEAD } from '../lib/model-catalog';
 
 interface WireMsg {
   role: 'user' | 'assistant';
@@ -214,7 +211,7 @@ interface Args {
   arm: 'before' | 'after';
   /** Append the P2 `## PENDING INVITATION` block to <context>. */
   intent: boolean;
-  /** Model id to post. Defaults to the shipped BIG_MODEL. */
+  /** Model id to post. Defaults to the shipped CHAT_HEAD. */
   model: string;
   /** chat_template_kwargs.enable_thinking. Defaults ON, the app's chat gear. */
   thinking: boolean;
@@ -232,7 +229,7 @@ function parseArgs(argv: string[]): Args {
     runs: 20,
     arm: 'after',
     intent: false,
-    model: BIG_MODEL,
+    model: CHAT_HEAD,
     thinking: true,
     stream: false,
   };
@@ -465,7 +462,7 @@ async function main(): Promise<number> {
   console.log(`arm     : ${args.arm} (${args.arm === 'before' ? 'final user turn only' : 'full history'})`);
   console.log(`runs    : ${args.runs}`);
   console.log(`intent  : ${args.intent ? 'PENDING INVITATION block present (P2)' : 'absent'}`);
-  console.log(`model   : ${args.model}${args.model === BIG_MODEL ? ' (BIG_MODEL)' : ' (override)'}`);
+  console.log(`model   : ${args.model}${args.model === CHAT_HEAD ? ' (CHAT_HEAD)' : ' (override)'}`);
   console.log(`thinking: ${args.thinking ? 'on (app chat gear)' : 'off'}`);
   console.log(`stream  : ${args.stream ? 'on — timing first visible delta' : 'off'}`);
   console.log(`effort  : ${args.effort ?? '(not sent)'}\n`);

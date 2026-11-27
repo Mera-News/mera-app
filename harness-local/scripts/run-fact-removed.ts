@@ -12,9 +12,8 @@ import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { factRemovedPrompt, runFactRemovedTurn } from '@/lib/mera-harness/core/fact-removed-turn';
-import { BIG_MODEL } from '@/lib/llm/constants';
 import { loadHarnessEnv } from '../config/env';
-import { costOf, fetchModelCatalog } from '../lib/model-catalog';
+import { CHAT_HEAD, costOf, fetchModelCatalog } from '../lib/model-catalog';
 import { postCompletion } from '../lib/near-call';
 import { createRunWriter } from '../lib/run-writer';
 import { applyEndpointOverrides, applyTargetOverride, requireStagingTarget } from '../lib/staging-guard';
@@ -42,14 +41,14 @@ async function main(): Promise<void> {
   const ri = argv.indexOf('--repeat');
   const repeat = ri === -1 ? 10 : Number(argv[ri + 1]);
   const planned = CASES.map((c) => ({ ...c, runs: Math.max(1, Math.round(repeat * c.share)) }));
-  console.log(`target ${env.target}, model ${BIG_MODEL}, ${planned.reduce((n, c) => n + c.runs, 0)} calls, stop at $${SPEND_STOP_USD}`); // eslint-disable-line no-console
+  console.log(`target ${env.target}, model ${CHAT_HEAD}, ${planned.reduce((n, c) => n + c.runs, 0)} calls, stop at $${SPEND_STOP_USD}`); // eslint-disable-line no-console
   if (dryRun) {
     console.log(factRemovedPrompt(CASES[0].statements, CASES[0].languageName)); // eslint-disable-line no-console
     return;
   }
 
-  const info = (await fetchModelCatalog({ baseUrl: env.nearAiBaseUrl, apiKey: env.nearAiApiKey }))[BIG_MODEL];
-  if (!info) throw new Error(`${BIG_MODEL} is not in the catalogue, cannot price the run`);
+  const info = (await fetchModelCatalog({ baseUrl: env.nearAiBaseUrl, apiKey: env.nearAiApiKey }))[CHAT_HEAD];
+  if (!info) throw new Error(`${CHAT_HEAD} is not in the catalogue, cannot price the run`);
   let spent = 0;
   const rows: Record<string, unknown>[] = [];
   for (const c of planned) {
@@ -63,7 +62,7 @@ async function main(): Promise<void> {
           const r = await postCompletion({
             baseUrl: env.nearAiBaseUrl,
             apiKey: env.nearAiApiKey,
-            model: BIG_MODEL,
+            model: CHAT_HEAD,
             messages: [{ role: 'system', content: req.systemPrompt }, ...req.messages] as never,
             maxTokens: req.maxTokens,
             enableThinking: false,
