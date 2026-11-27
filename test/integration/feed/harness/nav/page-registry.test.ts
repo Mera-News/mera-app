@@ -62,6 +62,7 @@ describe('page-registry', () => {
     expect(tabForSurface('interest:abc')).toBe('feed');
     expect(tabForSurface('sources')).toBe('you');
     expect(tabForSurface('settings:notifications')).toBe('you');
+    expect(tabForSurface('settings:feed-algorithm')).toBe('you');
     expect(tabForSurface('settings:backup')).toBe('you');
     expect(tabForSurface('checks')).toBe('library');
     for (const screen of LIBRARY_SCREENS) expect(tabForSurface(screen)).toBe('library');

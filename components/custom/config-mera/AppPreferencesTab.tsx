@@ -23,7 +23,7 @@ import { useAppPreferences } from './useAppPreferences';
 import { PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
 
 /** Settings sub-screens pushed inside the You stack, so the tab bar stays. */
-type YouSettingsScreen = 'display' | 'notifications' | 'mera-protocol' | 'app-lock' | 'data';
+type YouSettingsScreen = 'display' | 'feed-algorithm' | 'notifications' | 'mera-protocol' | 'app-lock' | 'data';
 const youScreen = (screen: YouSettingsScreen) => `/logged-in/app_container/you/${screen}` as Href;
 
 /** The account row: how this account signs in, with the Support ID and its
@@ -123,6 +123,12 @@ const AppPreferencesTab: React.FC = () => {
                     title={t('display.screenTitle')}
                     value={t(TEXT_SIZE_LABEL_KEYS[textStep])}
                     onPress={() => routerHook.push(youScreen('display'))}
+                />
+                <Row
+                    testID="settings-row-feed-algorithm"
+                    leadingIcon="tune"
+                    title={t('feedAlgorithm.screenTitle')}
+                    onPress={() => routerHook.push(youScreen('feed-algorithm'))}
                 />
                 <Row
                     testID="settings-row-notifications"

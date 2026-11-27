@@ -49,6 +49,17 @@ describe('readNavShape + spotFromShape', () => {
     });
   });
 
+  it('restores Settings > Feed algorithm pushed in the You stack, with no params', () => {
+    const shape = readNavShape(state({ tab: 'you', tabStack: [{ name: 'feed-algorithm', params: { junk: 'x' } }] }));
+    expect(spotFromShape(shape, 'settings')).toEqual({
+      v: 1,
+      tab: 'you',
+      page: 'settings',
+      tabStack: [{ route: 'feed-algorithm', params: {} }],
+      rootStack: [],
+    });
+  });
+
   it('reads a tab root with its page', () => {
     const shape = readNavShape(state({ tab: 'library' }));
     expect(topRouteKey(shape!)).toBe('tabroot');

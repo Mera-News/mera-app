@@ -5,6 +5,7 @@ import path from 'path';
 // not just above the tab bar. A new Profile or Settings scroll page that forgets this fails here.
 const PAGES = [
   'components/custom/config-mera/DisplaySettingsScreen.tsx',
+  'components/custom/config-mera/FeedAlgorithmScreen.tsx',
   'components/custom/config-mera/NotificationSettingsScreen.tsx',
   'components/custom/config-mera/MeraProtocolSettingsScreen.tsx',
   'components/custom/config-mera/ManageDataScreen.tsx',

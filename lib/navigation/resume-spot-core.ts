@@ -70,6 +70,7 @@ export const TAB_ROUTES: Readonly<Record<TabId, Readonly<Record<string, ParamSch
     sources: NO_PARAMS,
     locations: NO_PARAMS,
     display: NO_PARAMS,
+    'feed-algorithm': NO_PARAMS,
     data: NO_PARAMS,
     activity: NO_PARAMS,
     notifications: NO_PARAMS,

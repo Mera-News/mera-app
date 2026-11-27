@@ -193,6 +193,7 @@ export type SurfaceId =
   | 'activity'
   | (typeof LIBRARY_SCREENS)[number]
   | 'settings:display'
+  | 'settings:feed-algorithm'
   | 'settings:mera-protocol'
   | 'settings:notifications'
   | 'settings:app-lock'
@@ -207,6 +208,7 @@ const YOU_STACK_SURFACES: ReadonlySet<string> = new Set([
   'sources',
   'activity',
   'settings:display',
+  'settings:feed-algorithm',
   'settings:mera-protocol',
   'settings:notifications',
   'settings:app-lock',

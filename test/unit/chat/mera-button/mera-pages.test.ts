@@ -30,7 +30,7 @@ describe('pageKeyFor', () => {
     expect(pageKeyFor(surface as SurfaceId)).toBe(key);
   });
 
-  it.each(['settings', 'settings:display', 'settings:mera-protocol', 'settings:notifications', 'notifications', 'unknown'])(
+  it.each(['settings', 'settings:display', 'settings:feed-algorithm', 'settings:mera-protocol', 'settings:notifications', 'notifications', 'unknown'])(
     'the generic set on %s (the button is always shown)',
     (surface) => {
       expect(pageKeyFor(surface as SurfaceId)).toBe('settings');
