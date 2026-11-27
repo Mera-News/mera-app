@@ -126,7 +126,8 @@ const PUBLICATION_PROFILE = gql(`
 `);
 
 /** Today's document, for a server that has no `readingScore` yet. */
-const PUBLICATION_PROFILE_LEGACY = gql`
+// shortcut: call form until the client pin lists PublicationProfileLegacy as a host news operation; switch to the gql tag at the pin bump.
+const PUBLICATION_PROFILE_LEGACY = gql(`
   query PublicationProfileLegacy(
     $newsPublisherId: ID
     $name: String
@@ -153,7 +154,15 @@ const PUBLICATION_PROFILE_LEGACY = gql`
       subscriptionUri
     }
   }
-`;
+`);
+
+/**
+ * Whether a server without `readingScore` is asked again with the legacy document. Off, such a
+ * server latches `unsupported` for the whole profile, as before the score existed.
+ * shortcut: off until the client pin lists PublicationProfileLegacy in HOST_NEWS_OPERATION_NAMES (a
+ * pod's news passthrough refuses a name not on it); the pin bump turns it on and removes this seam.
+ */
+export const profileScoreFallback = { enabled: false };
 
 /** GraphQL error codes on a rejection (Apollo 4 `errors`, Apollo 3 `graphQLErrors`). */
 function graphQLErrorCodes(err: unknown): string[] {
@@ -245,6 +254,7 @@ async function fetchPublicationProfile(
     } catch (err) {
       if (!invalid(err)) throw err;
       scoreUnsupportedThisSession = true;
+      if (!profileScoreFallback.enabled) throw new PublicationProfileUnsupportedError();
       logger.info('[publication-profile] server has no readingScore; asking without it this session');
     }
   }
