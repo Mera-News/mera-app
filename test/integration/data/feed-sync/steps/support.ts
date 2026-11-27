@@ -201,14 +201,14 @@ export interface PersonaServe {
 }
 
 /**
- * `GetArticleIdsForPersona`, answering only what was asked: a topic result per listed text that
+ * `GetArticleIdsForPersona` (and the language document the client sends first), answering only what was asked: a topic result per listed text that
  * the request carried (under the text the request used, matched on normalized text, as the
  * server does) and a headline result per listed scope the request carried. Result order is the
  * order listed here, which is what the order guard depends on.
  */
 export function servePersona(serve: PersonaServe) {
   const norm = (s: string) => s.toLowerCase().trim().replace(/\s+/g, ' ');
-  return graphql.query('GetArticleIdsForPersona', ({ variables }) => {
+  return graphql.query(/^GetArticleIdsForPersona(ForLanguage)?$/, ({ variables }) => {
     const query = (variables.query ?? {}) as {
       topics?: { text: string }[];
       topHeadlines?: { scopes?: { scope: string; countryCode?: string | null }[] };
@@ -287,12 +287,13 @@ export interface HydrateStats {
   requests: { op: string; ids: string[] }[];
 }
 
-/** Both hydrate operations, with the same body shape. `stats` tracks concurrency. */
+/** Both hydrate operations, with the same body shape. `stats` tracks concurrency. Each also answers
+ *  its readingScore document (`...Scored`, sent first); `op` is recorded without the suffix. */
 export function serveHydrate(serve: HydrateServe = {}) {
   const stats: HydrateStats = { inFlight: 0, maxInFlight: 0, requests: [] };
   const build = serve.article ?? ((id: string) => art(id));
   const handler = (op: 'GetArticlesForTopicsByIds' | 'GetArticlesForStories') =>
-    graphql.query(op, async ({ variables }) => {
+    graphql.query(new RegExp(`^${op}(Scored)?$`), async ({ variables }) => {
       const requested = (variables.articleIds ?? []) as string[];
       stats.requests.push({ op, ids: requested });
       serve.timeline?.push(`${op}:${requested.length}`);

@@ -122,7 +122,7 @@ describe('a background run is silent', () => {
 describe('a run that fails', () => {
   it("returns 'error' for a failed request, with a breadcrumb: no status and no failed snapshot", async () => {
     await serveFresh(3);
-    server.use(graphql.query('GetArticleIdsForPersona', () => HttpResponse.error()));
+    server.use(graphql.query(/^GetArticleIdsForPersona/, () => HttpResponse.error()));
 
     const out = await advanceUntilDone(runFetch());
 
@@ -140,7 +140,7 @@ describe('a run that fails', () => {
   // reader does not open the app to a failure banner for a fetch they never started.
   it('DA37: a GraphQL error during a background fetch leaves no status for the reader to find', async () => {
     await serveFresh(3);
-    server.use(mockGqlError('GetArticleIdsForPersona', 'INTERNAL_SERVER_ERROR', { httpStatus: 500 }));
+    server.use(mockGqlError(/^GetArticleIdsForPersona/, 'INTERNAL_SERVER_ERROR', { httpStatus: 500 }));
 
     await advanceUntilDone(runFetch());
 

@@ -134,7 +134,7 @@ describe('the counts card lead after a failed refresh', () => {
     test('a foreground refresh that cannot look for articles says so on the counts card', async () => {
       await signInFixtureAccount();
       await serveNew(ids(3));
-      server.use(graphql.query('GetArticleIdsForPersona', () => HttpResponse.error()));
+      server.use(graphql.query(/^GetArticleIdsForPersona/, () => HttpResponse.error()));
       await expect(advanceUntilDone(problem({ background: false }))).rejects.toBeDefined();
       seedCounts();
 
@@ -146,7 +146,7 @@ describe('the counts card lead after a failed refresh', () => {
 
     test('a background run that fails leaves the counts line in place', async () => {
       await serveNew(ids(3));
-      server.use(graphql.query('GetArticleIdsForPersona', () => HttpResponse.error()));
+      server.use(graphql.query(/^GetArticleIdsForPersona/, () => HttpResponse.error()));
       await expect(advanceUntilDone(problem({ background: true }))).rejects.toBeDefined();
       expect(useForYouStore.getState().syncStatusMessage).toBeNull();
       seedCounts();
@@ -185,7 +185,7 @@ describe('a failed first sync', () => {
   const failFirstSync = async () => {
     await signInFixtureAccount();
     await serveNew(ids(3));
-    server.use(graphql.query('GetArticlesForTopicsByIds', () => HttpResponse.error()));
+    server.use(graphql.query(/^GetArticlesForTopicsByIds/, () => HttpResponse.error()));
     await expect(advanceUntilDone(startMachine(makeCtx(), {}))).rejects.toBeDefined();
     expect(useForYouStore.getState().lastProcessingRunFinishedAt).toBeNull();
   };

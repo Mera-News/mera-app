@@ -113,6 +113,11 @@ export const clusterMemberships = (a: FixtureArticle): ArticleWithClusters['clus
 ];
 const clusterMembers = (a: FixtureArticle): FixtureArticle[] =>
     articles.filter((x) => x.clusterIndex === a.clusterIndex);
+/** `TopHeadline.publisherCount`: distinct publishers in the story, 0 for a singleton (as the server). */
+export const publisherCount = (a: FixtureArticle): number => {
+    const members = clusterMembers(a);
+    return members.length > 1 ? new Set(members.map((x) => x.publicationIndex)).size : 0;
+};
 
 export const articleById = (id: string): FixtureArticle | undefined => articles.find((a) => a.id === id);
 
@@ -216,6 +221,8 @@ export function articleWithClusters(a: FixtureArticle, ctx: BuildContext): Artic
         maxClusterSize: clusterMembers(a).length,
         // Own id: every fixture article is its own story, so no dedup edge joins them.
         story_key: a.id,
+        // Unscored: election keeps today's order; a test that needs a score overrides it.
+        readingScore: null,
     };
 }
 
@@ -275,12 +282,14 @@ export function pageOf<T>(
     first: number | null | undefined,
     after: string | null | undefined,
     defaultFirst = 4,
-): { items: T[]; pageInfo: CursorPageInfo; restarted: boolean } {
+): { items: T[]; pageInfo: CursorPageInfo; restarted: boolean; itemCursors: string[] } {
     const offset = after ? Number(after.startsWith(CURSOR_PREFIX) ? after.slice(CURSOR_PREFIX.length) : NaN) : 0;
     const restarted = !!after && !Number.isInteger(offset);
     const start = restarted ? 0 : offset;
     const size = first && first > 0 ? first : defaultFirst;
     const slice = items.slice(start, start + size);
     const end = start + slice.length;
-    return { items: slice, pageInfo: pageInfo(slice.length, end < items.length, end), restarted };
+    // One cursor per item: passed as `after`, it continues right after that item.
+    const itemCursors = slice.map((_, i) => `${CURSOR_PREFIX}${start + i + 1}`);
+    return { items: slice, pageInfo: pageInfo(slice.length, end < items.length, end), restarted, itemCursors };
 }

@@ -31,6 +31,7 @@ import {
     newsArticle,
     newsCluster,
     pageOf,
+    publisherCount,
     publicationSource,
     stableClusterId,
     type BuildContext,
@@ -86,7 +87,8 @@ const storyLeaders = (list: readonly FixtureArticle[]): FixtureArticle[] =>
 // Persona ids: topic matches first (spread over the requested topics), then each
 // requested headline scope. The app inserts in that order and the server clips a
 // capped response in request order, so topics must stay ahead of headlines.
-query<'articleIdsForPersona'>('GetArticleIdsForPersona', (c) => {
+// The language document goes out first; the fixture ids do not depend on the language.
+const articleIdsForPersona = (c: Ctx): Pick<Query, 'articleIdsForPersona'> => {
     const input = c.variables.query ?? {};
     const topics: { text: string }[] = input.topics ?? [];
     const scopes: { scope: string; countryCode?: string | null; limit?: number | null }[] =
@@ -126,43 +128,34 @@ query<'articleIdsForPersona'>('GetArticleIdsForPersona', (c) => {
             }),
         },
     };
+};
+for (const name of ['GetArticleIdsForPersonaForLanguage', 'GetArticleIdsForPersona']) {
+    query<'articleIdsForPersona'>(name, articleIdsForPersona);
+}
+
+// Never truncates: every requested article that exists is delivered. Three tiers answer alike:
+// with readingScore (sent first), with story_key only, and the pre-story_key document, each sent
+// only after the one before it answered GRAPHQL_VALIDATION_FAILED.
+const articlesForTopicsByIds = (c: Ctx): Pick<Query, 'articlesForTopicsByIds'> => ({
+    articlesForTopicsByIds: {
+        __typename: 'ArticlesForTopicsByIdsResponse',
+        articles: isEmpty(c) ? [] : articlesByIds(c.variables.articleIds).map((a) => articleWithClusters(a, c)),
+        dailyLimitReached: false,
+        resetAt: null,
+    },
 });
-
-// Never truncates: every requested article that exists is delivered.
-query<'articlesForTopicsByIds'>('GetArticlesForTopicsByIds', (c) => ({
-    articlesForTopicsByIds: {
-        __typename: 'ArticlesForTopicsByIdsResponse',
-        articles: isEmpty(c) ? [] : articlesByIds(c.variables.articleIds).map((a) => articleWithClusters(a, c)),
-        dailyLimitReached: false,
-        resetAt: null,
-    },
-}));
-
 // Quota-exempt sibling: never capped.
-query<'articlesForStories'>('GetArticlesForStories', (c) => ({
+const articlesForStories = (c: Ctx): Pick<Query, 'articlesForStories'> => ({
     articlesForStories: {
         __typename: 'ArticlesForTopicsByIdsResponse',
         articles: isEmpty(c) ? [] : articlesByIds(c.variables.articleIds).map((a) => articleWithClusters(a, c)),
         dailyLimitReached: false,
     },
-}));
-
-// Pre-story_key documents, sent only after a server answered GRAPHQL_VALIDATION_FAILED.
-query<'articlesForTopicsByIds'>('GetArticlesForTopicsByIdsLegacy', (c) => ({
-    articlesForTopicsByIds: {
-        __typename: 'ArticlesForTopicsByIdsResponse',
-        articles: isEmpty(c) ? [] : articlesByIds(c.variables.articleIds).map((a) => articleWithClusters(a, c)),
-        dailyLimitReached: false,
-        resetAt: null,
-    },
-}));
-query<'articlesForStories'>('GetArticlesForStoriesLegacy', (c) => ({
-    articlesForStories: {
-        __typename: 'ArticlesForTopicsByIdsResponse',
-        articles: isEmpty(c) ? [] : articlesByIds(c.variables.articleIds).map((a) => articleWithClusters(a, c)),
-        dailyLimitReached: false,
-    },
-}));
+});
+for (const suffix of ['Scored', '', 'Legacy']) {
+    query<'articlesForTopicsByIds'>(`GetArticlesForTopicsByIds${suffix}`, articlesForTopicsByIds);
+    query<'articlesForStories'>(`GetArticlesForStories${suffix}`, articlesForStories);
+}
 
 // Every known id answers the memberships hydration gave it, so a refresh changes nothing by
 // default; an unknown id is left out (the server's "no complete generation": the app keeps its value).
@@ -191,6 +184,7 @@ const articlePage = (c: Ctx, list: readonly FixtureArticle[]) => {
         __typename: 'ArticlesForPublicationSourceResponse' as const,
         articles: page.items.map((a) => newsArticle(a, c)),
         pageInfo: page.pageInfo,
+        itemCursors: page.itemCursors,
     };
 };
 
@@ -209,6 +203,7 @@ const headlinesPage = (c: Ctx) => {
                 __typename: 'TopHeadline' as const,
                 stableClusterId: stableClusterId(a),
                 clusterSize: clusterSize(a),
+                publisherCount: publisherCount(a),
                 article: newsArticle(a, c),
             })),
             pageInfo: page.pageInfo,
@@ -230,31 +225,31 @@ ops.push({
         ],
     }),
 });
-ops.push({
-    kind: 'query',
-    name: 'GetWorldHeadlines',
-    resolve: (c) => {
-        const ids: string[] = c.variables.canonicalTopicIds ?? [];
-        const all = storyLeaders(articlesForCountry(c.variables.countryCode));
-        const base = headlinesPage(c).topHeadlinesForCountry;
-        const matches = ids.length === 0 || ids.includes('ct-politics');
-        const page = pageOf(isEmpty(c) || !matches ? [] : all, c.variables.first, c.variables.after);
-        return {
-            worldHeadlines: {
-                __typename: 'WorldHeadlinesResponse',
-                headlines: page.items.map((a) => ({
-                    __typename: 'TopHeadline',
-                    stableClusterId: stableClusterId(a),
-                    clusterSize: clusterSize(a),
-                    article: newsArticle(a, c),
-                })),
-                pageInfo: page.pageInfo,
-                editionBuiltAt: base.editionBuiltAt,
-                facets: isEmpty(c) ? [] : [{ __typename: 'CanonicalTopicFacet', topicId: 'ct-politics', count: all.length }],
-            },
-        };
-    },
-});
+// The language-ordered document goes out first; a server without `language` gets the plain one.
+// The fixture edition has one order for every language, so both answer alike.
+const worldHeadlines = (c: Ctx) => {
+    const ids: string[] = c.variables.canonicalTopicIds ?? [];
+    const all = storyLeaders(articlesForCountry(c.variables.countryCode));
+    const base = headlinesPage(c).topHeadlinesForCountry;
+    const matches = ids.length === 0 || ids.includes('ct-politics');
+    const page = pageOf(isEmpty(c) || !matches ? [] : all, c.variables.first, c.variables.after);
+    return {
+        worldHeadlines: {
+            __typename: 'WorldHeadlinesResponse',
+            headlines: page.items.map((a) => ({
+                __typename: 'TopHeadline',
+                stableClusterId: stableClusterId(a),
+                clusterSize: clusterSize(a),
+                publisherCount: publisherCount(a),
+                article: newsArticle(a, c),
+            })),
+            pageInfo: page.pageInfo,
+            editionBuiltAt: base.editionBuiltAt,
+            facets: isEmpty(c) ? [] : [{ __typename: 'CanonicalTopicFacet', topicId: 'ct-politics', count: all.length }],
+        },
+    };
+};
+for (const name of ['GetWorldHeadlinesForLanguage', 'GetWorldHeadlines']) ops.push({ kind: 'query', name, resolve: worldHeadlines });
 
 // The publisher's own articles (three per fixture outlet), newest first unless the
 // caller asks for TOP_HEADLINES, which ranks by story size.

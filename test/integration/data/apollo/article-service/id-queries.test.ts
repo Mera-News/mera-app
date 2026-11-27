@@ -61,7 +61,7 @@ describe('getArticleIdsForPersona', () => {
 
     it('rethrows with a breadcrumb and no capture of its own', async () => {
         const logs = spyLogger();
-        server.use(mockGqlError('GetArticleIdsForPersona', 'INTERNAL_SERVER_ERROR', { message: 'persona query failed' }));
+        server.use(mockGqlError(/^GetArticleIdsForPersona/, 'INTERNAL_SERVER_ERROR', { message: 'persona query failed' }));
         await expect(
             ArticleService.getArticleIdsForPersona(personaQuery({ topics: personaTopics(1) })),
         ).rejects.toThrow('persona query failed');
@@ -75,25 +75,26 @@ describe('getArticleIdsForPersona', () => {
     });
 });
 
-// A server without ArticleWithClusters.story_key answers the real graphql-response+json 400.
+// A server without ArticleWithClusters.story_key (so without readingScore too) answers the real
+// graphql-response+json 400 to the scored and the story_key documents.
 describe.each([
     ['getArticlesForTopicsByIds', 'GetArticlesForTopicsByIds'],
     ['getArticlesForStories', 'GetArticlesForStories'],
 ] as const)('%s on a server without story_key', (method, op) => {
-    const reject = () =>
-        mockGqlError(op, 'GRAPHQL_VALIDATION_FAILED', {
+    const reject = (name: string) =>
+        mockGqlError(name, 'GRAPHQL_VALIDATION_FAILED', {
             httpStatus: 400,
             headers: { 'Content-Type': 'application/graphql-response+json' },
         });
 
     it('falls back to the Legacy document once, latches, and neither captures nor raises the sync banner', async () => {
         const logs = spyLogger();
-        server.use(reject());
+        server.use(reject(`${op}Scored`), reject(op));
         const sent = recordOps();
         const wanted = ARTICLE_IDS.slice(0, 2);
         const result = await ArticleService[method]([...wanted]);
         await ArticleService[method]([...wanted]);
-        expect((await sentOf(sent)).map((c) => c.op)).toEqual([op, `${op}Legacy`, `${op}Legacy`]);
+        expect((await sentOf(sent)).map((c) => c.op)).toEqual([`${op}Scored`, op, `${op}Legacy`, `${op}Legacy`]);
         expect(result.articles.map((a) => a._id).sort()).toEqual([...wanted].sort());
         expect(logs.capture).not.toHaveBeenCalled();
         expect(useForYouStore.getState().syncStatusMessage).toBeNull();
@@ -104,7 +105,7 @@ describe('getArticlesForTopicsByIds', () => {
 
     it('rethrows with an error-level breadcrumb and no capture of its own', async () => {
         const logs = spyLogger();
-        server.use(mockGqlError('GetArticlesForTopicsByIds', 'INTERNAL_SERVER_ERROR', { message: 'batch fetch error' }));
+        server.use(mockGqlError(/^GetArticlesForTopicsByIds/, 'INTERNAL_SERVER_ERROR', { message: 'batch fetch error' }));
         await expect(ArticleService.getArticlesForTopicsByIds(['id1'])).rejects.toThrow('batch fetch error');
         expectNoServiceCapture(logs.capture);
         expect(logs.crumb).toHaveBeenCalledWith(
@@ -121,7 +122,7 @@ describe('getArticlesForStories', () => {
 
     it('rethrows with an error-level breadcrumb and no capture of its own', async () => {
         const logs = spyLogger();
-        server.use(mockGqlError('GetArticlesForStories', 'INTERNAL_SERVER_ERROR', { message: 'stories failed' }));
+        server.use(mockGqlError(/^GetArticlesForStories/, 'INTERNAL_SERVER_ERROR', { message: 'stories failed' }));
         await expect(ArticleService.getArticlesForStories(['id1'])).rejects.toThrow('stories failed');
         expectNoServiceCapture(logs.capture);
         expect(logs.crumb).toHaveBeenCalledWith(

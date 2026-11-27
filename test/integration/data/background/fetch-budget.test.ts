@@ -164,7 +164,7 @@ describe('followed stories when the open-ready target is already met (OWNER-F4)'
 describe('a failed run', () => {
   it("is reported as 'error', never thrown", async () => {
     await serveFresh(3);
-    server.use(mockGqlError('GetArticleIdsForPersona', 'INTERNAL_SERVER_ERROR', { httpStatus: 500 }));
+    server.use(mockGqlError(/^GetArticleIdsForPersona/, 'INTERNAL_SERVER_ERROR', { httpStatus: 500 }));
 
     const out = await advanceUntilDone(runFetch());
 

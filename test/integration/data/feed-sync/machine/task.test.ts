@@ -49,7 +49,8 @@ async function elapse(ms: number, stepMs = 250) {
 }
 
 let sent: ReturnType<typeof recordOps>;
-const runs = () => sent.count('GetArticleIdsForPersona');
+// One persona request per run: the language document, which the mock backend answers.
+const runs = () => sent.count('GetArticleIdsForPersonaForLanguage');
 
 describe('feed-sync scheduler task', () => {
   beforeEach(async () => {

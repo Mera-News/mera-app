@@ -9,7 +9,7 @@ import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { usePublicationPage } from '@/components/custom/publication-page/usePublicationPage';
 import type { PublicationView } from '@/components/custom/publication-page/open-publication-page';
 import { __resetPublisherOrderSupport } from '@/lib/article-service';
-import { __resetPublicationProfileSession, profileScoreFallback } from '@/lib/publication-profile-service';
+import { __resetPublicationProfileSession } from '@/lib/publication-profile-service';
 import { __clearPublisherSourceNames } from '@/lib/database/services/publisher-source-names';
 import { recordPublicationVisit } from '@/lib/database/services/publication-visit-service';
 import { useNetworkStore } from '@/lib/stores/network-store';
@@ -228,25 +228,7 @@ describe('when the publication is not found or the server is old', () => {
   });
 });
 
-describe('the phone reading score, before the client lists PublicationProfileLegacy', () => {
-  it('a server without readingScore latches unsupported and never sends the legacy document', async () => {
-    server.use(mockGqlError('PublicationProfile', 'GRAPHQL_VALIDATION_FAILED'));
-    const sent = record('PublicationProfile', 'PublicationProfileLegacy');
-    const { result } = await open({ publisherId: PUB.publisherId });
-    await waitFor(() => expect(result.current.state).toBe('unsupported'));
-    expect(result.current.scoreLatched).toBe(true);
-    expect(opsOf(sent)).toEqual(['PublicationProfile']);
-  });
-});
-
 describe('the phone reading score', () => {
-  beforeEach(() => {
-    profileScoreFallback.enabled = true;
-  });
-  afterEach(() => {
-    profileScoreFallback.enabled = false;
-  });
-
   it('opened by id: the score is read, the latch is off, only the scored document is sent', async () => {
     const sent = record('PublicationProfile', 'PublicationProfileLegacy');
     const { result } = await open({ publisherId: PUB.publisherId });

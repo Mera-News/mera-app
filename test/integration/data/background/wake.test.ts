@@ -242,7 +242,7 @@ describe('every normal state of a device exits quietly', () => {
 
   it('an offline fetch is a result, not an exception', async () => {
     await seedInterest('I follow racing', ['formula 1']);
-    server.use(mockGqlError('GetArticleIdsForPersona', 'INTERNAL_SERVER_ERROR', { httpStatus: 500 }));
+    server.use(mockGqlError(/^GetArticleIdsForPersona/, 'INTERNAL_SERVER_ERROR', { httpStatus: 500 }));
 
     const out = await advanceUntilDone(runBackgroundRefresh(NOW));
 
