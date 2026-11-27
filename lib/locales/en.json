@@ -2211,7 +2211,7 @@
         "slides": {
           "unscored-on-purpose": {
             "headline": "Deliberately not about you",
-            "body": "World is the one place Mera does not personalise anything. No scoring, no reasons, nothing learned from what you open here. Just what each country's newsrooms are leading with, in their order.",
+            "body": "World is the one place Mera does not use your interests. Nothing here is scored for you, there are no reasons, and nothing is learned from what you open here. Just what each country's newsrooms are leading with. The publication shown for each story, and the order, depend on your language and the reading score.",
             "ask": "Why is World not personalised?"
           },
           "the-chips": {
@@ -2839,7 +2839,10 @@
     "notPreferHint": "Hides its articles from your feed",
     "includedWith": "Included with {{country}}",
     "includedWithA11y": "Preferred, included with {{country}}",
-    "includedWithHelp": "Included with {{country}}. To change this, remove {{country}} in Sources."
+    "includedWithHelp": "Included with {{country}}. To change this, remove {{country}} in Sources.",
+    "readingScore": "Phone reading score {{score}}/100",
+    "readingScoreA11y": "Phone reading score {{score}} out of 100",
+    "readingScoreHint": "Opens the report on mera.news, in English."
   },
   "nav": {
     "page": {
@@ -2906,9 +2909,7 @@
     },
     "explainer": {
       "window": "The time switch sets how far back the page looks: 6, 12, 24 or 48 hours. Each list only counts articles published inside that window.",
-      "justMath": "Just math. No AI ranks this page, and it looks the same for everyone.",
-      "mathWorld": "Each country covering a story gives it 1 point, plus a little more for each extra publisher there, up to 4 points per country. Add up all the countries, and the highest total comes first.",
-      "mathCountry": "Count the articles this country's publishers wrote about a story in the last 24 hours. The story with the most comes first."
+      "justMath": "Just math. No AI ranks this page. Everyone sees the same stories. The publication shown for each, and the order, depend on your language and the reading score. Every other report is under Related coverage."
     },
     "homeRow": "Want news from where you live?"
   },

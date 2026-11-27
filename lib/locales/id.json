@@ -2073,7 +2073,7 @@
         "slides": {
           "unscored-on-purpose": {
             "headline": "Sengaja bukan tentang Anda",
-            "body": "Dunia adalah satu-satunya tempat Mera tidak mempersonalisasi apa pun. Tidak ada penilaian, tidak ada alasan, tidak ada yang dipelajari dari apa yang Anda buka di sini. Hanya apa yang diunggulkan ruang redaksi tiap negara, dengan urutan mereka.",
+            "body": "Dunia adalah satu-satunya tempat Mera tidak memakai minat Anda. Tidak ada yang dinilai untuk Anda di sini, tidak ada alasan, dan tidak ada yang dipelajari dari apa yang Anda buka di sini. Hanya yang diunggulkan ruang redaksi tiap negara. Publikasi yang ditampilkan untuk setiap cerita, dan urutannya, bergantung pada bahasa Anda dan skor membaca ponsel.",
             "ask": "Mengapa Dunia tidak dipersonalisasi?"
           },
           "the-chips": {
@@ -2818,7 +2818,10 @@
     "notPreferHint": "Menyembunyikan artikelnya dari umpan Anda",
     "includedWith": "Termasuk dalam {{country}}",
     "includedWithA11y": "Diutamakan, termasuk dalam {{country}}",
-    "includedWithHelp": "Termasuk dalam {{country}}. Untuk mengubahnya, hapus {{country}} di Sumber."
+    "includedWithHelp": "Termasuk dalam {{country}}. Untuk mengubahnya, hapus {{country}} di Sumber.",
+    "readingScore": "Skor membaca ponsel {{score}}/100",
+    "readingScoreA11y": "Skor membaca ponsel {{score}} dari 100",
+    "readingScoreHint": "Membuka laporan publikasi ini di mera.news, dalam bahasa Inggris."
   },
   "nav": {
     "page": {
@@ -2884,9 +2887,7 @@
     },
     "explainer": {
       "window": "Tombol waktu menentukan seberapa jauh halaman melihat ke belakang: 6, 12, 24 atau 48 jam. Setiap daftar hanya menghitung artikel yang terbit dalam rentang itu.",
-      "justMath": "Hanya hitungan. Tidak ada AI yang mengurutkan halaman ini, dan tampilannya sama untuk semua orang.",
-      "mathWorld": "Setiap negara yang meliput sebuah berita mendapat 1 poin, ditambah sedikit lagi untuk setiap penerbit tambahan di negara itu, dengan batas 4 poin per negara. Semua poin dari semua negara dijumlahkan, dan total tertinggi tampil paling atas.",
-      "mathCountry": "Hitung artikel yang ditulis penerbit di negara ini tentang sebuah berita dalam 24 jam terakhir. Berita dengan artikel terbanyak tampil paling atas."
+      "justMath": "Hanya hitungan. Tidak ada AI yang mengurutkan halaman ini. Semua pembaca melihat cerita yang sama. Publikasi yang ditampilkan untuk setiap cerita, dan urutannya, bergantung pada bahasa Anda dan skor membaca ponsel. Setiap laporan lain ada di bawah Liputan terkait."
     },
     "homeRow": "Ingin berita dari tempat tinggal Anda?"
   },

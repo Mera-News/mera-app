@@ -1,0 +1,462 @@
+{
+  "ar": {
+    "world": {
+      "explainer": {
+        "justMath": "مجرد حساب. لا يرتّب الذكاء الاصطناعي هذه الصفحة. يرى كل قارئ القصص نفسها. يعتمد الناشر المعروض لكل قصة، وترتيبها، على لغتك ودرجة القراءة على الهاتف. كل تقرير آخر تجده تحت «تغطية ذات صلة»."
+      }
+    },
+    "publicationPage": {
+      "readingScore": "درجة القراءة على الهاتف {{score}}/100",
+      "readingScoreA11y": "درجة القراءة على الهاتف {{score}} من 100",
+      "readingScoreHint": "يفتح تقرير الناشر على mera.news، وهو مكتوب بالإنجليزية."
+    },
+    "tutorials": {
+      "chapters": {
+        "explore": {
+          "slides": {
+            "unscored-on-purpose": {
+              "body": "العالم هو المكان الوحيد الذي لا يستخدم فيه ميرا اهتماماتك. لا شيء هنا يُقيَّم لأجلك، ولا توجد أسباب، ولا يُتعلَّم من أي شيء تفتحه هنا. فقط ما تضعه غرف الأخبار في كل دولة في المقدمة. يعتمد الناشر المعروض لكل قصة، وترتيبها، على لغتك ودرجة القراءة على الهاتف."
+            }
+          }
+        }
+      }
+    }
+  },
+  "de": {
+    "world": {
+      "explainer": {
+        "justMath": "Reine Mathematik. Keine KI sortiert diese Seite. Alle sehen dieselben Geschichten. Welcher Herausgeber pro Geschichte angezeigt wird und die Reihenfolge hängen von deiner Sprache und dem Telefon-Lesewert ab. Alle anderen Berichte findest du unter „Ähnliche Berichte“."
+      }
+    },
+    "publicationPage": {
+      "readingScore": "Telefon-Lesewert {{score}}/100",
+      "readingScoreA11y": "Telefon-Lesewert {{score}} von 100",
+      "readingScoreHint": "Öffnet den Bericht auf mera.news, auf Englisch."
+    },
+    "tutorials": {
+      "chapters": {
+        "explore": {
+          "slides": {
+            "unscored-on-purpose": {
+              "body": "Welt ist der eine Ort, an dem Mera deine Interessen nicht nutzt. Hier wird nichts für dich bewertet, es gibt keine Begründungen, und aus dem, was du hier öffnest, wird nichts gelernt. Nur das, womit die Redaktionen jedes Landes aufmachen. Welcher Herausgeber pro Geschichte angezeigt wird und die Reihenfolge hängen von deiner Sprache und dem Telefon-Lesewert ab."
+            }
+          }
+        }
+      }
+    }
+  },
+  "en": {
+    "world": {
+      "explainer": {
+        "justMath": "Just math. No AI ranks this page. Everyone sees the same stories. The publication shown for each, and the order, depend on your language and the reading score. Every other report is under Related coverage."
+      }
+    },
+    "publicationPage": {
+      "readingScore": "Phone reading score {{score}}/100",
+      "readingScoreA11y": "Phone reading score {{score}} out of 100",
+      "readingScoreHint": "Opens the report on mera.news, in English."
+    },
+    "tutorials": {
+      "chapters": {
+        "explore": {
+          "slides": {
+            "unscored-on-purpose": {
+              "body": "World is the one place Mera does not use your interests. Nothing here is scored for you, there are no reasons, and nothing is learned from what you open here. Just what each country's newsrooms are leading with. The publication shown for each story, and the order, depend on your language and the reading score."
+            }
+          }
+        }
+      }
+    }
+  },
+  "es": {
+    "world": {
+      "explainer": {
+        "justMath": "Solo matemáticas. Ninguna IA ordena esta página. Todos ven las mismas noticias. La publicación que se muestra para cada noticia y el orden dependen de tu idioma y de la puntuación de lectura. Todos los demás artículos sobre la misma noticia están en Cobertura relacionada."
+      }
+    },
+    "publicationPage": {
+      "readingScore": "Puntuación de lectura en el móvil {{score}}/100",
+      "readingScoreA11y": "Puntuación de lectura en el móvil {{score}} de 100",
+      "readingScoreHint": "Abre el informe en mera.news, en inglés."
+    },
+    "tutorials": {
+      "chapters": {
+        "explore": {
+          "slides": {
+            "unscored-on-purpose": {
+              "body": "Mundo es el único lugar donde Mera no usa tus intereses. Nada aquí se puntúa para ti, no hay motivos y no se aprende nada de lo que abres. Solo lo que las redacciones de cada país destacan. La publicación que se muestra para cada noticia y el orden dependen de tu idioma y de la puntuación de lectura."
+            }
+          }
+        }
+      }
+    }
+  },
+  "fr": {
+    "world": {
+      "explainer": {
+        "justMath": "Juste du calcul. Aucune IA ne classe cette page. Chaque lecteur voit les mêmes actualités. La publication affichée pour chaque actualité, et l'ordre, dépendent de votre langue et du score de lecture. Tous les autres reportages se trouvent sous « Articles connexes »."
+      }
+    },
+    "publicationPage": {
+      "readingScore": "Score de lecture sur téléphone {{score}}/100",
+      "readingScoreA11y": "Score de lecture sur téléphone {{score}} sur 100",
+      "readingScoreHint": "Ouvre le rapport sur mera.news, en anglais."
+    },
+    "tutorials": {
+      "chapters": {
+        "explore": {
+          "slides": {
+            "unscored-on-purpose": {
+              "body": "Monde est le seul endroit où Mera n'utilise pas vos centres d'intérêt. Rien ici n'est noté pour vous, il n'y a pas de raisons, et rien n'est appris de ce que vous ouvrez ici. Seulement ce que les rédactions de chaque pays mettent en avant. La publication affichée pour chaque actualité, et l'ordre, dépendent de votre langue et du score de lecture."
+            }
+          }
+        }
+      }
+    }
+  },
+  "hi": {
+    "world": {
+      "explainer": {
+        "justMath": "बस गणित। इस पेज का क्रम कोई AI तय नहीं करता। हर पाठक को एक ही खबरें दिखती हैं। हर खबर के लिए दिखाया जाने वाला प्रकाशन और क्रम, दोनों आपकी भाषा और फ़ोन रीडिंग स्कोर पर निर्भर करते हैं। हर दूसरी रिपोर्ट “संबंधित कवरेज” के अंतर्गत है।"
+      }
+    },
+    "publicationPage": {
+      "readingScore": "फ़ोन रीडिंग स्कोर {{score}}/100",
+      "readingScoreA11y": "फ़ोन रीडिंग स्कोर 100 में से {{score}}",
+      "readingScoreHint": "इस पर टैप करने से mera.news पर इस प्रकाशन की रिपोर्ट खुलती है, जो अंग्रेज़ी में है।"
+    },
+    "tutorials": {
+      "chapters": {
+        "explore": {
+          "slides": {
+            "unscored-on-purpose": {
+              "body": "विश्व वह अकेली जगह है जहाँ मेरा आपकी रुचियों का इस्तेमाल नहीं करता। यहाँ कुछ भी आपके लिए स्कोर नहीं होता, कोई कारण नहीं होता, और यहाँ आप जो खोलते हैं उससे कुछ नहीं सीखा जाता। यहाँ बस वही दिखता है जिसे हर देश के न्यूज़रूम सबसे पहले रख रहे हैं। हर खबर के लिए दिखाया जाने वाला प्रकाशन और क्रम, दोनों आपकी भाषा और फ़ोन रीडिंग स्कोर पर निर्भर करते हैं।"
+            }
+          }
+        }
+      }
+    }
+  },
+  "id": {
+    "world": {
+      "explainer": {
+        "justMath": "Hanya hitungan. Tidak ada AI yang mengurutkan halaman ini. Semua pembaca melihat cerita yang sama. Publikasi yang ditampilkan untuk setiap cerita, dan urutannya, bergantung pada bahasa Anda dan skor membaca ponsel. Setiap laporan lain ada di bawah Liputan terkait."
+      }
+    },
+    "publicationPage": {
+      "readingScore": "Skor membaca ponsel {{score}}/100",
+      "readingScoreA11y": "Skor membaca ponsel {{score}} dari 100",
+      "readingScoreHint": "Membuka laporan publikasi ini di mera.news, dalam bahasa Inggris."
+    },
+    "tutorials": {
+      "chapters": {
+        "explore": {
+          "slides": {
+            "unscored-on-purpose": {
+              "body": "Dunia adalah satu-satunya tempat Mera tidak memakai minat Anda. Tidak ada yang dinilai untuk Anda di sini, tidak ada alasan, dan tidak ada yang dipelajari dari apa yang Anda buka di sini. Hanya yang diunggulkan ruang redaksi tiap negara. Publikasi yang ditampilkan untuk setiap cerita, dan urutannya, bergantung pada bahasa Anda dan skor membaca ponsel."
+            }
+          }
+        }
+      }
+    }
+  },
+  "it": {
+    "world": {
+      "explainer": {
+        "justMath": "Solo matematica. Nessuna IA classifica questa pagina. Tutti vedono le stesse notizie. La testata mostrata per ogni storia e l'ordine dipendono dalla tua lingua e dal punteggio di lettura da telefono. Ogni altro articolo si trova in «Copertura correlata»."
+      }
+    },
+    "publicationPage": {
+      "readingScore": "Punteggio di lettura da telefono {{score}}/100",
+      "readingScoreA11y": "Punteggio di lettura da telefono {{score}} su 100",
+      "readingScoreHint": "Apre il report su mera.news, in inglese."
+    },
+    "tutorials": {
+      "chapters": {
+        "explore": {
+          "slides": {
+            "unscored-on-purpose": {
+              "body": "Mondo è l'unico posto in cui Mera non usa i tuoi interessi. Qui nulla è valutato per te, non ci sono motivi, e niente viene appreso da ciò che apri qui. Solo ciò che le redazioni di ogni paese mettono in primo piano. La testata mostrata per ogni storia e l'ordine dipendono dalla tua lingua e dal punteggio di lettura da telefono."
+            }
+          }
+        }
+      }
+    }
+  },
+  "ja": {
+    "world": {
+      "explainer": {
+        "justMath": "ただの計算です。AIがこのページを並べ替えることはありません。誰もが同じストーリーを見ます。各ストーリーに表示される媒体と、その並び順は、あなたの言語とスマホでの読みやすさスコアによって決まります。ほかの報道はすべて「関連する報道」の下にあります。"
+      }
+    },
+    "publicationPage": {
+      "readingScore": "スマホでの読みやすさスコア {{score}}/100",
+      "readingScoreA11y": "スマホでの読みやすさスコア、100点満点中{{score}}点",
+      "readingScoreHint": "タップすると、この媒体のレポートがmera.newsで英語で開きます。"
+    },
+    "tutorials": {
+      "chapters": {
+        "explore": {
+          "slides": {
+            "unscored-on-purpose": {
+              "body": "ワールドは、メラが唯一あなたの興味を使わない場所です。ここでは何もあなたのために採点されず、理由の説明もなく、ここで開いたものから何かを学習することもありません。各国の報道機関が今いちばん大きく扱っているものを、そのまま表示します。各ストーリーに表示される媒体と、その並び順は、あなたの言語とスマホでの読みやすさスコアによって決まります。"
+            }
+          }
+        }
+      }
+    }
+  },
+  "ko": {
+    "world": {
+      "explainer": {
+        "justMath": "단순한 계산입니다. AI는 이 페이지의 순위를 매기지 않습니다. 모든 독자가 같은 뉴스를 봅니다. 각 뉴스에 보이는 언론사와 기사 순서는 앱 언어와 휴대폰 읽기 점수에 따라 달라집니다. 그 밖의 모든 보도는 「관련 보도」 아래에 있습니다."
+      }
+    },
+    "publicationPage": {
+      "readingScore": "휴대폰 읽기 점수 {{score}}/100",
+      "readingScoreA11y": "휴대폰 읽기 점수 {{score}}점, 만점은 100점",
+      "readingScoreHint": "이 줄을 누르면 mera.news에서 보고서가 열리며, 보고서는 영어로 되어 있습니다."
+    },
+    "tutorials": {
+      "chapters": {
+        "explore": {
+          "slides": {
+            "unscored-on-purpose": {
+              "body": "전 세계는 메라가 여러분의 관심사를 사용하지 않는 유일한 곳입니다. 여기서는 어떤 것도 여러분에 맞춰 점수를 매기지 않고, 이유를 달지도 않으며, 여기서 연 내용으로 아무것도 학습하지 않습니다. 각 나라의 언론사가 무엇을 앞세우는지만 보여 줍니다. 각 뉴스에 보이는 언론사와 기사 순서는 앱 언어와 휴대폰 읽기 점수에 따라 달라집니다."
+            }
+          }
+        }
+      }
+    }
+  },
+  "nl": {
+    "world": {
+      "explainer": {
+        "justMath": "Gewoon rekenwerk. Geen AI rangschikt deze pagina. Iedereen ziet dezelfde verhalen. De uitgever die bij elk verhaal wordt getoond en de volgorde hangen af van je taal en de leesscore. Elk ander bericht staat onder Gerelateerde berichtgeving."
+      }
+    },
+    "publicationPage": {
+      "readingScore": "Leesscore op telefoon {{score}}/100",
+      "readingScoreA11y": "Leesscore op telefoon {{score}} van 100",
+      "readingScoreHint": "Opent het rapport op mera.news, in het Engels."
+    },
+    "tutorials": {
+      "chapters": {
+        "explore": {
+          "slides": {
+            "unscored-on-purpose": {
+              "body": "Wereld is de enige plek waar Mera je interesses niet gebruikt. Niets hier wordt voor jou gescoord, er zijn geen redenen, en niets wordt geleerd van wat je hier opent. Alleen waar de redacties van elk land mee openen. De uitgever die bij elk verhaal wordt getoond en de volgorde hangen af van je taal en de leesscore."
+            }
+          }
+        }
+      }
+    }
+  },
+  "pl": {
+    "world": {
+      "explainer": {
+        "justMath": "Po prostu matematyka. Żadna AI nie układa tej strony. Wszyscy widzą te same historie. Wydawca pokazany przy każdej historii oraz kolejność historii zależą od Twojego języka i wyniku czytelności na telefonie. Każdy inny raport znajdziesz w sekcji Powiązane doniesienia."
+      }
+    },
+    "publicationPage": {
+      "readingScore": "Wynik czytelności na telefonie {{score}}/100",
+      "readingScoreA11y": "Wynik czytelności na telefonie {{score}} na 100",
+      "readingScoreHint": "Otwiera raport na mera.news, po angielsku."
+    },
+    "tutorials": {
+      "chapters": {
+        "explore": {
+          "slides": {
+            "unscored-on-purpose": {
+              "body": "Świat to jedyne miejsce, w którym Mera nie korzysta z Twoich zainteresowań. Nic tutaj nie jest oceniane pod Ciebie, nie ma tu powodów, a z tego, co tu otwierasz, nic się nie uczy. Tylko to, od czego zaczynają redakcje każdego kraju. Wydawca pokazany przy każdej historii oraz kolejność historii zależą od Twojego języka i wyniku czytelności na telefonie."
+            }
+          }
+        }
+      }
+    }
+  },
+  "pt-BR": {
+    "world": {
+      "explainer": {
+        "justMath": "Só matemática. Nenhuma IA ordena esta página. Todo leitor vê as mesmas histórias. A publicação mostrada para cada história, e a ordem, dependem do seu idioma e da pontuação de leitura. Todas as outras matérias ficam em Cobertura relacionada."
+      }
+    },
+    "publicationPage": {
+      "readingScore": "Pontuação de leitura no celular {{score}}/100",
+      "readingScoreA11y": "Pontuação de leitura no celular {{score}} de 100",
+      "readingScoreHint": "Abre o relatório no mera.news, em inglês."
+    },
+    "tutorials": {
+      "chapters": {
+        "explore": {
+          "slides": {
+            "unscored-on-purpose": {
+              "body": "Mundo é o único lugar onde o Mera não usa seus interesses. Nada aqui é pontuado para você, não há motivos, e nada é aprendido com o que você abre aqui. Só o que as redações de cada país estão destacando. A publicação mostrada para cada história, e a ordem, dependem do seu idioma e da pontuação de leitura."
+            }
+          }
+        }
+      }
+    }
+  },
+  "ru": {
+    "world": {
+      "explainer": {
+        "justMath": "Просто математика. ИИ не ранжирует эту страницу. Все видят одни и те же истории. Издание, которое показано для каждой истории, и порядок историй зависят от вашего языка и оценки удобства чтения на телефоне. Все остальные материалы по теме находятся в разделе «Похожие материалы»."
+      }
+    },
+    "publicationPage": {
+      "readingScore": "Оценка удобства чтения на телефоне {{score}}/100",
+      "readingScoreA11y": "Оценка удобства чтения на телефоне {{score}} из 100",
+      "readingScoreHint": "Открывает отчёт об издании на mera.news на английском языке."
+    },
+    "tutorials": {
+      "chapters": {
+        "explore": {
+          "slides": {
+            "unscored-on-purpose": {
+              "body": "«Мир» единственный раздел, где Мера не использует ваши интересы. Здесь ничего не оценивается для вас, объяснений нет, и ничего не запоминается из того, что вы здесь открываете. Только то, с чего начинают редакции каждой страны. Издание, которое показано для каждой истории, и порядок зависят от вашего языка и оценки удобства чтения на телефоне."
+            }
+          }
+        }
+      }
+    }
+  },
+  "th": {
+    "world": {
+      "explainer": {
+        "justMath": "แค่การคำนวณ ไม่มี AI มาจัดอันดับหน้านี้ ทุกคนเห็นข่าวชุดเดียวกัน สำนักข่าวที่แสดงในแต่ละเรื่อง และลำดับของข่าว ขึ้นอยู่กับภาษาของคุณและคะแนนการอ่านบนมือถือ ข่าวอื่นทั้งหมดอยู่ภายใต้ “ข่าวที่เกี่ยวข้อง”"
+      }
+    },
+    "publicationPage": {
+      "readingScore": "คะแนนการอ่านบนมือถือ {{score}}/100",
+      "readingScoreA11y": "คะแนนการอ่านบนมือถือ {{score}} จาก 100",
+      "readingScoreHint": "แตะเพื่อเปิดรายงานบน mera.news เป็นภาษาอังกฤษ"
+    },
+    "tutorials": {
+      "chapters": {
+        "explore": {
+          "slides": {
+            "unscored-on-purpose": {
+              "body": "โลกเป็นที่เดียวที่ เมร่า ไม่ใช้ความสนใจของคุณ ไม่มีการให้คะแนนสำหรับคุณ ไม่มีเหตุผล และไม่เรียนรู้จากสิ่งที่คุณเปิดตรงนี้ มีแค่สิ่งที่ห้องข่าวของแต่ละประเทศนำเสนอเป็นข่าวหลัก สำนักข่าวที่แสดงในแต่ละเรื่อง และลำดับของข่าว ขึ้นอยู่กับภาษาของคุณและคะแนนการอ่านบนมือถือ"
+            }
+          }
+        }
+      }
+    }
+  },
+  "tr": {
+    "world": {
+      "explainer": {
+        "justMath": "Sadece hesaplama. Bu sayfayı hiçbir yapay zeka sıralamaz. Herkes aynı haberleri görür. Her hikâye için gösterilen yayın ve sıralama, dilinize ve yayının okuma puanına bağlıdır. Aynı haberin diğer tüm yazıları “İlgili haberler” altında listelenir."
+      }
+    },
+    "publicationPage": {
+      "readingScore": "Telefonda okuma puanı {{score}}/100",
+      "readingScoreA11y": "Telefonda okuma puanı {{score}}, 100 üzerinden",
+      "readingScoreHint": "Dokununca yayının raporu mera.news üzerinde, İngilizce olarak açılır."
+    },
+    "tutorials": {
+      "chapters": {
+        "explore": {
+          "slides": {
+            "unscored-on-purpose": {
+              "body": "Dünya, Mera'nın ilgi alanlarınızı kullanmadığı tek yerdir. Burada sizin için hiçbir şey puanlanmaz, hiçbir neden yazılmaz ve burada açtıklarınızdan hiçbir şey öğrenilmez. Sadece her ülkenin haber merkezlerinin öne çıkardıkları. Her hikâye için gösterilen yayın ve sıralama, dilinize ve yayının okuma puanına bağlıdır."
+            }
+          }
+        }
+      }
+    }
+  },
+  "uk": {
+    "world": {
+      "explainer": {
+        "justMath": "Просто математика. Жодний ШІ не ранжує цю сторінку. Усі бачать одні й ті самі історії. Видання, яке показують для кожної історії, і порядок залежать від вашої мови та оцінки читабельності на телефоні. Кожен інший матеріал є в розділі «Пов'язані матеріали»."
+      }
+    },
+    "publicationPage": {
+      "readingScore": "Оцінка читабельності на телефоні {{score}}/100",
+      "readingScoreA11y": "Оцінка читабельності на телефоні {{score}} з 100",
+      "readingScoreHint": "Відкриває звіт видання на mera.news англійською мовою."
+    },
+    "tutorials": {
+      "chapters": {
+        "explore": {
+          "slides": {
+            "unscored-on-purpose": {
+              "body": "«Світ» це єдине місце, де Мера не використовує ваші інтереси. Тут для вас нічого не оцінюється, немає жодних пояснень, і нічого не запам'ятовується з того, що ви тут відкриваєте. Лише те, що редакції кожної країни ставлять на перше місце. Видання, яке показують для кожної історії, і порядок залежать від вашої мови та оцінки читабельності на телефоні."
+            }
+          }
+        }
+      }
+    }
+  },
+  "vi": {
+    "world": {
+      "explainer": {
+        "justMath": "Chỉ là phép tính. Không có AI nào xếp hạng trang này. Mọi người đều thấy cùng những tin tức. Tờ báo hiển thị cho mỗi tin, và thứ tự, phụ thuộc vào ngôn ngữ của bạn và điểm đọc trên điện thoại. Mọi bài báo khác nằm trong mục “Đưa tin liên quan”."
+      }
+    },
+    "publicationPage": {
+      "readingScore": "Điểm đọc trên điện thoại {{score}}/100",
+      "readingScoreA11y": "Điểm đọc trên điện thoại {{score}} trên 100",
+      "readingScoreHint": "Mở báo cáo trên mera.news, bằng tiếng Anh."
+    },
+    "tutorials": {
+      "chapters": {
+        "explore": {
+          "slides": {
+            "unscored-on-purpose": {
+              "body": "Thế giới là nơi duy nhất Mera không dùng sở thích của bạn. Không có gì ở đây được chấm điểm cho bạn, không có lý do nào, và không học gì từ những gì bạn mở ở đây. Chỉ là những tin mà tòa soạn mỗi quốc gia đang đặt lên hàng đầu. Tờ báo hiển thị cho mỗi tin, và thứ tự, phụ thuộc vào ngôn ngữ của bạn và điểm đọc trên điện thoại."
+            }
+          }
+        }
+      }
+    }
+  },
+  "zh-CN": {
+    "world": {
+      "explainer": {
+        "justMath": "这一页只是计算。没有 AI 为这个页面排序。所有人看到的都是同样的报道。每则报道显示哪家媒体，以及报道的排列顺序，都取决于你的语言和阅读评分。其他所有报道都在“相关报道”中。"
+      }
+    },
+    "publicationPage": {
+      "readingScore": "手机阅读评分 {{score}}/100",
+      "readingScoreA11y": "手机阅读评分 {{score}}，满分 100",
+      "readingScoreHint": "点按后会在 mera.news 上打开该媒体的报告，报告为英文。"
+    },
+    "tutorials": {
+      "chapters": {
+        "explore": {
+          "slides": {
+            "unscored-on-purpose": {
+              "body": "“全球”是梅拉唯一不使用你兴趣的地方。这里不为你评分，没有理由，也不会从你在这里打开的内容中学习。只显示各国新闻编辑部正在重点报道的内容。每则报道显示哪家媒体，以及报道的排列顺序，都取决于你的语言和阅读评分。"
+            }
+          }
+        }
+      }
+    }
+  },
+  "zh-TW": {
+    "world": {
+      "explainer": {
+        "justMath": "只是計算。沒有 AI 在排這個頁面。每位讀者看到的新聞都一樣。每則報導顯示哪家媒體，以及報導的順序，都取決於你的語言和閱讀評分。其他報導都列在「相關報導」下。"
+      }
+    },
+    "publicationPage": {
+      "readingScore": "手機閱讀評分 {{score}}/100",
+      "readingScoreA11y": "手機閱讀評分 {{score}}，滿分 100",
+      "readingScoreHint": "點按後會在 mera.news 開啟這家媒體的報告，內容為英文。"
+    },
+    "tutorials": {
+      "chapters": {
+        "explore": {
+          "slides": {
+            "unscored-on-purpose": {
+              "body": "「全球」是梅拉唯一不使用你興趣的地方。這裡沒有為你評分，沒有理由，也不會從你在這裡開啟的內容中學習。只呈現各國新聞編輯室目前的頭條。每則報導顯示哪家媒體，以及報導的順序，都取決於你的語言和閱讀評分。"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -2099,7 +2099,7 @@
         "slides": {
           "unscored-on-purpose": {
             "headline": "Deliberadamente não sobre você",
-            "body": "Mundo é o único lugar onde o Mera não personaliza nada. Sem pontuação, sem motivos, nada aprendido com o que você abre aqui. Só o que as redações de cada país estão destacando, na ordem delas.",
+            "body": "Mundo é o único lugar onde o Mera não usa seus interesses. Nada aqui é pontuado para você, não há motivos, e nada é aprendido com o que você abre aqui. Só o que as redações de cada país estão destacando. A publicação mostrada para cada história, e a ordem, dependem do seu idioma e da pontuação de leitura.",
             "ask": "Por que Mundo não é personalizado?"
           },
           "the-chips": {
@@ -2844,7 +2844,10 @@
     "notPreferHint": "Oculta os artigos dela do seu Feed",
     "includedWith": "Incluída com {{country}}",
     "includedWithA11y": "Preferida, incluída com {{country}}",
-    "includedWithHelp": "Incluída com {{country}}. Para mudar isso, remova {{country}} em Fontes."
+    "includedWithHelp": "Incluída com {{country}}. Para mudar isso, remova {{country}} em Fontes.",
+    "readingScore": "Pontuação de leitura no celular {{score}}/100",
+    "readingScoreA11y": "Pontuação de leitura no celular {{score}} de 100",
+    "readingScoreHint": "Abre o relatório no mera.news, em inglês."
   },
   "nav": {
     "page": {
@@ -2911,9 +2914,7 @@
     },
     "explainer": {
       "window": "O seletor de tempo define até onde a página olha: 6, 12, 24 ou 48 horas. Cada lista só conta artigos publicados dentro dessa janela.",
-      "justMath": "Só matemática. Nenhuma IA ordena esta página, e ela é igual para todo mundo.",
-      "mathWorld": "Cada país que cobre uma notícia dá 1 ponto a ela, mais um pouco por cada veículo extra de lá, com limite de 4 pontos por país. Some todos os países, e o maior total aparece primeiro.",
-      "mathCountry": "Conte os artigos que os veículos deste país publicaram sobre uma notícia nas últimas 24 horas. A notícia com mais artigos aparece primeiro."
+      "justMath": "Só matemática. Nenhuma IA ordena esta página. Todo leitor vê as mesmas histórias. A publicação mostrada para cada história, e a ordem, dependem do seu idioma e da pontuação de leitura. Todas as outras matérias ficam em Cobertura relacionada."
     },
     "homeRow": "Quer notícias de onde você mora?"
   },

@@ -2093,7 +2093,7 @@
         "slides": {
           "unscored-on-purpose": {
             "headline": "Opzettelijk niet over jou",
-            "body": "Wereld is de enige plek waar Mera niets personaliseert. Geen scores, geen redenen, niets geleerd van wat je hier opent. Alleen waar de redacties van elk land mee openen, in hun volgorde.",
+            "body": "Wereld is de enige plek waar Mera je interesses niet gebruikt. Niets hier wordt voor jou gescoord, er zijn geen redenen, en niets wordt geleerd van wat je hier opent. Alleen waar de redacties van elk land mee openen. De uitgever die bij elk verhaal wordt getoond en de volgorde hangen af van je taal en de leesscore.",
             "ask": "Waarom is Wereld niet gepersonaliseerd?"
           },
           "the-chips": {
@@ -2838,7 +2838,10 @@
     "notPreferHint": "Verbergt de artikelen uit je feed",
     "includedWith": "Inbegrepen bij {{country}}",
     "includedWithA11y": "Voorkeur, inbegrepen bij {{country}}",
-    "includedWithHelp": "Inbegrepen bij {{country}}. Om dit te wijzigen, verwijder je {{country}} bij Bronnen."
+    "includedWithHelp": "Inbegrepen bij {{country}}. Om dit te wijzigen, verwijder je {{country}} bij Bronnen.",
+    "readingScore": "Leesscore op telefoon {{score}}/100",
+    "readingScoreA11y": "Leesscore op telefoon {{score}} van 100",
+    "readingScoreHint": "Opent het rapport op mera.news, in het Engels."
   },
   "nav": {
     "page": {
@@ -2905,9 +2908,7 @@
     },
     "explainer": {
       "window": "De tijdschakelaar bepaalt hoe ver de pagina terugkijkt: 6, 12, 24 of 48 uur. Elke lijst telt alleen artikelen die binnen dat venster zijn gepubliceerd.",
-      "justMath": "Gewoon rekenwerk. Geen AI rangschikt deze pagina, en hij ziet er voor iedereen hetzelfde uit.",
-      "mathWorld": "Elk land dat een verhaal behandelt, geeft het 1 punt, plus een beetje meer voor elke extra uitgever daar, tot maximaal 4 punten per land. Tel alle landen op, en het hoogste totaal staat bovenaan.",
-      "mathCountry": "Tel de artikelen die de uitgevers van dit land in de afgelopen 24 uur over een verhaal schreven. Het verhaal met de meeste artikelen staat bovenaan."
+      "justMath": "Gewoon rekenwerk. Geen AI rangschikt deze pagina. Iedereen ziet dezelfde verhalen. De uitgever die bij elk verhaal wordt getoond en de volgorde hangen af van je taal en de leesscore. Elk ander bericht staat onder Gerelateerde berichtgeving."
     },
     "homeRow": "Wil je nieuws uit waar je woont?"
   },
