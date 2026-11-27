@@ -19,6 +19,8 @@ import { effectivePick, topicLabel } from '@/lib/explore/topic-filter';
 import type { CanonicalTopic, CanonicalTopicFacet } from '@/lib/generated/graphql-types';
 import { WORLD_TOPIC_PILL_ENABLED } from '@/lib/config/feature-gates';
 import { useIsOnline } from '@/lib/stores/network-store';
+import { useAppLanguageStore } from '@/lib/stores/app-language-store';
+import { baseLang } from '@/lib/algorithms/geo-language-priority';
 import WorldTopicPill from './WorldTopicPill';
 import { allCountryOptions, commitWorldDraft, searchCountryOptions } from './world-arrange';
 
@@ -49,6 +51,7 @@ export function WorldPages() {
     const { pages, loaded } = useWorldPages();
     const listEndClearance = useListEndClearance();
     const online = useIsOnline();
+    const language = baseLang(useAppLanguageStore((s) => s.appLanguage)) ?? 'en';
 
     // Topic filter. The pick is tab-session state only: never stored, never in a URL, never logged.
     const [pick, setPick] = useState<string | null>(null);
@@ -133,9 +136,9 @@ export function WorldPages() {
             const topicId = facets ? effectivePick(pick, facets) : pick;
             return (
                 <ScopeArticleList
-                    // A window or topic change is a fresh list: new first page, cursor
-                    // and generation. The pager keys the panel by page id.
-                    key={`${hours}:${topicId ?? ''}`}
+                    // A window, topic or app-language change is a fresh list: new first page,
+                    // cursor and generation. The pager keys the panel by page id.
+                    key={`${hours}:${topicId ?? ''}:${language}`}
                     topicId={topicId}
                     pickLabel={pickName}
                     leading={page.scope.kind === 'world' ? <WorldHomeRow /> : undefined}
@@ -153,7 +156,7 @@ export function WorldPages() {
                 />
             );
         },
-        [pages, /* windows, setWindowFor, */ loaded, listEndClearance, pageFacets, pick, pickName, reportFacets],
+        [pages, /* windows, setWindowFor, */ loaded, listEndClearance, pageFacets, pick, pickName, reportFacets, language],
     );
 
     // const renderTitleChip = useCallback(

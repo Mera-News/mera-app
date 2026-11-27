@@ -12,6 +12,7 @@ import React from 'react';
 import { graphql, HttpResponse, initI18nEn, mockGql, server } from '@/test/helpers';
 import { __resetExploreWindowSupport, __resetWorldTopicsSupport } from '@/lib/article-service';
 import { useNetworkStore } from '@/lib/stores/network-store';
+import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 
 let mockClosed: (() => void) | undefined;
 let mockClose: (() => void) | undefined;
@@ -118,6 +119,7 @@ beforeEach(() => {
         code === 'NLD' ? [facet('ct-sports', 3)] : [facet('ct-politics', 4), facet('ct-sports', 2), facet('ct-ref', 9)];
     install();
 });
+afterEach(() => useAppLanguageStore.setState({ appLanguage: 'en' }));
 
 it('picking applies only after the sheet has closed, and the sheet hides Reference', async () => {
     await render(<WorldPages />);
@@ -255,4 +257,19 @@ it('a picked row applies even if the sheet never reports it has gone', async () 
     await fireEvent.press(await screen.findByTestId('world-topic-row-politics'));
     await waitFor(() => expect(sent.at(-1)?.ids).toEqual(['ct-politics']), { timeout: 3000 });
     expect(await screen.findByTestId('world-topic-clear')).toBeTruthy();
+});
+
+it('an app-language change asks for a fresh first page', async () => {
+    const afters: unknown[] = [];
+    server.use(
+        graphql.operation(({ operationName, variables }) => {
+            if (operationName === 'GetWorldHeadlines') afters.push(variables.after);
+            return undefined;
+        }),
+    );
+    await render(<WorldPages />);
+    await waitFor(() => expect(afters.length).toBe(1));
+    await act(() => useAppLanguageStore.setState({ appLanguage: 'fr' }));
+    await waitFor(() => expect(afters.length).toBe(2));
+    expect(afters[1]).toBeUndefined();
 });
