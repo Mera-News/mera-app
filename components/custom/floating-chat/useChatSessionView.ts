@@ -197,6 +197,7 @@ export function useChatSessionView(props: ChatSessionViewProps) {
   // state, and the deriver's fallback errs safe: it marks nothing interrupted
   // that is not from an earlier conversation.
   const turnActive = useCloudChatStore((st) => st.agentTurnState?.turnActive);
+  const turnFrom = useCloudChatStore((st) => st.turnFrom);
   const loopTerminal = useCloudChatStore((st) => renderableTerminal(st.agentTerminal));
   // A throw sets `error`; a Stop never does. The deriver adds the sentence only
   // when the latest turn has tool rows (no rows: the inferenceError banner covers it).
@@ -338,6 +339,7 @@ export function useChatSessionView(props: ChatSessionViewProps) {
         quickFactChecks,
         toolCallResults,
         turnActive,
+        turnFrom,
         agentTerminal,
         engine,
         liveTool,

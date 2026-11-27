@@ -153,7 +153,9 @@ export function stepsForMessage(
   interrupted: boolean,
 ): AgentStep[] {
   if (!toolCalls || toolCalls.length === 0) return [];
-  return toolCalls.map((tc, idx) => {
+  return toolCalls.flatMap((tc, idx) => {
+    // A search the loop refused never ran: no row says it did.
+    if (asRecord(tc.result)?.refused === true) return [];
     const stranded = interrupted && tc.status === 'pending';
     const refused = !stranded && isRefusedCard(tc);
     const status: AgentStepStatus = stranded || refused ? 'error' : tc.status;
@@ -169,7 +171,7 @@ export function stepsForMessage(
     if (labelValues) step.labelValues = labelValues;
     if (refused) step.consequenceKey = CARD_REFUSED_CONSEQUENCE_KEY;
     else if (status === 'error') step.consequenceKey = consequenceKeyFor(tc.name, stranded);
-    return step;
+    return [step];
   });
 }
 

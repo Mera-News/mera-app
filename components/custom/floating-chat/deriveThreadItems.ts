@@ -109,6 +109,7 @@ function emitMessage(
   boxes?: Map<string, AgentStepsItem>,
   answeredAsk = false,
   streaming: StreamingInfo | null = null,
+  holdCards = false,
 ): void {
   // A hidden turn is the model's business only — it produces no bubble and no
   // cards. Filtered here rather than at the call sites so every source (live,
@@ -305,6 +306,9 @@ function emitMessage(
     });
   }
 
+  // A running turn's cards wait for its sentence (see `holdFrom`).
+  if (holdCards) cards.length = 0;
+
   // An earlier conversation's menu leads nowhere.
   if (!stale && isOnboardingMenuRow(message.id)) {
     cards.push({ kind: 'onboarding-menu', key: `onboarding-menu-${message.id}` });
@@ -423,6 +427,8 @@ export function deriveThreadItems(opts: {
    * "everything settled" and marks nothing interrupted unless it is stale.
    */
   turnActive?: boolean;
+  /** Cloud: index in `live` where the running turn's rows start (the store's `turnFrom`). */
+  turnFrom?: number | null;
   /** Why the latest agent turn stopped, when the user needs telling. */
   agentTerminal?: AgentTerminal | null;
   /** Which engine runs this turn. Local always shows the words. */
@@ -584,9 +590,22 @@ export function deriveThreadItems(opts: {
       ? { id: lastLiveMsg.id, showWords, engine, handover: !(liveBox && keepBox(liveBox)) }
       : null;
 
+  // THE SENTENCE AND ITS CARD LAND TOGETHER (cloud). While a turn runs, the
+  // cards on its own rows are held until one of those rows has text; the final
+  // write brings both in one render. Rows before `turnFrom` are an earlier
+  // turn's and never held, so a hidden turn or a retry leaves their cards up.
+  const turnFrom = opts.turnFrom;
+  const holdFrom =
+    engine === 'cloud' &&
+    opts.turnActive === true &&
+    typeof turnFrom === 'number' &&
+    !live.slice(turnFrom).some((m) => m.role === 'assistant' && m.content.trim().length > 0)
+      ? turnFrom
+      : null;
+
   // --- Live session (skip anything already rendered via resume) ---
-  for (const message of live) {
-    if (resumeIds.has(message.id)) continue;
+  live.forEach((message, index) => {
+    if (resumeIds.has(message.id)) return;
     emitMessage(
       out,
       message,
@@ -596,9 +615,10 @@ export function deriveThreadItems(opts: {
       liveBoxes,
       answeredAskIds.has(message.id),
       streaming,
+      holdFrom !== null && index >= holdFrom,
     );
     if (message.id === lastUserId) typingAt = out.length;
-  }
+  });
 
   // --- Typing indicator ---
   const lastLive = live[live.length - 1];
@@ -610,8 +630,10 @@ export function deriveThreadItems(opts: {
   const stepsBoxIsLive = Array.from(liveBoxes.values()).some(
     (box) => !box.collapsed && box.steps.some((s) => s.status === 'pending'),
   );
+  // Once the cloud turn is over nothing waits, even for the instant before the status follows.
   const showTyping =
     isStreaming &&
+    !(engine === 'cloud' && opts.turnActive === false) &&
     !stepsBoxIsLive &&
     (!lastLive ||
       lastLive.role === 'user' ||

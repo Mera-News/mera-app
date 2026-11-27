@@ -37,7 +37,6 @@ export const WaitBubble: React.FC<WaitBubbleProps> = ({
   const local = engine === 'local';
   const minHeight = useWaitRowHeight(showWords, engine);
   const sealedSeq = useChatPhaseStore((s) => s.sealedSeq);
-  const liveTool = useChatPhaseStore((s) => s.liveTool !== null);
   const { phaseId, line } = usePhaseLine();
   useAnnounce(line, phaseId === 'retrying');
 
@@ -56,8 +55,8 @@ export const WaitBubble: React.FC<WaitBubbleProps> = ({
     wasShowing.current = ackShowing;
   }, [ackShowing, sealedSeq]);
   const ackStreaming = ackShowing && ackSeq !== null && sealedSeq === ackSeq;
-  // ponytail: `landing` (step rows landing) is the steps box's signal, not wired here yet.
-  const rest = stripRests({ liveTool, landing: false, ackStreaming });
+  // The row is alone on screen, so a running tool does not rest it: nothing else would move.
+  const rest = stripRests({ liveTool: false, landing: false, ackStreaming });
 
   const strip = <EncryptionStrip host="row" rest={rest} playReturn={playReturn} />;
   return (

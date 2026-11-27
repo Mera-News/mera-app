@@ -1150,6 +1150,59 @@ describe('follow card override (chatfix: grown options, outcomes, superseded)', 
   });
 });
 
+describe('a running cloud turn: its cards wait for its sentence', () => {
+  const card = (proposalId: string): ToolCallRecord => ({
+    id: `tc-${proposalId}`,
+    name: 'proposeTrack',
+    status: 'done',
+    input: {},
+    result: { staged: true, proposalId, options: [{ label: 'Ukraine war', search: 'ukraine war' }, { label: 'Kyiv talks', search: 'kyiv talks' }] },
+  });
+  const kinds = (items: ChatThreadItem[]) => items.filter((i) => i.kind !== 'agent-steps').map((i) => i.kind);
+  const running = { isStreaming: true, turnActive: true, engine: 'cloud' as const };
+
+  it('holds the card while the turn has no text, then shows sentence and card together', () => {
+    const turn = [userMsg('u1', 'follow the war'), assistantMsg('a1-ack', ''), assistantMsg('a1', '', [card('p1')])];
+    const waiting = deriveThreadItems(base({ ...running, live: turn, turnFrom: 1 }));
+    expect(waiting.some((i) => i.kind === 'proposal-card')).toBe(false);
+    expect(waiting.some((i) => i.kind === 'agent-steps')).toBe(true);
+
+    const landed = deriveThreadItems(
+      base({ ...running, live: [turn[0], turn[1], assistantMsg('a1', 'Pick the stories to follow below.', [card('p1')])], turnFrom: 1 }),
+    );
+    expect(kinds(landed)).toEqual(['message', 'message', 'proposal-card']);
+  });
+
+  it('releases a card that got no sentence when the turn ends', () => {
+    const live = [userMsg('u1'), assistantMsg('a1-ack', ''), assistantMsg('a1', '', [card('p1')])];
+    const done = deriveThreadItems(base({ live, isStreaming: true, turnActive: false, engine: 'cloud', turnFrom: 1 }));
+    expect(done.some((i) => i.kind === 'proposal-card')).toBe(true);
+    // The turn is over: nothing waits, even before the status follows.
+    expect(done.some((i) => i.kind === 'typing')).toBe(false);
+  });
+
+  it('never touches an earlier turn\'s card: a hidden turn or a retry leaves it on screen', () => {
+    const earlier = [userMsg('u1'), assistantMsg('a1', '', [card('p1')])];
+    // A hidden turn adds no user row; its own rows start at index 2.
+    const live = [...earlier, assistantMsg('a2-ack', ''), assistantMsg('a2', '')];
+    const items = deriveThreadItems(base({ ...running, live, turnFrom: 2 }));
+    expect(items.filter((i) => i.kind === 'proposal-card')).toHaveLength(1);
+    // Before the turn's own rows exist, too.
+    const early = deriveThreadItems(base({ ...running, live: earlier, turnFrom: 2 }));
+    expect(early.filter((i) => i.kind === 'proposal-card')).toHaveLength(1);
+  });
+
+  it('does not hold on device, on a resumed thread, or with no turn start published', () => {
+    const live = [userMsg('u1'), assistantMsg('a1', '', [card('p1')])];
+    const has = (o: Partial<Parameters<typeof deriveThreadItems>[0]>) =>
+      deriveThreadItems(base({ live, ...o })).some((i) => i.kind === 'proposal-card');
+    expect(has({ isStreaming: true, turnActive: true, engine: 'local', turnFrom: 1 })).toBe(true);
+    expect(has({ isStreaming: false, turnActive: false, engine: 'cloud', turnFrom: 1 })).toBe(true);
+    expect(has({ ...running, turnFrom: null })).toBe(true);
+    expect(has({ ...running })).toBe(true);
+  });
+});
+
 describe('the onboarding menu row', () => {
   const menuRow = assistantMsg('scripted-1-x-onboarding-menu', 'What would you like to do next?');
   const followTurn: ToolCallRecord = {

@@ -72,6 +72,20 @@ describe('the box exists at all', () => {
   });
 });
 
+describe('a search the loop refused', () => {
+  it('draws no row: nothing says the web was searched when it was not', () => {
+    const refused: ToolCallRecord = { id: 'tc-web', name: 'webSearch', input: { queries: ['x'] }, status: 'done', result: { error: 'No search on this step.', refused: true, searched: false } };
+    const items = deriveThreadItems(
+      base({ live: [user('u1'), asst('a1', '', [tool('load_skill', 'done'), refused, tool('proposeTrack', 'done')])], turnActive: false }),
+    );
+    const box = items.find((i): i is Box => i.kind === 'agent-steps')!;
+    const rows = box.steps.filter((s) => s.kind === 'tool');
+    expect(rows.map((s) => s.toolName)).toEqual(['load_skill', 'proposeTrack']);
+    // Ids keep the call's own index, so a card keyed on it is not shifted.
+    expect(rows.map((s) => s.id)).toEqual(['a1::0', 'a1::2']);
+  });
+});
+
 describe('one box per TURN, not per message', () => {
   it('accumulates two legs into a single box keyed to the turn', () => {
     const items = deriveThreadItems(

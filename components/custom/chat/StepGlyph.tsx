@@ -83,7 +83,9 @@ export const StepGlyph: React.FC<StepGlyphProps> = ({ kind, state, delayMs = 0 }
   if (showTick) {
     body = <Tick draw={state === 'landing' && motion} color={colors.accentMark} />;
   } else {
-    const source = kind === 'working' ? null : chatStepAnimationFor(kind);
+    // A plain working row has no file of its own: it plays the thinking one, so the row a
+    // reader watches during a model call is never a still dot.
+    const source = chatStepAnimationFor(kind === 'working' ? 'think' : kind);
     body =
       source === null ? (
         <Svg width={SIZE} height={SIZE} viewBox="0 0 20 20">
