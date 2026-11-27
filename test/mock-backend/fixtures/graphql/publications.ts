@@ -8,8 +8,9 @@ import { articleFixtures, publicationSource, type BuildContext } from '../articl
 
 const { publications } = articleFixtures;
 
+// shortcut: readingScore is not in the pinned client's PublicationProfile type; drop the casts at the pin bump.
 /** Profile of the first fixture outlet. */
-export const publicationProfile: PublicationProfile = {
+export const publicationProfile = {
     __typename: 'PublicationProfile',
     newsPublisherId: publications[0].publisherId,
     name: publications[0].name,
@@ -23,7 +24,8 @@ export const publicationProfile: PublicationProfile = {
     countryName: publications[0].countryName,
     sourceNames: [publications[0].name],
     subscriptionUri: null,
-};
+    readingScore: 92,
+} as PublicationProfile;
 
 export function publicationProfileFor(args: {
     newsPublisherId?: string | null;
@@ -42,7 +44,8 @@ export function publicationProfileFor(args: {
         countryCode: p.countryCode,
         countryName: p.countryName,
         sourceNames: [p.name],
-    };
+        readingScore: p === publications[0] ? 92 : null,
+    } as PublicationProfile;
 }
 
 export const displayNamesFor = (names: readonly string[]): PublicationDisplayName[] =>

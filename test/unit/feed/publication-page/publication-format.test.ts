@@ -1,4 +1,4 @@
-import { formatCategories, homepageUrlOf, hostOf, monogramHueOf, monogramOf, sourceKindOf } from '@/components/custom/publication-page/publication-format';
+import { formatCategories, homepageUrlOf, hostOf, monogramHueOf, monogramOf, readingScoreBand, readingScoreInk, sourceKindOf } from '@/components/custom/publication-page/publication-format';
 
 describe('hostOf', () => {
     it.each([
@@ -89,5 +89,22 @@ describe('monogramHueOf', () => {
     it('tells apart outlets that share a first letter', () => {
         const hues = new Set(['The Hindu', 'The Guardian', 'The Times of Bengal', 'The Print'].map(monogramHueOf));
         expect(hues.size).toBeGreaterThan(1);
+    });
+});
+
+describe('readingScoreBand', () => {
+    it.each([
+        [100, 'top'], [90, 'top'], [89, 'good'], [75, 'good'], [74, 'fair'], [50, 'fair'], [49, 'low'], [0, 'low'],
+    ] as const)('%d -> %s', (score, band) => {
+        expect(readingScoreBand(score)).toBe(band);
+    });
+});
+
+describe('readingScoreInk', () => {
+    it('is the site colour for the mode, never swapped', () => {
+        expect(readingScoreInk(92, 'dark')).toBe('#34D399');
+        expect(readingScoreInk(92, 'light')).toBe('#059669');
+        expect(readingScoreInk(40, 'dark')).toBe('#F97316');
+        expect(readingScoreInk(40, 'light')).toBe('#C2410C');
     });
 });

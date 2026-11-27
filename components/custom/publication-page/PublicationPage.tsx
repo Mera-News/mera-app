@@ -121,6 +121,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
         state,
         retry,
         profile,
+        scoreLatched,
         newsPublisherId,
         pref,
         newsAvailable,
@@ -203,6 +204,9 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                 details={dataLine || null}
                 badge={kind ? { label: t(SOURCE_KIND_META[kind].key), color: colors[SOURCE_KIND_META[kind].color] } : null}
                 detailsLoading={state === 'loading'}
+                readingScore={profile?.readingScore ?? null}
+                reportPublisherId={profile?.newsPublisherId ?? null}
+                scoreReserved={!scoreLatched}
             />
 
             {showPref ? (
