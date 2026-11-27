@@ -1,4 +1,5 @@
 import { CardGlassPlate } from '@/components/custom/cards/CardGlassPlate';
+import { Appear } from '@/components/ui/appear';
 import { Box } from '@/components/ui/box';
 import { HERO_IMAGE_CLASS } from '@/lib/layout/card-metrics';
 import { useColors } from '@/lib/theme/tokens';
@@ -13,7 +14,7 @@ import { View } from 'react-native';
  * with cached cards present.
  *
  * STATIC on purpose: no shimmer, so there is nothing to gate on Reduce Motion
- * and nothing to cost battery. Same outer geometry as a flat hero card
+ * and nothing to cost battery. It fades in once (it shows only after a delay). Same outer geometry as a flat hero card
  * (`rounded-2xl`, `h-48` hero, `mb-3`), so the real cards replace it without
  * the list jumping.
  *
@@ -24,7 +25,8 @@ const FeedSkeleton: React.FC = () => {
     // Placeholder bar tone: a faint lift over the card plate.
     const BAR = useColors().trackFill;
     return (
-    <View
+    <Appear
+        rise={0}
         testID="feed-skeleton"
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
@@ -41,7 +43,7 @@ const FeedSkeleton: React.FC = () => {
                 </Box>
             </Box>
         ))}
-    </View>
+    </Appear>
 );
 };
 

@@ -1,5 +1,6 @@
 import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import { Group, Help } from '@/components/custom/you/rows';
+import { Appear } from '@/components/ui/appear';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Pressable } from '@/components/ui/pressable';
@@ -189,6 +190,7 @@ const LocationsScreen: React.FC<Props> = ({ onBack }) => {
     }
     if (locations.length === 0) {
       return (
+        <Appear style={{ flex: 1 }}>
         <VStack className="flex-1 items-center justify-center px-8" space="md">
           <MaterialIcons name="add-location-alt" size={56} color={colors.ink3} />
           <Text size="md" className="text-center" style={{ color: colors.ink2 }}>
@@ -198,10 +200,11 @@ const LocationsScreen: React.FC<Props> = ({ onBack }) => {
             <ButtonText className="text-primary-400">{t('locations.addFirst')}</ButtonText>
           </Button>
         </VStack>
+        </Appear>
       );
     }
     return (
-      <View style={{ flex: 1 }}>
+      <Appear style={{ flex: 1 }}>
       <ScrollView
         testID="places-list"
         showsVerticalScrollIndicator={false}
@@ -211,7 +214,7 @@ const LocationsScreen: React.FC<Props> = ({ onBack }) => {
         <Group>{locations.map(renderPlace)}</Group>
         <Help>{t('locations.footnote')}</Help>
       </ScrollView>
-      </View>
+      </Appear>
     );
     // renderPlace reads only state already in these deps.
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -1,5 +1,6 @@
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
+import { Appear } from '@/components/ui/appear';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -119,7 +120,9 @@ const PersonaArticleList: React.FC<PersonaArticleListProps> = ({ topicTexts, fac
                 <Box className="flex-1 items-center justify-center">
                     <Spinner size="large" />
                 </Box>
-            ) : articles.length === 0 ? (
+            ) : (
+                <Appear style={{ flex: 1 }}>
+                {articles.length === 0 ? (
                 <VStack className="flex-1 items-center justify-center p-6" space="md">
                     <MaterialIcons name="article" size={48} color={colors.ink3} />
                     <Text size="md" className="text-ink-2 text-center">
@@ -136,6 +139,8 @@ const PersonaArticleList: React.FC<PersonaArticleListProps> = ({ topicTexts, fac
                     onScroll={notifyScrollTick}
                     scrollEventThrottle={16}
                 />
+                )}
+                </Appear>
             )}
         </Box>
     );

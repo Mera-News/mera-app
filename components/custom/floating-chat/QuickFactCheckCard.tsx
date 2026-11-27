@@ -13,6 +13,7 @@
 // the other. That is deliberate: a model narrating this result would be free to
 // blur exactly those two, and no test of the underlying data would catch it.
 
+import { Appear } from '@/components/ui/appear';
 import { Text } from '@/components/ui/text';
 import { describeVerdict } from '@/lib/fact-check/fact-check-state';
 import { quickFactCheckCopyKey } from '@/lib/chat-tools/quick-fact-check-handler';
@@ -48,7 +49,7 @@ export function sourceLabel(uri: string): string {
   return match ? match[1].replace(/^www\./i, '') : (uri ?? '');
 }
 
-const QuickFactCheckCard: React.FC<QuickFactCheckCardProps> = ({ entry }) => {
+const QuickFactCheckCardBody: React.FC<QuickFactCheckCardProps> = ({ entry }) => {
   const styles = useStyles();
   const colors = useColors();
   const { t } = useTranslation();
@@ -165,6 +166,13 @@ const QuickFactCheckCard: React.FC<QuickFactCheckCardProps> = ({ entry }) => {
     </View>
   );
 };
+
+// The card arrives like the other chat cards; its three states share the one fade.
+const QuickFactCheckCard: React.FC<QuickFactCheckCardProps> = (props) => (
+  <Appear>
+    <QuickFactCheckCardBody {...props} />
+  </Appear>
+);
 
 const useStyles = themedStyles((c) => StyleSheet.create({
   card: {

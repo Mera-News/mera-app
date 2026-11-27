@@ -3,6 +3,7 @@ import PinLockScreen from '@/components/custom/auth/PinLockScreen';
 import PinSetupScreen from '@/components/custom/auth/PinSetupScreen';
 import { Group, Help, Row } from '@/components/custom/you/rows';
 import { useColors } from '@/lib/theme/tokens';
+import { Appear } from '@/components/ui/appear';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
@@ -42,6 +43,8 @@ const SecuritySettingsSection: React.FC = () => {
     const toast = useToast();
     const insets = useSafeAreaInsets();
     const lockEnabled = usePinStore((s) => s.lockEnabled);
+    // The Change PIN row fades in only after a toggle here, never when the screen opens with the lock on.
+    const [lockToggled, setLockToggled] = useState(false);
     const setLockEnabled = usePinStore((s) => s.setLockEnabled);
     const [flow, setFlow] = useState<Flow>('none');
     useRestartHold(flow !== 'none', 'overlay:app-lock', 'auto');
@@ -60,6 +63,7 @@ const SecuritySettingsSection: React.FC = () => {
     };
 
     const handleLockToggle = async () => {
+        setLockToggled(true);
         if (lockBusy) return;
         if (!lockEnabled) {
             setFlow('enable');
@@ -164,14 +168,16 @@ const SecuritySettingsSection: React.FC = () => {
                 {/* Only meaningful while the lock is on: with it off there is
                     no record to change. */}
                 {lockEnabled ? (
-                    <Row
-                        testID="settings-row-change-pin"
-                        title={t('security.changePin')}
-                        onPress={() => {
-                            changePinStartRef.current = Date.now();
-                            setFlow('verify');
-                        }}
-                    />
+                    <Appear animateOnMount={lockToggled}>
+                        <Row
+                            testID="settings-row-change-pin"
+                            title={t('security.changePin')}
+                            onPress={() => {
+                                changePinStartRef.current = Date.now();
+                                setFlow('verify');
+                            }}
+                        />
+                    </Appear>
                 ) : null}
             </Group>
             {/* Static text, never a route to /pin-setup (invariant 7). C3 copy. */}

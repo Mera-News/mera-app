@@ -1,6 +1,7 @@
-// THE motion gate. Owner rule: Lite = no motion at all (no animations, no
-// transitions, no loops), and Reduce Motion keeps its own fades-not-moves rule
-// on top. Everything that moves asks here.
+// THE motion gate. Owner rule: in Lite nothing moves, scales or loops, and
+// Reduce Motion keeps its own fades-not-moves rule on top. An object that
+// comes in or goes out still FADES in both (components/ui/appear), and a stack
+// push fades in place. Everything that moves asks here.
 //
 // Kept out of lib/motion.ts on purpose: that file is imported by ~30
 // components; this one pulls the display-prefs store (AsyncStorage,

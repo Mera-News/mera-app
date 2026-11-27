@@ -191,9 +191,9 @@ holdSplash();
 void hydrateTheme();
 
 /**
- * Lite = no motion (lib/motion-gate.ts, layer 1): Reanimated's reduce-motion
+ * Lite = no movement (lib/motion-gate.ts, layer 1): Reanimated's reduce-motion
  * switch forced on, so every Reanimated animation started from now on lands at
- * once. Rendered only in Lite: unmounting restores the system value, so a Full
+ * once, except the appear presets, which opt out to keep their fade. Rendered only in Lite: unmounting restores the system value, so a Full
  * user's Reduce Motion is never touched. Its own component so the store
  * subscription never re-renders the root.
  */

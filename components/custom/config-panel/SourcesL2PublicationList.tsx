@@ -1,3 +1,4 @@
+import { Appear } from '@/components/ui/appear';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -139,7 +140,9 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                 <Box className="flex-1 items-center justify-center">
                     <Spinner size="large" />
                 </Box>
-            ) : publishers.length === 0 ? (
+            ) : (
+                <Appear style={{ flex: 1 }}>
+                {publishers.length === 0 ? (
                 <VStack className="flex-1 items-center justify-center p-6" space="md">
                     <MaterialIcons name="newspaper" size={48} color={colors.ink3} />
                     <Text size="md" className="text-ink-2 text-center">
@@ -157,6 +160,8 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                     onEndReachedThreshold={0.5}
                     ListFooterComponent={ListFooterComponent}
                 />
+                )}
+                </Appear>
             )}
             <InheritedStarHelp country={prefs.helpCountry} onClose={prefs.closeHelp} />
         </Box>

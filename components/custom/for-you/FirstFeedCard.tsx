@@ -4,6 +4,7 @@
 // card (even when the run ended before the Feed mounted, e.g. during onboarding), a different one hides it.
 import React, { useCallback, useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
+import { Appear } from '@/components/ui/appear';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -70,9 +71,9 @@ const FirstFeedCard: React.FC = () => {
     const c = useColors();
     const [visible, dismiss] = useFirstFeedVisible();
     const [explainerOpen, setExplainerOpen] = useState(false);
-    if (!visible) return null;
     return (
-        <View testID="first-feed-card" style={{ marginBottom: 8 }}>
+        // Fades out on dismiss; the header then closes up at once (no layout animation in the Feed).
+        <Appear show={visible} testID="first-feed-card" style={{ marginBottom: 8 }}>
             <GlassPanel radius={12} contentClassName="px-4 py-3" paper>
                 <View style={{ flexDirection: 'row', gap: 10 }}>
                     <View style={{ paddingTop: 1 }}>
@@ -106,7 +107,7 @@ const FirstFeedCard: React.FC = () => {
             {PAGE_META.feed.explainer ? (
                 <PageExplainerSheet explainer={PAGE_META.feed.explainer} open={explainerOpen} onClose={() => setExplainerOpen(false)} />
             ) : null}
-        </View>
+        </Appear>
     );
 };
 

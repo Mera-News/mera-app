@@ -31,6 +31,7 @@ import { PackMeasure, packGroups, type PackMeasurement } from '@/components/cust
 import StatsShareModal from '@/components/custom/share-stats/StatsShareModal';
 import { SourceFlag } from '@/components/custom/SourceFlag';
 import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
+import { Appear } from '@/components/ui/appear';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -408,6 +409,7 @@ const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listE
                             <Spinner size="large" />
                         </Box>
                     ) : (
+                        <Appear>
                         <ForYouEmptyState
                             icon="insights"
                             title={t('library.stats.emptyTitle')}
@@ -419,6 +421,7 @@ const StatsPage: React.FC<Props> = ({ active, scrollHandler, headerHeight, listE
                             }}
                             testID="stats-empty"
                         />
+                        </Appear>
                     )
                 }
                 contentContainerStyle={{

@@ -1,17 +1,19 @@
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import RelatedErrorRow from '@/components/custom/news-detail/RelatedErrorRow';
 import { leadWithOrigin } from '@/components/custom/news-detail/merge-related-entries';
+import { appearEntering } from '@/components/ui/appear/presets';
 import { Shimmer } from '@/components/ui/shimmer';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { MOTION } from '@/lib/motion';
+import { useMotionAllowed } from '@/lib/motion-gate';
 import { useColors } from '@/lib/theme/tokens';
 import { router } from 'expo-router';
 import React, { useReducer } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
-import Animated, { FadeInUp } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 interface RelatedRow {
     /** The article id. */
@@ -26,7 +28,7 @@ interface RelatedRow {
 const openedThisSession = new Set<string>();
 /** Grey cards while the first page loads (FinalRead #7). */
 const SKELETON_CARDS = 3;
-/** Only the first rows rise in one by one; the rest just appear. */
+/** Only the first rows rise in one by one; the rest (and later pages) arrive together. */
 const STAGGERED = 4;
 
 function SkeletonCard() {
@@ -101,6 +103,7 @@ const RelatedCoverage: React.FC<RelatedCoverageProps> = ({
     const { t, i18n } = useTranslation();
     const colors = useColors();
     const [, rerender] = useReducer((n: number) => n + 1, 0);
+    const moves = useMotionAllowed();
     if (!loading && rows.length === 0 && !error) return null;
     const shownCount = count && count > 0 ? new Intl.NumberFormat(i18n.language).format(count) : null;
 
@@ -124,7 +127,7 @@ const RelatedCoverage: React.FC<RelatedCoverageProps> = ({
         );
     };
 
-    const { duration, stagger, rise } = MOTION.relatedStagger;
+    const { stagger } = MOTION.relatedStagger;
     return (
         <View testID="related-coverage">
             <View
@@ -158,13 +161,8 @@ const RelatedCoverage: React.FC<RelatedCoverageProps> = ({
             {leadWithOrigin(rows, fromArticleId).map((row, i) => (
                 <Animated.View
                     key={row.id}
-                    entering={
-                        i < STAGGERED
-                            ? FadeInUp.duration(duration)
-                                  .delay(i * stagger)
-                                  .withInitialValues({ opacity: 0, transform: [{ translateY: rise }] })
-                            : undefined
-                    }
+                    // Not a virtualized list (a plain map), so a row enters once.
+                    entering={appearEntering(moves, { delay: i < STAGGERED ? i * stagger : 0 })}
                 >
                     <ArticleStandaloneCompactCard
                         article={row.article}

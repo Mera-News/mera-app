@@ -104,6 +104,8 @@ import { arrivedAtOf, isNewCard, type FeedEntry } from './feed-entries';
 import FeedMinimap, { MINIMAP_LIST_INSET } from './FeedMinimap';
 import { useFeedScreen } from './useFeedScreen';
 import type { CardFeedbackHandlers } from './use-feedback-sheet';
+import { Appear } from '@/components/ui/appear';
+import { useAppearEntering } from '@/components/ui/appear/presets';
 import { Box } from '@/components/ui/box';
 import { Icon, AlertCircleIcon } from '@/components/ui/icon';
 import { Spinner } from '@/components/ui/spinner';
@@ -434,7 +436,8 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
   const listFooter = useMemo(
     () =>
       listData.length > 0 || fold.terminal === 'fold' ? (
-        <Box style={{ marginTop: 16 }} testID="feed-caught-up-footer">
+        // The list footer, never a row: a new variant fades in place.
+        <Appear key={fold.terminal} rise={0} style={{ marginTop: 16 }} testID="feed-caught-up-footer">
           <AllCaughtUpCard
             variant={fold.terminal}
             count={fold.count}
@@ -446,12 +449,14 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
             refreshing={refreshing}
             testID={`feed-${fold.terminal}-card`}
           />
-        </Box>
+        </Appear>
       ) : null,
     [listData.length, fold.terminal, fold.count, fold.seenCount, fold.nothingAbove, fold.held, onShowThem, onRefresh, refreshing],
   );
 
 
+  // What replaces the skeleton or a spinner in the empty list fades in. Never on a row.
+  const emptyEntering = useAppearEntering();
   const renderEmpty = () => {
     if (warmup === 'blank') return null;
     if (warmup === 'skeleton') return <FeedSkeleton />;
@@ -485,21 +490,25 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     // Rows held back while the first run reads are not a filter: fall
     // through to the processing scene.
     if (allRowsCount > 0 && fold.terminal !== 'reading') {
-      return show === 'picks' ? (
-        <>
-          {/* No picks is the empty Feed for a reader on the Picks view. */}
-          <PendingFollowOffer />
-          <ForYouEmptyState
-            icon="auto-awesome"
-            body={t('feed.show.emptyPicks')}
-            action={{ label: t('feed.show.showAll'), onPress: () => setFeedShow('all'), testID: 'feed-show-empty-show-all' }}
-            testID="feed-show-empty-picks"
-          />
-        </>
-      ) : show === 'discarded' ? (
-        <ForYouEmptyState icon="done-all" body={t('feed.show.emptyDiscarded')} testID="feed-show-empty-discarded" />
-      ) : (
-        <ForYouEmptyState icon="done-all" body={t('feed.show.emptyUnread')} testID="feed-show-empty-unread" />
+      return (
+        <Animated.View key={show} entering={emptyEntering}>
+          {show === 'picks' ? (
+            <>
+              {/* No picks is the empty Feed for a reader on the Picks view. */}
+              <PendingFollowOffer />
+              <ForYouEmptyState
+                icon="auto-awesome"
+                body={t('feed.show.emptyPicks')}
+                action={{ label: t('feed.show.showAll'), onPress: () => setFeedShow('all'), testID: 'feed-show-empty-show-all' }}
+                testID="feed-show-empty-picks"
+              />
+            </>
+          ) : show === 'discarded' ? (
+            <ForYouEmptyState icon="done-all" body={t('feed.show.emptyDiscarded')} testID="feed-show-empty-discarded" />
+          ) : (
+            <ForYouEmptyState icon="done-all" body={t('feed.show.emptyUnread')} testID="feed-show-empty-unread" />
+          )}
+        </Animated.View>
       );
     }
     // Nothing to show (FinalFeed "Feed, empty after a long gap"): the counts
@@ -507,18 +516,13 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     // this is; the list shows the shortcuts. They fold away when the first rows
     // land. The first run after setup keeps the processing scene unless an
     // issue is current (the card then speaks).
-    if (!showsProcessingScene({ runFinished: lastProcessingRunFinishedAt !== null, issue })) {
-      return (
-        <Animated.View exiting={FadeOut.duration(200)}>
-          <FeedShortcuts reading={isFeedProcessing} />
-        </Animated.View>
-      );
-    }
+    // One wrapper for both, so the shortcuts stay mounted when the first run ends.
+    const scene = showsProcessingScene({ runFinished: lastProcessingRunFinishedAt !== null, issue });
     return (
-      <>
-        <FeedProcessingCard />
-        <FeedShortcuts reading />
-      </>
+      <Animated.View key="idle" entering={emptyEntering} exiting={scene ? undefined : FadeOut.duration(200)}>
+        {scene ? <FeedProcessingCard /> : null}
+        <FeedShortcuts reading={scene || isFeedProcessing} />
+      </Animated.View>
     );
   };
 

@@ -1,4 +1,5 @@
 import { Group } from '@/components/custom/you/rows';
+import { Appear } from '@/components/ui/appear';
 import { Text } from '@/components/ui/text';
 import { readLocalDataSizes, type LocalDataSizes } from '@/lib/database/local-data-size';
 import { useColors } from '@/lib/theme/tokens';
@@ -30,7 +31,8 @@ const DataMeterCard: React.FC = () => {
     const f = meterFigures(sizes, i18n.language);
     const stacked = fontScale >= 1.3;
     return (
-        <>
+        // Lands after the sizes are read, so it fades in.
+        <Appear>
             <Group testID="data-meter">
                 <View style={{ padding: 16, gap: 8 }}>
                     <Text style={{ color: colors.ink, fontSize: 16, lineHeight: 21, fontWeight: '700' }}>
@@ -70,7 +72,7 @@ const DataMeterCard: React.FC = () => {
                 ))}
             </Group>
             <View style={{ height: 14 }} />
-        </>
+        </Appear>
     );
 };
 

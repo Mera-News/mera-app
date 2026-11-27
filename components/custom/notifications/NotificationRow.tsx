@@ -11,7 +11,8 @@ import { Trash } from 'lucide-react-native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, Text, View } from 'react-native';
-import Animated, { FadeOut } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
+import { appearExiting } from '@/components/ui/appear/presets';
 import { FEEDBACK_REQUEST, parseJson, resolveText, tapNotification } from './notification-actions';
 
 /** "now" / "5m" / "2h" / "3d", as the board draws it, in the app language. */
@@ -37,8 +38,6 @@ interface NotificationRowProps {
     /** First and last rows round the grouped plate's corners. */
     readonly first: boolean;
     readonly last: boolean;
-    /** Lite / Reduce Motion: a deleted row leaves at once. */
-    readonly motion: boolean;
 }
 
 /**
@@ -49,7 +48,7 @@ interface NotificationRowProps {
  * since VoiceOver cannot see the dot. Rows stack into one grouped plate: an
  * opaque panel (paper in light), a 1pt edge, hairline dividers.
  */
-export default function NotificationRow({ n, first, last, motion }: NotificationRowProps) {
+export default function NotificationRow({ n, first, last }: NotificationRowProps) {
     const { t } = useTranslation();
     const c = useColors();
     const params = parseJson<Record<string, unknown>>(n.contextJson) ?? undefined;
@@ -67,7 +66,7 @@ export default function NotificationRow({ n, first, last, motion }: Notification
 
     return (
         <Animated.View
-            exiting={motion ? FadeOut.duration(180) : undefined}
+            exiting={appearExiting}
             style={{
                 marginHorizontal: PAGE_SIDE_INSET,
                 backgroundColor: c.panel,

@@ -14,6 +14,7 @@ import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleS
 import type { PickableFact } from '@/components/custom/feedback-tree/pick-fact';
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
+import { Appear } from '@/components/ui/appear';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -248,21 +249,25 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
         <Box className="items-center justify-center py-20">
             <Spinner size="large" />
         </Box>
-    ) : list === 'archive' ? (
-        <ForYouEmptyState
-            icon="archive"
-            title={t('library.saved.emptyArchiveTitle')}
-            body={t('library.saved.emptyArchiveBody')}
-            testID="saved-empty-archive"
-        />
     ) : (
-        <ForYouEmptyState
-            icon="bookmark-border"
-            title={t('savedSuggestions.emptyTitle')}
-            body={t('library.saved.emptyBody')}
-            action={{ label: t('library.saved.learn'), onPress: () => openTutorial('library', 'saved'), testID: 'saved-learn' }}
-            testID="saved-empty"
-        />
+        <Appear>
+            {list === 'archive' ? (
+                <ForYouEmptyState
+                    icon="archive"
+                    title={t('library.saved.emptyArchiveTitle')}
+                    body={t('library.saved.emptyArchiveBody')}
+                    testID="saved-empty-archive"
+                />
+            ) : (
+                <ForYouEmptyState
+                    icon="bookmark-border"
+                    title={t('savedSuggestions.emptyTitle')}
+                    body={t('library.saved.emptyBody')}
+                    action={{ label: t('library.saved.learn'), onPress: () => openTutorial('library', 'saved'), testID: 'saved-learn' }}
+                    testID="saved-empty"
+                />
+            )}
+        </Appear>
     );
 
     // Pinned on Read later, where it rides with the tab header. Archive has a

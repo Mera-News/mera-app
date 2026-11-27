@@ -14,6 +14,7 @@ import {
     type LayoutChangeEvent,
 } from 'react-native';
 import Animated, {
+    ReduceMotion,
     runOnJS,
     useAnimatedStyle,
     useReducedMotion,
@@ -25,6 +26,7 @@ import ModalMaterial from '@/components/custom/ModalMaterial';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { Text } from '@/components/ui/text';
 import { EASE, MOTION } from '@/lib/motion';
+import { useMotionAllowed } from '@/lib/motion-gate';
 import { useColors } from '@/lib/theme/tokens';
 
 import { closedOn } from './closed-on';
@@ -44,12 +46,15 @@ const CARD_MAX_WIDTH = 400;
 const SIDE_GAP = 16;
 const MAX_HEIGHT_FRACTION = 0.7;
 const CLOSE_FRAME = 44;
+/** Without it Reanimated lands the timing at once under Reduce Motion or Lite, and the fade is a cut.
+ *  `?.`: a test's cut-down Reanimated mock has no `ReduceMotion`. */
+const KEEP_FADE = ReduceMotion?.Never;
 
 /**
  * Help for a "?": a centred card on the modal material. It opens and closes
  * with the small-modal motion (FinalMotion, `MOTION.smallModal`): a fade from
  * 96% scale in, a fade to 98% out, the scrim fading with it; Reduce Motion
- * fades only. Width min(W − 32, 400), at most 70% of the screen tall with the
+ * and Lite fade only. Width min(W − 32, 400), at most 70% of the screen tall with the
  * body scrolling. The X, a scrim tap and Android back close it; focus moves
  * into the card on open.
  */
@@ -57,7 +62,8 @@ export function HelpModal({ open, onClose, onClosed, title, children, testID }: 
     useRestartHold(open, 'overlay:help', 'auto');
     const { t } = useTranslation();
     const colors = useColors();
-    const reduceMotion = useReducedMotion();
+    const systemReduce = useReducedMotion();
+    const reduceMotion = !useMotionAllowed() || systemReduce;
     const { width: W, height: H } = useWindowDimensions();
     const cardWidth = Math.min(W - 2 * SIDE_GAP, CARD_MAX_WIDTH);
 
@@ -89,7 +95,7 @@ export function HelpModal({ open, onClose, onClosed, title, children, testID }: 
         if (cardHeight === 0 || rose.current) return;
         rose.current = true;
         closing.value = 0;
-        progress.value = withTiming(1, { duration: MOTION.smallModal.in, easing: EASE.arrive }, (done) => {
+        progress.value = withTiming(1, { duration: MOTION.smallModal.in, easing: EASE.arrive, reduceMotion: KEEP_FADE }, (done) => {
             if (done) runOnJS(focusTitle)();
         });
     }, [open, cardHeight, closing, progress, focusTitle]);
@@ -103,7 +109,7 @@ export function HelpModal({ open, onClose, onClosed, title, children, testID }: 
         }
         rose.current = false;
         closing.value = 1;
-        progress.value = withTiming(0, { duration: MOTION.smallModal.out, easing: EASE.leave }, (done) => {
+        progress.value = withTiming(0, { duration: MOTION.smallModal.out, easing: EASE.leave, reduceMotion: KEEP_FADE }, (done) => {
             if (done) runOnJS(finish)();
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps

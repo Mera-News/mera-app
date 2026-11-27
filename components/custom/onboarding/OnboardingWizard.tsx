@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import MeraLogo from '@/components/custom/MeraLogo';
+import { Appear } from '@/components/ui/appear';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -310,17 +311,18 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                                 {t('onboarding.factsCount', { count: factCount })}
                             </RNText>
                         </Animated.View>
-                        {gated ? (
-                            <View style={styles.zero} testID="onboarding-zero-block">
-                                <RNText accessibilityRole="header" style={[styles.zeroHint, { color: colors.ink }]}>
-                                    {t('onboarding.gateHint')}
-                                </RNText>
-                                <HomeCountryChip />
-                                <RNText style={[styles.zeroPrivacy, { color: colors.ink3 }]}>{t('onboarding.privacyLine')}</RNText>
-                            </View>
-                        ) : null}
+                        {/* On screen from the start, so it only fades out, when the first fact lands. */}
+                        <Appear show={gated} animateOnMount={false} style={styles.zero} testID="onboarding-zero-block">
+                            <RNText accessibilityRole="header" style={[styles.zeroHint, { color: colors.ink }]}>
+                                {t('onboarding.gateHint')}
+                            </RNText>
+                            <HomeCountryChip />
+                            <RNText style={[styles.zeroPrivacy, { color: colors.ink3 }]}>{t('onboarding.privacyLine')}</RNText>
+                        </Appear>
                         {showPicker ? (
-                            <HomePickerFallback reason={chatUnavailable ? 'unavailable' : 'slow'} onClose={() => setPickerClosed(true)} />
+                            <Appear style={styles.flex}>
+                                <HomePickerFallback reason={chatUnavailable ? 'unavailable' : 'slow'} onClose={() => setPickerClosed(true)} />
+                            </Appear>
                         ) : null}
                         {/* Hidden, never unmounted: a remount opens a new conversation and loses the reply and its fact card. */}
                         <View style={showPicker ? styles.hidden : styles.flex}>
@@ -330,7 +332,8 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                 ) : currentStep === 1 ? (
                     <OnboardingSourcesStep onHasPicksChange={setHasPicks} />
                 ) : (
-                    <>
+                    // flex: 1 keeps the wheel's box below at the height it had as a direct child.
+                    <Appear style={styles.flex}>
                         <View style={styles.remind} testID="onboarding-remind">
                             <RNText accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>
                                 {t('onboarding.remindTitle')}
@@ -346,7 +349,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                                 enableRequest={enableRequest}
                             />
                         </View>
-                    </>
+                    </Appear>
                 )}
 
                 <View style={[styles.guard, { bottom: insets.bottom + 72 }]} pointerEvents="box-none">

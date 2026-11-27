@@ -1,5 +1,6 @@
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import IndeterminateBar from '@/components/custom/toast/IndeterminateBar';
+import { Appear } from '@/components/ui/appear';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -282,6 +283,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
         // terms, and offer the widest window when a narrower one is set.
         const answeredEmpty = isConnected && isOnline && !loadFailed && !isLoading;
         return (
+            <Appear>
             <VStack className="items-center justify-center py-20 p-6" space="md" testID="explore-empty">
                 <MaterialIcons name="article" size={48} color={colors.ink3} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
                 <Text size="md" className="text-ink-2 text-center">
@@ -311,6 +313,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
                     </Button>
                 ) : null}
             </VStack>
+            </Appear>
         );
     }, [isLoading, enabled, loadHung, isOnline, isConnected, loadFailed, t, countryName, hours, onWindowChange, colors]);
 

@@ -1,3 +1,4 @@
+import { Appear } from '@/components/ui/appear';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
@@ -72,7 +73,8 @@ export default function WorldTopicPill({ topics, facets, pick, onPick }: Props) 
     const fg = pickedName ? c.onAccent : c.ink;
     return (
         <>
-            <View
+            {/* Mounts when the page's topics are in: it fades in. */}
+            <Appear
                 pointerEvents="box-none"
                 style={{ position: 'absolute', right: MERA_BUTTON_EDGE, bottom, zIndex: 5 }}
             >
@@ -116,7 +118,7 @@ export default function WorldTopicPill({ topics, facets, pick, onPick }: Props) 
                         </Pressable>
                     ) : null}
                 </View>
-            </View>
+            </Appear>
             <BottomSheet testID="world-topic-sheet" open={open} onClose={dismiss} onClosed={onClosed}>
                 <Text style={{ color: c.ink, fontSize: 17, fontWeight: '600', lineHeight: 24, paddingVertical: 8 }}>
                     {t('explore.topicFilter.sheetTitle')}

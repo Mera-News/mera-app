@@ -1,3 +1,4 @@
+import { Appear } from '@/components/ui/appear';
 import { HStack } from '@/components/ui/hstack';
 import { AlertCircleIcon, Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
@@ -51,9 +52,9 @@ const OfflineBanner: React.FC = () => {
 
 
     useEffect(() => {
-        // Asymmetric on purpose: delayed show, INSTANT hide. Lingering on a
-        // "we can't connect" message while the feed is visibly loading is worse
-        // than never having shown it.
+        // Asymmetric on purpose: delayed show, hide AT ONCE (a short fade, no
+        // delay). Lingering on a "we can't connect" message while the feed is
+        // visibly loading is worse than never having shown it.
         if (healthy) {
             setVisible(false);
             return;
@@ -76,28 +77,31 @@ const OfflineBanner: React.FC = () => {
         void probeInternetReachable();
     }, [healthy, isConnected]);
 
-    if (!visible) return null;
-
     const messageKey = !isConnected
         ? 'common.offlineBannerOffline'
         : !internetReachable
             ? 'common.offlineBannerInternetDown'
             : 'common.offlineBannerServerDown';
+    // The leaving band keeps the message it showed: the stores already read healthy by then.
+    const [shownKey, setShownKey] = useState<typeof messageKey>(messageKey);
+    if (visible && shownKey !== messageKey) setShownKey(messageKey);
 
     return (
-        <HStack
-            testID="offline-banner"
-            className="items-center bg-warning-900 rounded-lg px-3 py-2"
-            space="sm"
-            // Purely informational — must never swallow a pull-to-refresh
-            // starting underneath it.
-            pointerEvents="none"
-        >
-            <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
-            <Text size="sm" className="text-warning-400">
-                {t(messageKey)}
-            </Text>
-        </HStack>
+        // Purely informational — must never swallow a pull-to-refresh
+        // starting underneath it.
+        <Appear show={visible} pointerEvents="none">
+            <HStack
+                testID="offline-banner"
+                className="items-center bg-warning-900 rounded-lg px-3 py-2"
+                space="sm"
+                pointerEvents="none"
+            >
+                <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
+                <Text size="sm" className="text-warning-400">
+                    {t(shownKey)}
+                </Text>
+            </HStack>
+        </Appear>
     );
 };
 

@@ -1,10 +1,10 @@
 import React from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeOut, useReducedMotion } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import ModalMaterial from '@/components/custom/ModalMaterial';
+import { appearExiting, useAppearEntering } from '@/components/ui/appear/presets';
 import { Button, ButtonText } from '@/components/ui/button';
-import { MOTION } from '@/lib/motion';
 import { useColors } from '@/lib/theme/tokens';
 
 export interface NextGuardBoxProps {
@@ -39,16 +39,13 @@ export function NextGuardBox({
     testID,
 }: NextGuardBoxProps) {
     const colors = useColors();
-    const reduceMotion = useReducedMotion();
+    // The shared enter and exit: they keep the fade in Lite, where a Reanimated builder lands at once.
+    const entering = useAppearEntering({ rise: 12 });
     if (!open) return null;
     return (
         <Animated.View
-            entering={
-                reduceMotion
-                    ? FadeIn.duration(MOTION.smallModal.in)
-                    : FadeInDown.duration(MOTION.smallModal.in).withInitialValues({ transform: [{ translateY: 12 }] })
-            }
-            exiting={FadeOut.duration(MOTION.smallModal.out)}
+            entering={entering}
+            exiting={appearExiting}
             accessibilityViewIsModal
             testID={testID}
             style={[styles.box, { borderColor: colors.line }, style]}

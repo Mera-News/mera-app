@@ -65,6 +65,7 @@ import { flagEmoji } from './PageStrip';
 import type { ArrangeConfig, PagePill } from './types';
 import { useMotionAllowed } from '@/lib/motion-gate';
 import { useRestartHold } from '@/lib/app-restart';
+import { appearExiting, useAppearEntering } from '@/components/ui/appear/presets';
 
 const GLOW_PERIOD_MS = 1600;
 /** Constant: the glow animates colour only, never width. */
@@ -258,6 +259,7 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
   const insets = useSafeAreaInsets();
   const rtl = I18nManager.isRTL;
   const still = !useMotionAllowed();
+  const entering = useAppearEntering({ rise: 0 });
   // Mounted only while open: an update reload cannot rebuild the draft.
   useRestartHold(true, 'world-arrange', 'auto');
 
@@ -352,7 +354,13 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
   const footnote = footnoteId ? arrange.footnoteFor(footnoteId) : null;
 
   return (
-    <View style={[StyleSheet.absoluteFill, styles.layer]} accessibilityViewIsModal testID="arrange-overlay">
+    <Animated.View
+      entering={entering}
+      exiting={appearExiting}
+      style={[StyleSheet.absoluteFill, styles.layer]}
+      accessibilityViewIsModal
+      testID="arrange-overlay"
+    >
       <View style={[styles.dim, ink.dim]} pointerEvents="auto" {...GLYPH_HIDDEN} testID="arrange-dim" />
       <View style={[styles.panel, ink.panel, { paddingTop: insets.top + 8 }]}>
         <View style={styles.chips} testID="arrange-chips">
@@ -454,7 +462,7 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
           {footnote ?? t('nav.arrange.hint', { tab: tabLabel })}
         </Text>
       </View>
-    </View>
+    </Animated.View>
   );
 };
 

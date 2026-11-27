@@ -1,5 +1,6 @@
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import { usePageActiveSource } from '@/components/custom/nav/page-active';
+import { Appear } from '@/components/ui/appear';
 import { Heading } from '@/components/ui/heading';
 import { Popover, PopoverBackdrop, PopoverBody, PopoverContent } from '@/components/ui/popover';
 import { Pressable } from '@/components/ui/pressable';
@@ -460,6 +461,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         nodeRef.current = node as MeasurableNode | null;
     }, []);
     const [isOnScreen, setIsOnScreen] = useState(false);
+    const [sawPending, setSawPending] = useState<string | null>(null);
     // Avoid firing multiple translation requests for the same (text, language) pair.
     const firedRef = useRef<string | null>(null);
     /**
@@ -702,15 +704,19 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     // shimmer says so, so the swap (and the re-wrap it can cause) reads as a
     // translation arriving rather than as the card changing under the reader.
     const translating = needsTranslation && !translated && translationPending;
+    // The text this mount saw in flight. A translation already cached at mount (a row
+    // scrolled back in) never sets it, so only a translation that ARRIVES fades in.
+    if (translating && sawPending !== text) setSawPending(text);
 
     const glyph: 'failed' | 'translated' | null = failed
         ? 'failed'
         : translated && showTranslatedGlyph
             ? 'translated'
             : null;
+    const arrived = translated && glyph == null && sawPending === text;
     // A clamped text (cards) puts the glyph beside it, where an ellipsis cannot hide it.
     const clamped = numberOfLines != null;
-    const needsWrapper = translating || (glyph != null && clamped);
+    const needsWrapper = translating || arrived || (glyph != null && clamped);
     const layout = needsWrapper ? splitLayout(className, style) : null;
 
     const token: TypeToken = tokenFromClassName(className) ?? (size === 'md' ? 'base' : size);
@@ -827,6 +833,13 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
                     }
                     : null),
             },
+        );
+    } else if (arrived && layout) {
+        // The same outer box as the shimmer it replaces; opacity only, so the row's height is set at once.
+        body = (
+            <View className={layout.outerClass} style={layout.outerStyle}>
+                <Appear rise={0}>{renderTextNode(displayText)}</Appear>
+            </View>
         );
     } else {
         body = renderTextNode(displayText);

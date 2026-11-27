@@ -10,6 +10,7 @@ import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import { MERA_BUTTON_BAR_GAP, MERA_BUTTON_SIZE } from '@/lib/navigation/tab-bar';
 import DetailTopBar from '@/components/custom/news-detail/DetailTopBar';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
+import { Appear } from '@/components/ui/appear';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
@@ -200,19 +201,21 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                     everything else on the page. */}
                 <AbstractGradientBackdrop />
 
-                <MaterialIcons
-                    name="wifi-off"
-                    size={48}
-                    color={colors.ink2}
-                    accessibilityElementsHidden={true}
-                    importantForAccessibility="no-hide-descendants"
-                />
-                <Text size="lg" className="text-ink mt-4 text-center">
-                    {t('articleDetail.offlineUnavailable')}
-                </Text>
-                <Pressable onPress={onBack} className="mt-6 bg-surface-raised rounded-lg px-6 py-3">
-                    <Text size="md" className="text-ink">{t('common.goBack')}</Text>
-                </Pressable>
+                <Appear style={{ alignItems: 'center' }}>
+                    <MaterialIcons
+                        name="wifi-off"
+                        size={48}
+                        color={colors.ink2}
+                        accessibilityElementsHidden={true}
+                        importantForAccessibility="no-hide-descendants"
+                    />
+                    <Text size="lg" className="text-ink mt-4 text-center">
+                        {t('articleDetail.offlineUnavailable')}
+                    </Text>
+                    <Pressable onPress={onBack} className="mt-6 bg-surface-raised rounded-lg px-6 py-3">
+                        <Text size="md" className="text-ink">{t('common.goBack')}</Text>
+                    </Pressable>
+                </Appear>
             </Box>
         );
     }
@@ -227,6 +230,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                     everything else on the page. */}
                 <AbstractGradientBackdrop />
 
+                <Appear style={{ flex: 1 }}>
                 <ScrollView
                     // Rows below the first screen ask for their translation only
                     // when a scroll tick finds them on screen (lib/visibility-tick).
@@ -285,6 +289,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                         <Text size="md" className="text-ink">{t('common.goBack')}</Text>
                     </Pressable>
                 </ScrollView>
+                </Appear>
             </Box>
         );
     }
@@ -336,6 +341,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
             <ArticleSuggestionContainer
                 article={article}
                 variant="screen"
+                arrives
                 read={read}
                 onTitleDisplayChange={handleTitleDisplayChange}
                 scrollViewRef={scrollViewRef}

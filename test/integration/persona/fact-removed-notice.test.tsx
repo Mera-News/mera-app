@@ -39,7 +39,7 @@ describe('fact_removed notice', () => {
     });
 
     it('the body is not clamped and shows the statement intact', async () => {
-        await render(<NotificationRow n={await seed()} first last motion={false} />);
+        await render(<NotificationRow n={await seed()} first last />);
         const body = screen.getByText(t('notifications.factRemovedBody', { statement: STATEMENT }));
         expect(body.props.numberOfLines).toBeUndefined();
         expect(body.props.children).toContain(STATEMENT);

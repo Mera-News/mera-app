@@ -32,6 +32,6 @@ describe('a finished reply keeps the streaming bubble', () => {
 
   it('the entering wrapper does not come or go with the handover', () => {
     expect(src).not.toMatch(/startsWith\('live-'\)\s*&&\s*!item\.handover/);
-    expect(src).toMatch(/entering=\{item\.handover \? undefined : MESSAGE_ENTERING\}/);
+    expect(src).toMatch(/entering=\{item\.handover \? undefined : appearIn\}/);
   });
 });

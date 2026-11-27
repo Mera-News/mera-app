@@ -33,7 +33,7 @@ const updateRow = () =>
         actions: [{ id: RESTART_FOR_UPDATE, labelKey: 'notificationCenter.update.restart' }],
     });
 
-const mount = (row: Awaited<ReturnType<typeof seed>>) => render(<NotificationRow n={row} first last motion={false} />);
+const mount = (row: Awaited<ReturnType<typeof seed>>) => render(<NotificationRow n={row} first last />);
 
 beforeAll(initI18nEn);
 beforeEach(() => useNotificationSheet.setState({ updateReady: null, updateReadyOpen: false, notesAt: null }));
@@ -99,7 +99,7 @@ describe('NotificationRow', () => {
 
         const other = await updateRow();
         useNotificationSheet.setState({ updateReady: null, updateReadyOpen: false });
-        await render(<NotificationRow n={other} first last motion={false} />);
+        await render(<NotificationRow n={other} first last />);
         await fireEvent.press(screen.getByTestId(`notification-delete-${other.id}`));
         await waitFor(async () => expect((await getAll()).map((n) => n.id)).not.toContain(other.id));
         expect(useNotificationSheet.getState().updateReadyOpen).toBe(false);

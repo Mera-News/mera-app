@@ -36,7 +36,8 @@ import {
   findNodeHandle,
   useWindowDimensions,
 } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
+import { appearExiting, useAppearEntering } from '@/components/ui/appear/presets';
 import { useTranslation } from 'react-i18next';
 import { PopoverPhaseContext } from './ChatPopover';
 import AgentStepsBox from './AgentStepsBox';
@@ -58,10 +59,27 @@ import ConflictResolutionCard from './ConflictResolutionCard';
 import StarterChips from './StarterChips';
 import type { ChatThreadItem, ChatThreadProps, StarterChip } from './types';
 
-// Short, snappy spring for freshly-arrived message bubbles. Applied ONLY to
-// live-session items (keys prefixed `live-`); prepended history pages (`hist-`)
-// must not replay this animation when they load in behind the current session.
-const MESSAGE_ENTERING = FadeInDown.springify().damping(20).stiffness(220).mass(0.5);
+// A freshly-arrived bubble fades in ONCE. Only live-session items (keys prefixed
+// `live-`) come through here; prepended history pages (`hist-`) never do. `entered`
+// lives as long as the thread, so a row the list unmounts on a long scroll and
+// mounts again on the way back is drawn at rest.
+function LiveRow({
+  id,
+  entered,
+  entering,
+  children,
+}: {
+  id: string;
+  entered: Set<string>;
+  entering: ReturnType<typeof useAppearEntering> | undefined;
+  children: React.ReactNode;
+}) {
+  const [first] = useState(() => !entered.has(id));
+  useEffect(() => {
+    entered.add(id);
+  }, [entered, id]);
+  return <Animated.View entering={first ? entering : undefined}>{children}</Animated.View>;
+}
 
 const HISTORY_ITEM: ChatThreadItem = { kind: 'history-button', key: 'history-button' };
 
@@ -100,6 +118,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   const styles = useStyles();
   const { t } = useTranslation();
   const colors = useColors();
+  const [enteredRows] = useState(() => new Set<string>());
   // The session's whole-turn busy mirror (not `status`): Send is Stop until it clears.
   const turnBusy = useFloatingChatStore((st) => st.isGenerating);
 
@@ -120,6 +139,9 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   // wait for phase 'open'. If the session finishes loading after the morph, this
   // ChatThread mounts with phase already 'open' and the effect still fires.
   const phase = useContext(PopoverPhaseContext);
+  // What is there when the panel opens arrives on the panel's own morph; only later arrivals fade in.
+  const fadeIn = useAppearEntering();
+  const appearIn = phase === 'opening' ? undefined : fadeIn;
   const promptRef = useRef<PromptInputHandle>(null);
   useEffect(() => {
     if (phase === 'open') {
@@ -295,12 +317,14 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             </Message>
           );
         // Only animate in live-session bubbles; history pages load without
-        // replay. A reply taking the wait row's slot does not spring in: the
+        // replay. A reply taking the wait row's slot does not fade in: the
         // handover is its entrance. The wrapper itself never comes or goes
         // with `handover` (it clears when the stream ends): a wrapper that
-        // appeared then remounted the finished reply with the spring.
+        // appeared then remounted the finished reply with the entrance.
         return item.key.startsWith('live-') ? (
-          <Animated.View entering={item.handover ? undefined : MESSAGE_ENTERING}>{inner}</Animated.View>
+          <LiveRow id={item.key} entered={enteredRows} entering={item.handover ? undefined : appearIn}>
+            {inner}
+          </LiveRow>
         ) : (
           inner
         );
@@ -476,7 +500,8 @@ const ChatThread: React.FC<ChatThreadProps> = ({
           isLoadingOlder={isLoadingOlder}
           header={
             showChips || !hasRealMessage ? (
-              <View style={styles.header}>
+              // Leaves on the first send: it fades in place while the new bubble lands.
+              <Animated.View style={styles.header} entering={appearIn} exiting={appearExiting}>
                 {!hasRealMessage && usageNotice && (
                   <View style={styles.noticeRow}>
                     <MaterialIcons {...DECORATIVE_ICON_A11Y} name="info-outline" size={14} color={colors.ink3} />
@@ -488,14 +513,14 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                 {showChips && (
                   <StarterChips chips={starterChips} onChipPress={handleChip} />
                 )}
-              </View>
+              </Animated.View>
             ) : null
           }
         />
       </View>
 
       {blockedMessage && (
-        <View style={styles.blockedBanner}>
+        <Animated.View style={styles.blockedBanner} entering={appearIn} exiting={appearExiting}>
           <MaterialIcons {...DECORATIVE_ICON_A11Y} name="block" size={20} color={colors.negative} />
           <View style={styles.blockedBody}>
             <Text size="sm" style={styles.blockedText}>
@@ -564,7 +589,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
               </View>
             )}
           </View>
-        </View>
+        </Animated.View>
       )}
 
       <TopicPlanSaveAllRow factIds={topicPlanFactIds} />
@@ -591,11 +616,11 @@ const ChatThread: React.FC<ChatThreadProps> = ({
       ) : null}
 
       {composerHint && !blockedMessage ? (
-        <View style={styles.hintRow} testID="chat-composer-hint">
+        <Animated.View style={styles.hintRow} testID="chat-composer-hint" entering={appearIn} exiting={appearExiting}>
           <Text size="xs" style={styles.hintText} accessibilityLiveRegion="polite">
             {composerHint}
           </Text>
-        </View>
+        </Animated.View>
       ) : null}
 
       <View style={composerTrailing ? styles.composerRow : undefined}>

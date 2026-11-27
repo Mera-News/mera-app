@@ -1,4 +1,5 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import { Appear } from '@/components/ui/appear';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -115,6 +116,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                         <Spinner size="large" />
                     </View>
                 ) : (
+                    <Appear style={{ flex: 1 }}>
                     <ScrollView
                         contentContainerStyle={{ paddingHorizontal: 14, paddingTop: SUBPAGE_TOP_GAP, paddingBottom: insets.bottom + 24, gap: 12 }}
                         showsVerticalScrollIndicator={false}
@@ -125,16 +127,16 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                             title `manage-activation-timeout`): the device flow
                             keys on those ids. */}
                         {confirming ? (
-                            <View testID="manage-confirming-card" style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line, alignItems: 'center' }]}>
+                            <Appear testID="manage-confirming-card" style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line, alignItems: 'center' }]}>
                                 <ActivityIndicator size="small" color={colors.ink} />
                                 <Text testID="manage-activation-pending" style={{ color: colors.ink, fontSize: 16, fontWeight: '600', textAlign: 'center' }}>{t('subscription.confirmingTitle')}</Text>
                                 <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20, textAlign: 'center' }}>{t('subscription.confirmingBody')}</Text>
-                            </View>
+                            </Appear>
                         ) : null}
                         {/* Both poll budgets are spent. If they paid, support
                             can sort it out; otherwise they can look again. */}
                         {purchaseStatus === 'timed-out' ? (
-                            <View testID="manage-timeout-card" style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line, alignItems: 'center' }]}>
+                            <Appear testID="manage-timeout-card" style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.line, alignItems: 'center' }]}>
                                 <MaterialIcons name="warning-amber" size={24} color={colors.warning} />
                                 <Text testID="manage-activation-timeout" style={{ color: colors.ink, fontSize: 16, fontWeight: '600', textAlign: 'center' }}>{t('subscription.confirmTimeoutTitle')}</Text>
                                 <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20, textAlign: 'center' }}>{t('subscription.confirmTimeoutBody')}</Text>
@@ -157,7 +159,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                                 >
                                     <Text style={{ color: colors.accentText, fontSize: 15, fontWeight: '600' }}>{t('subscription.checkAgain')}</Text>
                                 </Pressable>
-                            </View>
+                            </Appear>
                         ) : null}
 
                         {/* The plan, named once. */}
@@ -245,6 +247,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                             </Text>
                         ) : null}
                     </ScrollView>
+                    </Appear>
                 )}
             </View>
         </View>

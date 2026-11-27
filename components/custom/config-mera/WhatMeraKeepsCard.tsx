@@ -1,3 +1,4 @@
+import { Appear } from '@/components/ui/appear';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
@@ -109,6 +110,7 @@ const WhatMeraKeepsCard: React.FC = () => {
             </Pressable>
 
             {expanded ? (
+                <Appear>
                 <VStack testID="manage-data-keeps-body" space="sm" className="px-4 pb-4">
                     {lines.map((key) => (
                         <Text
@@ -137,6 +139,7 @@ const WhatMeraKeepsCard: React.FC = () => {
                         </Text>
                     </Pressable>
                 </VStack>
+                </Appear>
             ) : null}
         </Box>
     );

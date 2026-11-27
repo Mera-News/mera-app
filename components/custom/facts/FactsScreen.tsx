@@ -4,6 +4,7 @@ import { openMeraChat } from '@/components/custom/mera-button/open-mera-chat';
 import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
 import { Group, Row } from '@/components/custom/you/rows';
 import { useActiveTopicTexts, useHubFacts } from '@/components/custom/you/use-hub-data';
+import { Appear } from '@/components/ui/appear';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -53,14 +54,16 @@ const FactsScreen: React.FC<{ readonly onBack: () => void }> = ({ onBack }) => {
                     <Spinner size="large" />
                 </View>
             ) : facts.length === 0 ? (
-                <ForYouEmptyState
-                    testID="facts-empty"
-                    animationId="facts-a-fact-is"
-                    body={t('you.profile.factsEmpty')}
-                    action={{ label: t('nav.learnMore'), onPress: () => openTutorial('facts'), testID: 'facts-empty-learn' }}
-                />
+                <Appear>
+                    <ForYouEmptyState
+                        testID="facts-empty"
+                        animationId="facts-a-fact-is"
+                        body={t('you.profile.factsEmpty')}
+                        action={{ label: t('nav.learnMore'), onPress: () => openTutorial('facts'), testID: 'facts-empty-learn' }}
+                    />
+                </Appear>
             ) : (
-                <View style={{ flex: 1 }}>
+                <Appear style={{ flex: 1 }}>
                 <ScrollView
                     testID="facts-list"
                     showsVerticalScrollIndicator={false}
@@ -98,7 +101,7 @@ const FactsScreen: React.FC<{ readonly onBack: () => void }> = ({ onBack }) => {
                         <Text style={{ color: colors.ink, fontSize: 15, fontWeight: '600' }}>{t('facts.addFact')}</Text>
                     </Pressable>
                 </ScrollView>
-                </View>
+                </Appear>
             )}
         </View>
     );

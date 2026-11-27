@@ -18,11 +18,13 @@
 // user can be left with a block and no visible way to clear it.
 
 import { Button, ButtonText } from '@/components/ui/button';
+import { Appear } from '@/components/ui/appear';
 import { Text } from '@/components/ui/text';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { PopoverPhaseContext } from './ChatPopover';
 import { discardTopicPlan, saveTopicPlan } from './topic-plan-actions';
 import { useTopicPlanResolutions } from './useTopicPlanResolutions';
 import { themedStyles } from '@/lib/theme/tokens';
@@ -38,6 +40,8 @@ const TopicPlanSaveAllRow: React.FC<TopicPlanSaveAllRowProps> = ({ factIds }) =>
   const { unresolved } = useTopicPlanResolutions(factIds);
   const [busy, setBusy] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
+  // A row already there when the panel opens arrives with the panel, at rest.
+  const opening = useContext(PopoverPhaseContext) === 'opening';
 
   if (unresolved.length < 2) return null;
 
@@ -72,11 +76,13 @@ const TopicPlanSaveAllRow: React.FC<TopicPlanSaveAllRowProps> = ({ factIds }) =>
   };
 
   return (
-    <View style={styles.row} testID="chat-save-all-row">
+    <Appear animateOnMount={!opening} style={styles.row} testID="chat-save-all-row">
       {confirmDiscard && (
-        <Text size="xs" style={styles.warning}>
-          {t('topicPlan.discardAllWarning', { count: unresolved.length })}
-        </Text>
+        <Appear rise={0}>
+          <Text size="xs" style={styles.warning}>
+            {t('topicPlan.discardAllWarning', { count: unresolved.length })}
+          </Text>
+        </Appear>
       )}
       <View style={styles.buttons}>
         <Button
@@ -102,7 +108,7 @@ const TopicPlanSaveAllRow: React.FC<TopicPlanSaveAllRowProps> = ({ factIds }) =>
           </ButtonText>
         </Button>
       </View>
-    </View>
+    </Appear>
   );
 };
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text as RNText, View } from 'react-native';
-import Animated, { FadeIn, FadeOut, LinearTransition, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, { LinearTransition, useAnimatedStyle } from 'react-native-reanimated';
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +12,8 @@ import SourceSearch from '@/components/custom/publication-preferences/SourceSear
 import { localizedCountryName } from '@/components/custom/publication-preferences/country-search';
 import { useAdjustedSources } from '@/components/custom/publication-preferences/use-adjusted-sources';
 import { usePublicationRowPrefs } from '@/components/custom/publication-preferences/use-publication-row-prefs';
+import { Appear } from '@/components/ui/appear';
+import { appearExiting, useAppearEntering } from '@/components/ui/appear/presets';
 import { useRestartHold } from '@/lib/app-restart';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useIsOnline } from '@/lib/stores/network-store';
@@ -37,6 +39,8 @@ const OnboardingSourcesStep: React.FC<{ readonly onHasPicksChange: (has: boolean
     // and an update restart there would end the wizard.
     useRestartHold(true, 'onboarding-sources', 'hard');
     const keyboard = useReanimatedKeyboardAnimation();
+    const stepIn = useAppearEntering();
+    const titleIn = useAppearEntering({ rise: 0 });
     const lift = useAnimatedStyle(() => ({ paddingBottom: keyboardLift(keyboard.height.value, insets.bottom) }));
 
     const hasPicks = publications.length + scopes.length > 0;
@@ -45,9 +49,9 @@ const OnboardingSourcesStep: React.FC<{ readonly onHasPicksChange: (has: boolean
     }, [hasPicks, onHasPicksChange]);
 
     return (
-        <Animated.View style={[styles.flex, lift]} testID="onboarding-sources-step">
+        <Animated.View entering={stepIn} style={[styles.flex, lift]} testID="onboarding-sources-step">
             {!focused ? (
-                <Animated.View entering={FadeIn} exiting={FadeOut} style={styles.remind}>
+                <Animated.View entering={titleIn} exiting={appearExiting} style={styles.remind}>
                     <RNText accessibilityRole="header" style={[styles.title, { color: colors.ink }]}>
                         {t('onboarding.sourcesTitle')}
                     </RNText>
@@ -59,7 +63,7 @@ const OnboardingSourcesStep: React.FC<{ readonly onHasPicksChange: (has: boolean
                     <ScrollView style={styles.flex} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
                         {!online ? <RNText style={[styles.hint, { color: colors.ink2 }]}>{t('onboarding.sourcesOffline')}</RNText> : null}
                         {hasPicks ? (
-                            <View testID="onboarding-your-sources">
+                            <Appear testID="onboarding-your-sources">
                                 <RNText accessibilityRole="header" style={[styles.section, { color: colors.ink2 }]}>
                                     {t('onboarding.yourSources')}
                                 </RNText>
@@ -96,7 +100,7 @@ const OnboardingSourcesStep: React.FC<{ readonly onHasPicksChange: (has: boolean
                                         />
                                     );
                                 })}
-                            </View>
+                            </Appear>
                         ) : null}
                     </ScrollView>
                 </SourceSearch>

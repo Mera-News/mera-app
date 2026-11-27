@@ -6,10 +6,11 @@
 
 import React from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeOut, useReducedMotion } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import DownloadPressIllustration from '@/components/custom/auth/DownloadPressIllustration';
 import ModalMaterial from '@/components/custom/ModalMaterial';
+import { appearExiting, useAppearEntering } from '@/components/ui/appear/presets';
 import i18n from '@/lib/i18n';
 import { COLORS } from '@/lib/theme/tokens';
 import { getNativeLanguageName } from '@/lib/translation-service';
@@ -22,7 +23,8 @@ const NOTICE_INK = COLORS.light.ink;
 
 /** The card itself, absolutely placed at `top` in its host. */
 export default function LanguageDownloadNotice({ code, top }: { readonly code: string | null; readonly top: number }) {
-    const reduceMotion = useReducedMotion();
+    // The shared enter and exit keep the fade in Lite, where a Reanimated builder lands at once.
+    const entering = useAppearEntering();
     if (!code) return null;
     // The notice speaks the language being fetched: the reader picked it, and
     // iOS dims the rest of the screen while it asks.
@@ -35,8 +37,8 @@ export default function LanguageDownloadNotice({ code, top }: { readonly code: s
     return (
         <Animated.View
             key={code}
-            entering={reduceMotion ? FadeIn.duration(150) : FadeInDown.duration(220)}
-            exiting={FadeOut.duration(220)}
+            entering={entering}
+            exiting={appearExiting}
             accessibilityLiveRegion="polite"
             // The LIGHT modal material with dark ink in BOTH themes: iOS's
             // download sheet dims everything behind it, and this card has to

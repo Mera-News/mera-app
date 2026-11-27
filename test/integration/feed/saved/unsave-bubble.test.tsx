@@ -115,7 +115,7 @@ describe('the filled bookmark', () => {
     await openBubble();
     await press('unsave-bubble-move');
 
-    expect(bubble()).toBeNull();
+    await waitFor(() => expect(bubble()).toBeNull());
     await waitFor(async () => expect(await getSavedList('art-1')).toBe('archive'));
     await waitFor(() => expect(useToastQueue.getState().entries.length).toBe(1));
     const entry = useToastQueue.getState().entries[0];
@@ -140,7 +140,7 @@ describe('the filled bookmark', () => {
     await openBubble();
     await press('unsave-bubble-remove');
 
-    expect(bubble()).toBeNull();
+    await waitFor(() => expect(bubble()).toBeNull());
     await waitFor(async () => expect(await isSuggestionSaved('art-1')).toBe(false));
   });
 
@@ -150,7 +150,7 @@ describe('the filled bookmark', () => {
     await openBubble();
     await press('unsave-bubble-outside');
 
-    expect(bubble()).toBeNull();
+    await waitFor(() => expect(bubble()).toBeNull());
     expect(await getSavedList('art-1')).toBe('later');
     expect(useToastQueue.getState().entries.length).toBe(0);
   });
@@ -162,7 +162,7 @@ describe('the filled bookmark', () => {
     await openBubble();
     expect(activeHolds('ota')).toEqual(['overlay:sheet']);
     await press('unsave-bubble-outside');
-    expect(activeHolds('ota')).toEqual([]);
+    await waitFor(() => expect(activeHolds('ota')).toEqual([]));
   });
 
   it('a row removed behind its back reports the failure and never an Undo', async () => {

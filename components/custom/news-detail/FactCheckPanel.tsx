@@ -2,6 +2,7 @@ import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import { useNoteInk } from '@/components/custom/cards/FactChips';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
+import { Appear } from '@/components/ui/appear';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { secureUrlOrNull, isSecureUrl } from '@/lib/algorithms/secure-url';
@@ -120,13 +121,13 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
             {showStalled ? (
                 // Its own block: the working block promises an answer soon,
                 // which is no longer honest once the poll has given up.
-                <View style={[box, styles.padded]} testID={`${testIDPrefix}-stalled`}>
+                <Appear style={[box, styles.padded]} testID={`${testIDPrefix}-stalled`}>
                     <Text size="sm" style={{ color: c.ink }}>{t('factCheck.stillChecking')}</Text>
-                </View>
+                </Appear>
             ) : null}
 
             {showWorking ? (
-                <View style={[box, styles.padded, { gap: 6 }]} testID={`${testIDPrefix}-working`}>
+                <Appear style={[box, styles.padded, { gap: 6 }]} testID={`${testIDPrefix}-working`}>
                     <View style={styles.row}>
                         <Spinner size="small" />
                         <View style={{ flex: 1 }}>
@@ -137,18 +138,19 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                     {/* The job survives navigation and a kill: nothing to wait here for. */}
                     <Text size="xs" style={{ color: c.ink2 }}>{t('factCheck.queued')}</Text>
                     <Text size="xs" style={{ color: c.ink3 }}>{t('factCheck.queuedHint')}</Text>
-                </View>
+                </Appear>
             ) : null}
 
             {terminalRows.map((row, index) => (
-                <FactCheckResult
-                    key={row.id}
-                    row={row}
-                    open={collapsed[row.id] !== true}
-                    onToggle={() => toggle(row.id)}
-                    article={article}
-                    testIDPrefix={`${testIDPrefix}-${index}`}
-                />
+                <Appear key={row.id}>
+                    <FactCheckResult
+                        row={row}
+                        open={collapsed[row.id] !== true}
+                        onToggle={() => toggle(row.id)}
+                        article={article}
+                        testIDPrefix={`${testIDPrefix}-${index}`}
+                    />
+                </Appear>
             ))}
         </View>
     );

@@ -1,4 +1,5 @@
 import type { PageHeaderBinding } from '@/components/custom/nav/types';
+import { Appear } from '@/components/ui/appear';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import type NotificationModel from '@/lib/database/models/Notification';
@@ -12,6 +13,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
+import { appearExiting } from '@/components/ui/appear/presets';
 import { NOT_KEPT_NOTICE_TYPES } from './notification-actions';
 import NotificationRow from './NotificationRow';
 import { PAGE_CONTENT_GAP, PAGE_SIDE_INSET } from '@/components/custom/nav/page-registry';
@@ -44,7 +46,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
     usePageScrollTarget(listRef, { getOffset: tracked.getOffset });
     const colors = useColors();
     const endClearance = useListEndClearance();
-    // Lite / Reduce Motion: a deleted row leaves at once.
+    // Lite / Reduce Motion: a deleted row fades out and the rows under it do not slide.
     const motion = useMotionAllowed();
     const [rows, setRows] = useState<NotificationModel[]>([]);
     // Tidy-up suggestions are cards above the rows, so their "Tidy up your
@@ -70,13 +72,13 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
 
     const renderItem = useCallback(
         ({ item, index }: { item: NotificationModel; index: number }) => (
-            <NotificationRow n={item} first={index === 0} last={index === items.length - 1} motion={motion} />
+            <NotificationRow n={item} first={index === 0} last={index === items.length - 1} />
         ),
-        [items.length, motion],
+        [items.length],
     );
 
     const empty = (
-        <View testID="notifications-empty" style={{ marginHorizontal: PAGE_SIDE_INSET, gap: 6 }}>
+        <Appear testID="notifications-empty" style={{ marginHorizontal: PAGE_SIDE_INSET, gap: 6 }}>
             <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '600' }}>{t('notificationCenter.empty')}</Text>
             <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20 }}>{t('notificationCenter.emptyBody')}</Text>
             <Pressable
@@ -87,7 +89,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
             >
                 <Text style={{ color: colors.accentText, fontSize: 15, fontWeight: '600' }}>{t('notificationCenter.settingsLink')}</Text>
             </Pressable>
-        </View>
+        </Appear>
     );
 
     return (
@@ -103,13 +105,14 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, activ
                     suggestions.items.length > 0 ? (
                         <View testID="hygiene-suggestions">
                             {suggestions.items.map((item) => (
-                                <HygieneSuggestionCard
-                                    key={item.id}
-                                    item={item}
-                                    busy={suggestions.actingId === item.id}
-                                    onAccept={suggestions.accept}
-                                    onDismiss={suggestions.dismiss}
-                                />
+                                <Animated.View key={item.id} exiting={appearExiting}>
+                                    <HygieneSuggestionCard
+                                        item={item}
+                                        busy={suggestions.actingId === item.id}
+                                        onAccept={suggestions.accept}
+                                        onDismiss={suggestions.dismiss}
+                                    />
+                                </Animated.View>
                             ))}
                         </View>
                     ) : undefined

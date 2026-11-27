@@ -12,6 +12,7 @@ import Animated, {
     withRepeat,
     withTiming,
 } from 'react-native-reanimated';
+import { appearExiting, useAppearEntering } from '@/components/ui/appear/presets';
 
 /**
  * The readiness pill left of New chat: a turning refresh icon while the ping is out, a tick once the
@@ -26,6 +27,7 @@ const ReadinessBadge: React.FC<{
 }> = ({ label, tone, icon, spinning }) => {
     const colors = useColors();
     const motion = useMotionAllowed();
+    const appearIn = useAppearEntering({ rise: 0 });
     const ink = { neutral: colors.ink2, positive: colors.positive, negative: colors.negative }[tone];
     const fill = { neutral: colors.ink3, positive: colors.positive, negative: colors.negative }[tone];
     const turn = useSharedValue(0);
@@ -41,7 +43,9 @@ const ReadinessBadge: React.FC<{
     }, [spinning, motion, turn]);
     const turning = useAnimatedStyle(() => ({ transform: [{ rotate: `${turn.value}deg` }] }));
     return (
-        <View
+        <Animated.View
+            entering={appearIn}
+            exiting={appearExiting}
             pointerEvents="none"
             accessibilityElementsHidden
             importantForAccessibility="no-hide-descendants"
@@ -53,7 +57,7 @@ const ReadinessBadge: React.FC<{
                 <MaterialIcons {...DECORATIVE_ICON_A11Y} name={icon} size={13} color={ink} />
             </Animated.View>
             <Text style={{ color: ink, fontSize: 12, fontWeight: '600' }}>{label}</Text>
-        </View>
+        </Animated.View>
     );
 };
 

@@ -36,6 +36,7 @@ import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useAppearEntering } from '@/components/ui/appear/presets';
+import { Dim } from './Dim';
 import { useTranslation } from 'react-i18next';
 import { themedStyles, tint, useColors } from '@/lib/theme/tokens';
 
@@ -389,10 +390,8 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
   const confirmDisabled = isGenerating || isApplying;
 
   return (
-    <Animated.View
-      entering={appearIn}
-      style={[styles.card, dimmed && styles.cardDimmed]}
-    >
+    <Dim on={dimmed} to={0.5}>
+    <Animated.View entering={appearIn} style={styles.card}>
       <View style={styles.headerRow}>
         <MaterialIcons
           {...DECORATIVE_ICON_A11Y}
@@ -589,6 +588,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
         </Text>
       )}
     </Animated.View>
+    </Dim>
   );
 };
 
@@ -663,9 +663,6 @@ const useStyles = themedStyles((c) => StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     gap: 10,
-  },
-  cardDimmed: {
-    opacity: 0.5,
   },
   headerRow: {
     flexDirection: 'row',

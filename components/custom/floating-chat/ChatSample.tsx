@@ -19,6 +19,7 @@ import Animated, {
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
+import { appearExiting, useAppearEntering } from '@/components/ui/appear/presets';
 import { sampleLines, type ChatSampleKind } from './chat-samples';
 
 const HOLD_MS = 4500;
@@ -36,6 +37,7 @@ export default function ChatSample({ kind }: { kind: ChatSampleKind }) {
   const { t } = useTranslation();
   const colors = useColors();
   const motion = useMotionAllowed();
+  const appearIn = useAppearEntering({ rise: 0 });
   const lang = useAppLanguageStore((s) => s.appLanguage);
   const [shown, setShown] = useState<{ cur: string[]; prev: string[]; gen: number } | null>(null);
   const seed = useRef(0);
@@ -67,6 +69,9 @@ export default function ChatSample({ kind }: { kind: ChatSampleKind }) {
   if (!shown) return null;
   const label = t(kind === 'profile' ? 'chatSample.profileLabel' : 'chatSample.storiesLabel');
   return (
+    // The fade is on a wrapper: `wrap` holds the sample's own 0.8 opacity. It also runs when
+    // ChatSessionView drops the sample (first touch, keyboard).
+    <Animated.View pointerEvents="none" entering={appearIn} exiting={appearExiting}>
     <View
       pointerEvents="none"
       accessible
@@ -87,6 +92,7 @@ export default function ChatSample({ kind }: { kind: ChatSampleKind }) {
         />
       ))}
     </View>
+    </Animated.View>
   );
 }
 

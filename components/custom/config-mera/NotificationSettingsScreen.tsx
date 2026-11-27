@@ -1,4 +1,5 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import { Appear } from '@/components/ui/appear';
 import { Box } from '@/components/ui/box';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { HStack } from '@/components/ui/hstack';
@@ -252,7 +253,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                         <Spinner size="large" />
                     </VStack>
                 ) : (
-                    body()
+                    <Appear style={{ flex: 1, minHeight: 0 }}>{body()}</Appear>
                 )}
             </Box>
         </GluestackUIProvider>

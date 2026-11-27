@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
-import { Text, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Animated, {
     FadeIn,
     FadeOut,
+    ReduceMotion,
     SlideInLeft,
     SlideInRight,
     SlideOutLeft,
@@ -21,6 +22,8 @@ import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdr
 import WelcomeStage from '@/components/custom/auth/WelcomeStage';
 import LaunchLogo from '@/components/custom/auth/LaunchLogo';
 import TutorialModalHost from '@/components/custom/tutorials/TutorialModalHost';
+import { Appear } from '@/components/ui/appear';
+import { appearExiting, useAppearEntering } from '@/components/ui/appear/presets';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { EASE, MOTION } from '@/lib/motion';
 import { useMotionAllowed } from '@/lib/motion-gate';
@@ -59,6 +62,9 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
     const { height } = useWindowDimensions();
     const reduceMotion = useReducedMotion();
     const motion = useMotionAllowed();
+    // Lite and Reduce Motion: everything fades in place, nothing moves and nothing cuts.
+    const still = !motion || reduceMotion;
+    const fadeIn = useAppearEntering({ rise: 0 });
 
     const {
         stage,
@@ -94,20 +100,16 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
         const topY = (y: number) => y - (LOGO_FULL - LOGO_TOP) / 2;
         const y = logoAt === 'center' ? height * 0.3 : topY(insets.top + 16);
         const scale = logoAt === 'center' ? 1 : LOGO_TOP / LOGO_FULL;
-        if (!motion && !reduceMotion) {
-            // Lite: no motion at all. Set, not animated, so it never rides on
-            // Reanimated's root switch having landed first.
-            logoOpacity.value = 1;
-            logoY.value = y;
-            logoScale.value = scale;
-            return;
-        }
-        if (reduceMotion) {
-            // A plain crossfade: out where it is, in where it goes.
+        if (still) {
+            // A plain crossfade: out where it is, in where it goes. `Never`, or
+            // Reanimated lands every step at once here and the logo jumps.
+            const never = ReduceMotion.Never;
             const half = MOTION.launchLogo.duration / 2;
-            logoOpacity.value = withSequence(withTiming(0, { duration: half }), withTiming(hidden ? 0 : 1, { duration: half }));
-            logoY.value = withDelay(half, withTiming(y, { duration: 0 }));
-            logoScale.value = withDelay(half, withTiming(scale, { duration: 0 }));
+            const fade = { duration: half, reduceMotion: never };
+            const jump = { duration: 0, reduceMotion: never };
+            logoOpacity.value = withSequence(never, withTiming(0, fade), withTiming(hidden ? 0 : 1, fade));
+            logoY.value = withDelay(half, withTiming(y, jump), never);
+            logoScale.value = withDelay(half, withTiming(scale, jump), never);
             return;
         }
         // ONE glide, position and scale together, at the track's own pace and
@@ -117,7 +119,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
         logoOpacity.value = withTiming(hidden ? 0 : 1, { duration: 250 });
         logoScale.value = withTiming(scale, glide);
         logoY.value = withTiming(y, glide);
-    }, [logoAt, height, insets.top, reduceMotion, motion, logoScale, logoY, logoOpacity]);
+    }, [logoAt, height, insets.top, reduceMotion, still, logoScale, logoY, logoOpacity]);
     const logoStyle = useAnimatedStyle(() => ({
         opacity: logoOpacity.value,
         transform: [{ translateY: logoY.value }, { scale: logoScale.value }],
@@ -172,13 +174,13 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
             body = null;
     }
 
-    const entering = reduceMotion
-        ? FadeIn.duration(200)
+    const entering = still
+        ? fadeIn
         : stage === 'welcome'
           ? FadeIn.duration(500)
           : (forward ? SlideInRight : SlideInLeft).duration(MOTION.stage.duration).easing(EASE.across);
-    const exiting = reduceMotion
-        ? FadeOut.duration(200)
+    const exiting = still
+        ? appearExiting
         : stage === 'welcome'
           ? FadeOut.duration(200)
           : (forward ? SlideOutLeft : SlideOutRight).duration(MOTION.stage.duration).easing(EASE.across);
@@ -196,7 +198,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
                 beside the logo, so both measure from the same unpadded box. */}
             {stage === 'intro' ? (
                 <Animated.View
-                    exiting={FadeOut.duration(200)}
+                    exiting={appearExiting}
                     style={[styles.introLine, { top: height * 0.3 + LOGO_FULL + 24 }]}
                 >
                     <Text accessibilityRole="header" style={[styles.introText, { color: colors.ink }]}>
@@ -207,15 +209,17 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
 
             <Animated.View
                 key={stage}
-                // Lite: no entering or exiting at all, so a stage never waits on an animation frame.
-                entering={stage === 'intro' || !motion && !reduceMotion ? undefined : entering}
-                exiting={!motion && !reduceMotion ? undefined : exiting}
+                entering={stage === 'intro' ? undefined : entering}
+                exiting={exiting}
                 style={[styles.stage, { paddingTop: bodyTop, paddingBottom: insets.bottom }]}
             >
                 {body}
             </Animated.View>
 
-            {stage === 'welcome' || stage === 'consent' ? <AuthAppearanceToggle /> : null}
+            {/* The toggle places itself in the root's box, so its fade fills that box and takes no touches. */}
+            <Appear show={stage === 'welcome' || stage === 'consent'} rise={0} pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+                <AuthAppearanceToggle />
+            </Appear>
 
             <TutorialModalHost
                 visible={tourOpen}

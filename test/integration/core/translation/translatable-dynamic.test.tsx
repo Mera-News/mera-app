@@ -5,6 +5,7 @@
 // The translation service is faked at its edge; the store, i18n and popover are real.
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import TranslatableDynamic, { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
 import { createPageActiveSource, PageActiveContext } from '@/components/custom/nav/page-active';
@@ -237,6 +238,35 @@ describe('pending and failure fall back to English', () => {
         await act(() => useAppLanguageStore.getState().cacheTranslation(EN, MR));
         await waitFor(() => expect(screen.getByText(MR)).toBeTruthy());
         expect(screen.queryByTestId('translatable-failed')).toBeNull();
+    });
+});
+
+describe('only a translation that arrives fades in', () => {
+    // <Appear> is the one ancestor that carries an opacity once the text is translated.
+    const fades = (text: string) => {
+        for (let n = screen.getByText(text).parent; n; n = n.parent) {
+            if (StyleSheet.flatten(n.props.style)?.opacity !== undefined) return true;
+        }
+        return false;
+    };
+
+    it('a translation that lands while the text is mounted fades in', async () => {
+        await mount(card());
+        await waitFor(() => expect(screen.getByTestId('translatable-pending')).toBeTruthy());
+        await act(() => {
+            useAppLanguageStore.getState().removePending(EN);
+            useAppLanguageStore.getState().cacheTranslation(EN, MR);
+        });
+        await waitFor(() => expect(screen.getByText(MR)).toBeTruthy());
+        expect(fades(MR)).toBe(true);
+    });
+
+    it('a translation already held at mount (a row scrolled back in) is drawn at rest', async () => {
+        await act(() => useAppLanguageStore.getState().cacheTranslation(EN, MR));
+        await mount(card());
+        expect(screen.getByText(MR)).toBeTruthy();
+        await settle();
+        expect(fades(MR)).toBe(false);
     });
 });
 

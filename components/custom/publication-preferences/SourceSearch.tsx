@@ -5,6 +5,7 @@ import PublicationListRow from '@/components/custom/publication-page/Publication
 import PublicationControlRow, { InheritedStarHelp } from '@/components/custom/publication-preferences/PublicationControlRow';
 import { searchSourceCountries } from '@/components/custom/publication-preferences/country-search';
 import { usePublicationRowPrefs } from '@/components/custom/publication-preferences/use-publication-row-prefs';
+import { Appear } from '@/components/ui/appear';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { Input, InputField, InputSlot } from '@/components/ui/input';
@@ -239,28 +240,28 @@ const SourceSearch: React.FC<{
                 {children}
             </View>
             {panelOpen ? (
-                <>
-                    <RNPressable
-                        testID="sources-search-backdrop"
-                        accessible={false}
-                        importantForAccessibility="no"
-                        onPress={() => {
-                            Keyboard.dismiss();
-                            setDismissed(true);
-                        }}
-                        style={[StyleSheet.absoluteFill, styles.backdrop, { top: fieldHeight }]}
-                    />
-                    <View
-                        testID="sources-search-panel"
-                        style={[styles.panel, { top: fieldHeight, maxHeight: Math.max(0, boxHeight - fieldHeight - 8), backgroundColor: colors.panel, borderColor: colors.line }]}
-                    >
-                        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.panelContent}>
-                            <VStack space="sm" className="px-4">{status}</VStack>
-                            {rows}
-                        </ScrollView>
-                    </View>
-                </>
+                <RNPressable
+                    testID="sources-search-backdrop"
+                    accessible={false}
+                    importantForAccessibility="no"
+                    onPress={() => {
+                        Keyboard.dismiss();
+                        setDismissed(true);
+                    }}
+                    style={[StyleSheet.absoluteFill, styles.backdrop, { top: fieldHeight }]}
+                />
             ) : null}
+            <Appear
+                show={panelOpen}
+                rise={0}
+                testID="sources-search-panel"
+                style={[styles.panel, { top: fieldHeight, maxHeight: Math.max(0, boxHeight - fieldHeight - 8), backgroundColor: colors.panel, borderColor: colors.line }]}
+            >
+                <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.panelContent}>
+                    <VStack space="sm" className="px-4">{status}</VStack>
+                    {rows}
+                </ScrollView>
+            </Appear>
             {help}
         </View>
     );

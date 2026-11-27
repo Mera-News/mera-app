@@ -47,6 +47,7 @@ import { useStatsCardItem } from '@/components/custom/for-you/DashboardStatsCard
 import { showsProcessingScene } from '@/components/custom/for-you/feed-status-card';
 import { useFeedIssue } from '@/components/custom/for-you/use-stats-card-lead';
 import Animated, { FadeOut } from 'react-native-reanimated';
+import { useAppearEntering } from '@/components/ui/appear/presets';
 
 interface SortSnapshot {
   cardStates: Record<string, unknown>;
@@ -154,6 +155,8 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header }) => {
   const cardItem = useStatsCardItem(emptyHere, hasStories);
 
   // ── Nothing to show yet ──
+  // What replaces the spinner fades in.
+  const emptyEntering = useAppearEntering();
   let empty: React.ReactElement | null;
   if (isLoading || snapshots === null) {
     empty = (
@@ -175,20 +178,17 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header }) => {
   } else if (snapshots.facts.size === 0) {
     // Sectioned shows the block alone (no headline rows here, C4).
     empty = <FeedNoFacts view="sectioned" />;
-  } else if (!showsProcessingScene({ runFinished: lastProcessingRunFinishedAt !== null, issue })) {
-    // Nothing to show, the same as Continuous (FinalFeed "Feed, empty after
-    // a long gap"): the counts card leads the list; the shortcuts here.
-    empty = (
-      <Animated.View exiting={FadeOut.duration(200)}>
-        <FeedShortcuts reading={isFeedProcessing} />
-      </Animated.View>
-    );
   } else {
+    // Nothing to show, the same as Continuous (FinalFeed "Feed, empty after
+    // a long gap"): the counts card leads the list; the shortcuts here, under
+    // the processing scene during the first run. One wrapper for both, so the
+    // shortcuts stay mounted when that run ends.
+    const scene = showsProcessingScene({ runFinished: lastProcessingRunFinishedAt !== null, issue });
     empty = (
-      <>
-        <FeedProcessingCard />
-        <FeedShortcuts reading />
-      </>
+      <Animated.View entering={emptyEntering} exiting={scene ? undefined : FadeOut.duration(200)}>
+        {scene ? <FeedProcessingCard /> : null}
+        <FeedShortcuts reading={scene || isFeedProcessing} />
+      </Animated.View>
     );
   }
 

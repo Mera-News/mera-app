@@ -13,6 +13,7 @@
 
 import ModalMaterial from '@/components/custom/ModalMaterial';
 import { menuTop } from '@/components/custom/nav/menu-placement';
+import { APPEAR, Appear } from '@/components/ui/appear';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { useRestartHold } from '@/lib/app-restart';
@@ -21,14 +22,12 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, StyleSheet, View, useWindowDimensions } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ArchiveMenuItem } from './use-archive-menu-item';
 
 const GAP = 6;
 /** The bubble's least distance from the window's sides. */
 const SIDE = 12;
-const OPEN_MS = 150;
 
 const HIDDEN = {
   accessible: false,
@@ -58,9 +57,17 @@ const UnsaveBubble: React.FC<Props> = ({ anchor, item, onRemove, onClose }) => {
   const insets = useSafeAreaInsets();
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
   useRestartHold(true, 'overlay:sheet', 'auto');
+  const [leaving, setLeaving] = useState(false);
+
+  // The parent unmounts the Modal on onClose, so the fade out runs first.
+  const close = () => {
+    if (leaving) return;
+    setLeaving(true);
+    setTimeout(onClose, APPEAR.out);
+  };
 
   const move = async () => {
-    onClose();
+    close();
     let ok: void | boolean = undefined;
     try {
       ok = await item.run();
@@ -76,7 +83,7 @@ const UnsaveBubble: React.FC<Props> = ({ anchor, item, onRemove, onClose }) => {
   };
 
   const remove = () => {
-    onClose();
+    close();
     onRemove?.();
   };
 
@@ -113,15 +120,16 @@ const UnsaveBubble: React.FC<Props> = ({ anchor, item, onRemove, onClose }) => {
   );
 
   return (
-    <Modal visible transparent animationType="none" onRequestClose={onClose}>
+    <Modal visible transparent animationType="none" onRequestClose={close}>
       <Pressable
         style={StyleSheet.absoluteFill}
-        onPress={onClose}
+        onPress={close}
         accessible={false}
         testID="unsave-bubble-outside"
       />
-      <Animated.View
-        entering={FadeIn.duration(OPEN_MS)}
+      <Appear
+        show={!leaving}
+        rise={0}
         pointerEvents="box-none"
         testID="unsave-bubble-box"
         style={[styles.box, { top }]}
@@ -130,7 +138,7 @@ const UnsaveBubble: React.FC<Props> = ({ anchor, item, onRemove, onClose }) => {
           testID="unsave-bubble"
           accessibilityRole="menu"
           accessibilityViewIsModal
-          onAccessibilityEscape={onClose}
+          onAccessibilityEscape={close}
           onLayout={(e) => setSize(e.nativeEvent.layout)}
           style={[
             styles.panel,
@@ -147,7 +155,7 @@ const UnsaveBubble: React.FC<Props> = ({ anchor, item, onRemove, onClose }) => {
             {row(t('savedSuggestions.removeShort'), 'delete-outline', remove, 'unsave-bubble-remove')}
           </View>
         </View>
-      </Animated.View>
+      </Appear>
     </Modal>
   );
 };

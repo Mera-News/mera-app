@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import { Keyboard, Modal, Platform, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
+    ReduceMotion,
     runOnJS,
     useAnimatedStyle,
     useReducedMotion,
@@ -16,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import ModalMaterial from '@/components/custom/ModalMaterial';
 import { hapticLight } from '@/lib/haptics';
 import { EASE, MOTION, SPRING } from '@/lib/motion';
+import { useMotionAllowed } from '@/lib/motion-gate';
 import { useColors } from '@/lib/theme/tokens';
 
 export interface BottomSheetProps {
@@ -63,13 +65,16 @@ export function keyboardLiftFor(keyboardHeight: number, bottomInset: number): nu
 /** Drag this far, or flick this fast, to dismiss. */
 const DISMISS_DISTANCE = 120;
 const DISMISS_VELOCITY = 800;
+/** Without it Reanimated lands the timing at once under Reduce Motion or Lite, and the fade is a cut.
+ *  `?.`: a test's cut-down Reanimated mock has no `ReduceMotion`. */
+const KEEP_FADE = ReduceMotion?.Never;
 /** If the Modal never reports onShow, rise anyway this long after layout. */
 const PRESENT_FALLBACK_MS = 150;
 
 /**
  * The ONE bottom sheet (FinalMotion "Sheets"): an RN Modal over the tab bar,
  * the 78% scrim, the ModalMaterial surface with a grab handle. Rises 320 ms
- * ease-out, leaves 220 ms; drag down to dismiss; Reduce Motion fades in place.
+ * ease-out, leaves 220 ms; drag down to dismiss; Reduce Motion and Lite fade in place.
  *
  * The rise waits until the sheet can be SEEN (the Modal presented AND the sheet
  * laid out). Started earlier it ran behind a Modal not yet on screen, and the
@@ -89,7 +94,9 @@ export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLa
     // the window's own home indicator.
     const bottomInset = initialWindowMetrics?.insets.bottom ?? insets.bottom;
     const { height: windowHeight } = useWindowDimensions();
-    const reduceMotion = useReducedMotion();
+    // Lite and Reduce Motion: the sheet fades in place, it never moves and never cuts.
+    const systemReduce = useReducedMotion();
+    const reduceMotion = !useMotionAllowed() || systemReduce;
     // How far the keyboard covers the screen, animated with it. RN's own Keyboard events, not
     // react-native-keyboard-controller: the kit loads in every Jest suite, which has no native module.
     const keyboardLift = useSharedValue(0);
@@ -142,6 +149,7 @@ export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLa
             withTiming(1, {
                 duration: reduceMotion ? MOTION.sheet.reduce : MOTION.sheet.open,
                 easing: EASE.arrive,
+                reduceMotion: KEEP_FADE,
             }),
         );
         void hapticLight();
@@ -166,7 +174,11 @@ export function BottomSheet({ open, onClose, onClosed, children, testID, scrimLa
         progress.set(
             withTiming(
                 0,
-                { duration: reduceMotion ? MOTION.sheet.reduce : MOTION.sheet.close, easing: EASE.across },
+                {
+                    duration: reduceMotion ? MOTION.sheet.reduce : MOTION.sheet.close,
+                    easing: EASE.across,
+                    reduceMotion: KEEP_FADE,
+                },
                 (finished) => {
                     if (finished) runOnJS(finish)();
                 },

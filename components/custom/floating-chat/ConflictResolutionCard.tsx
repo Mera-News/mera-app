@@ -35,6 +35,7 @@ import React, { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useAppearEntering } from '@/components/ui/appear/presets';
+import { Dim } from './Dim';
 import { useTranslation } from 'react-i18next';
 import { themedStyles, tint, useColors, useThemeMode } from '@/lib/theme/tokens';
 
@@ -115,7 +116,8 @@ const ConflictResolutionCard: React.FC<ConflictResolutionCardProps> = ({ conflic
   const dimmed = resolved !== null;
 
   return (
-    <Animated.View entering={appearIn} style={[styles.card, dimmed && styles.cardDimmed]}>
+    <Dim on={dimmed} to={0.6}>
+    <Animated.View entering={appearIn} style={styles.card}>
       <View style={styles.headerRow}>
         <MaterialIcons {...DECORATIVE_ICON_A11Y} name="compare-arrows" size={18} color={colors.warning} />
         <Text size="sm" bold style={styles.title}>
@@ -242,6 +244,7 @@ const ConflictResolutionCard: React.FC<ConflictResolutionCardProps> = ({ conflic
         </View>
       )}
     </Animated.View>
+    </Dim>
   );
 };
 
@@ -289,7 +292,6 @@ const useStyles = themedStyles((c) => StyleSheet.create({
     paddingVertical: 12,
     gap: 10,
   },
-  cardDimmed: { opacity: 0.6 },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   title: { color: c.warning },
   statements: { gap: 8 },

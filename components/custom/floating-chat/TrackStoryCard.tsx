@@ -5,6 +5,7 @@
 
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
+import { Appear } from '@/components/ui/appear';
 import { Text } from '@/components/ui/text';
 import { canRegenerateWithWebSearch, canRequestMoreOptions } from '@/lib/chat-session/chat-session';
 import { hapticSuccess } from '@/lib/haptics';
@@ -60,7 +61,7 @@ interface Props {
 
 const isDone = (o: TrackOutcome | undefined) => o === 'following' || o === 'already';
 
-const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
+const TrackStoryCardBody: React.FC<Props> = ({ proposal, source, onGrown }) => {
   const styles = useStyles();
   const colors = useColors();
   const { t } = useTranslation();
@@ -548,7 +549,8 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
         </GlyphSafeButton>
       )}
       {(loadingMore || loadingWeb) && (
-        <View
+        <Appear
+          rise={0}
           testID={loadingWeb ? 'track-regenerate-loading' : 'track-more-loading'}
           accessible
           accessibilityLabel={t(loadingWeb ? 'trackedStories.regenerateLoading' : 'trackedStories.moreOptionsLoading')}
@@ -559,17 +561,21 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
           <Text size="sm" style={styles.mutedText}>
             {t(loadingWeb ? 'trackedStories.regenerateLoading' : 'trackedStories.moreOptionsLoading')}
           </Text>
-        </View>
+        </Appear>
       )}
       {pending && moreState === 'none' && (
-        <Text size="xs" style={styles.mutedText}>
-          {t('trackedStories.moreOptionsNone')}
-        </Text>
+        <Appear rise={0}>
+          <Text size="xs" style={styles.mutedText}>
+            {t('trackedStories.moreOptionsNone')}
+          </Text>
+        </Appear>
       )}
       {pending && moreState === 'failed' && (
-        <Text size="xs" style={styles.mutedText}>
-          {t('trackedStories.moreOptionsFailed')}
-        </Text>
+        <Appear rise={0}>
+          <Text size="xs" style={styles.mutedText}>
+            {t('trackedStories.moreOptionsFailed')}
+          </Text>
+        </Appear>
       )}
 
       {pending && (
@@ -599,6 +605,14 @@ const TrackStoryCard: React.FC<Props> = ({ proposal, source, onGrown }) => {
     </View>
   );
 };
+
+// The card arrives like the other chat cards. The fade sits on a wrapper: the card's root
+// holds the expired dim, and its states must keep that one root (the settle animates inside it).
+const TrackStoryCard: React.FC<Props> = (props) => (
+  <Appear>
+    <TrackStoryCardBody {...props} />
+  </Appear>
+);
 
 const useStyles = themedStyles((c, mode) =>
   StyleSheet.create({

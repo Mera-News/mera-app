@@ -48,7 +48,7 @@ import {
   type MeraPageKey,
 } from '@/lib/stores/floating-chat-store';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Keyboard, StyleSheet, View } from 'react-native';
+import { Keyboard, StyleSheet } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import Animated, {
@@ -58,6 +58,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
+import { Appear } from '@/components/ui/appear';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   DRAG_ACTIVATION,
@@ -243,14 +244,17 @@ const MeraButtonHost: React.FC = () => {
     [size, tabHeaderBottom, tabBarTop, insets.top, insets.bottom],
   );
 
-  if (!meraButtonVisible({ route, hydrated, chatOpen, arrangeOpen, keyboardUp })) return null;
+  const visible = meraButtonVisible({ route, hydrated, chatOpen, arrangeOpen, keyboardUp });
   // Search and the article pages carry no page of their own: the generic set.
   const page: MeraPageKey = (onTab ? pageKeyFor(surface) : null) ?? 'settings';
 
   return (
-    <View
+    <Appear
+      show={visible}
+      rise={0}
       {...OVERLAY_PROPS}
-      style={[StyleSheet.absoluteFill, styles.physical]}
+      // The chat opens out of the button with its own morph, so there the button cuts.
+      style={[StyleSheet.absoluteFill, styles.physical, chatOpen && styles.gone]}
       onLayout={(e) => {
         const { width, height } = e.nativeEvent.layout;
         setSize((prev) => (prev?.width === width && prev?.height === height ? prev : { width, height }));
@@ -267,7 +271,7 @@ const MeraButtonHost: React.FC = () => {
           unread={unread}
         />
       )}
-    </View>
+    </Appear>
   );
 };
 
@@ -275,6 +279,7 @@ const styles = StyleSheet.create({
   // Corners are PHYSICAL: top-left stays top-left in RTL.
   physical: { direction: 'ltr' },
   placed: { position: 'absolute', left: 0, top: 0 },
+  gone: { display: 'none' },
 });
 
 export default MeraButtonHost;

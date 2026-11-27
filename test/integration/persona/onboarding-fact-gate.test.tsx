@@ -123,7 +123,8 @@ describe('the fact gate', () => {
         expect(facts).toHaveLength(1);
         expect(facts[0].questionnaireAttribute).toBe(CANONICAL_LOCATION_KEY);
         expect(useCloudChatStore.getState().messages).toEqual([]);
-        expect(screen.queryByTestId('onboarding-zero-block')).toBeNull();
+        // The block fades out before it leaves.
+        await waitFor(() => expect(screen.queryByTestId('onboarding-zero-block')).toBeNull());
     });
 
     it('a reader with a fact sees no block', async () => {

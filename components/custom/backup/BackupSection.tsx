@@ -41,6 +41,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 import { Group, Help, Row } from '@/components/custom/you/rows';
 import { gameAnimationFor } from '@/components/custom/game-ui/animation-registry';
+import { Appear } from '@/components/ui/appear';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
@@ -431,7 +432,7 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
   const earnSource = gameAnimationFor('game-mark-earn');
 
   return (
-    <View testID="backup-section" style={{ gap: 12 }}>
+    <Appear testID="backup-section" style={{ gap: 12 }}>
       <Group>
         <Row
           testID="backup-switch-row"
@@ -527,7 +528,7 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
           </Pressable>
         </View>
       </BottomSheet>
-    </View>
+    </Appear>
   );
 };
 

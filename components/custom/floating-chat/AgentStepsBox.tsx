@@ -24,7 +24,8 @@ import { themedStyles, useColors } from '@/lib/theme/tokens';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
+import { useAppearEntering } from '@/components/ui/appear/presets';
 import { GlyphSafeButton } from './glyph-safe';
 import { stepLabel, stepTables } from './agent-step-labels';
 import { landingPlan } from './landing';
@@ -33,8 +34,6 @@ import type { AgentStep, AgentTerminal } from './types';
 
 /** A finished step behind the live one. */
 const DONE_DIM = 0.6;
-/** The fold opening again on a tap. */
-const REOPEN_MS = 220;
 /** The fold row's touch frame grows past its 32pt slot without moving it. */
 const FOLD_HIT_SLOP = Platform.OS === 'ios' ? 6 : 8;
 /** If the strip never reports its `return` finished, fold anyway. */
@@ -69,6 +68,8 @@ const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
   const { t } = useTranslation();
   const colors = useColors();
   const motion = useMotionAllowed();
+  // The fold opening again on a tap: a fade in place, the box has no slide-in.
+  const reopenIn = useAppearEntering({ rise: 0 });
   const liveTool = useChatPhaseStore((s) => s.liveTool);
   // A folded box opens again on a tap (FinalMeraChat #9). Local: it is a view
   // of a finished turn, nothing about the turn changes.
@@ -245,8 +246,7 @@ const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
       {live ? (
         stepRows
       ) : reopened ? (
-        // Reanimated's own gate: Lite lands this at once.
-        <Animated.View entering={FadeIn.duration(REOPEN_MS)}>{stepRows}</Animated.View>
+        <Animated.View entering={reopenIn}>{stepRows}</Animated.View>
       ) : null}
     </View>
   );

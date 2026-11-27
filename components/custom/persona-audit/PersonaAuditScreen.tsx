@@ -1,5 +1,6 @@
 import DrillDownHeader, { SUBPAGE_TOP_GAP } from '@/components/custom/config-panel/DrillDownHeader';
 import { Group, GroupLabel } from '@/components/custom/you/rows';
+import { Appear } from '@/components/ui/appear';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -200,7 +201,7 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
                     {t('personaAudit.empty')}
                 </Text>
             ) : (
-                <View style={{ flex: 1 }}>
+                <Appear style={{ flex: 1 }}>
                 <FlatList
                     data={days}
                     keyExtractor={(day) => day.label}
@@ -208,7 +209,7 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
                     contentContainerStyle={{ paddingBottom: endClearance }}
                     showsVerticalScrollIndicator={false}
                 />
-                </View>
+                </Appear>
             )}
         </View>
     );

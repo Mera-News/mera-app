@@ -1,5 +1,6 @@
 import ArticleCompactCardBase from '@/components/custom/cards/ArticleCompactCardBase';
 import { router } from 'expo-router';
+import { Appear } from '@/components/ui/appear';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -108,6 +109,7 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
     if (status === 'error') {
         const isNotSubscribed = errorKind === 'not-subscribed';
         return (
+            <Appear>
             <VStack
                 testID="explore-search-error"
                 className="items-center justify-center py-16 p-6"
@@ -130,6 +132,7 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
                     <ButtonText>{isNotSubscribed ? t('freeTier.seePlans') : t('common.retry')}</ButtonText>
                 </Button>
             </VStack>
+            </Appear>
         );
     }
 
@@ -137,6 +140,7 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
     if (hits.length === 0) {
         return (
             // One plain line and what to try; the words stay in the field.
+            <Appear>
             <VStack testID="explore-search-empty" className="items-center justify-center py-16 p-6" space="xs">
                 <Text size="md" bold className="text-ink text-center">
                     {t('world.search.noMatch')}
@@ -145,10 +149,13 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
                     {t('world.search.noMatchTry')}
                 </Text>
             </VStack>
+            </Appear>
         );
     }
 
     return (
+        // The whole list arrives once, after the spinner; its rows never animate.
+        <Appear style={{ flex: 1 }}>
         <FlatList
             // Rows below the first screen ask for their translation only
             // when a scroll tick finds them on screen (lib/visibility-tick).
@@ -168,6 +175,7 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
         />
+        </Appear>
     );
 };
 

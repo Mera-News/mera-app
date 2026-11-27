@@ -17,6 +17,7 @@ import { useHistory } from '@/components/custom/library/use-history';
 import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
 import { SourceFlag } from '@/components/custom/SourceFlag';
 import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
+import { Appear } from '@/components/ui/appear';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -188,6 +189,7 @@ const HistoryScreen: React.FC<Props> = ({ country, onBack }) => {
                         <Spinner size="large" />
                     </Box>
                 ) : (
+                    <Appear>
                     <ForYouEmptyState
                         icon="history"
                         title={t('library.visited.emptyTitle')}
@@ -199,6 +201,7 @@ const HistoryScreen: React.FC<Props> = ({ country, onBack }) => {
                         }}
                         testID="visited-publications-empty"
                     />
+                    </Appear>
                 )
             }
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.accent} colors={[c.accent]} />}

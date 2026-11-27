@@ -19,6 +19,7 @@ import { GlassPanel } from '@/components/custom/GlassSurface';
 import MeraLogo from '@/components/custom/MeraLogo';
 import SmoothScrollView, { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
 import TranslatableDynamic, { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
+import { Appear } from '@/components/ui/appear';
 import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';
 import { Image } from '@/components/ui/image';
@@ -71,6 +72,8 @@ interface BaseProps {
      *  instance) — fires whenever the displayed title variant changes so the
      *  detail screen can share whichever title the reader currently sees. */
     onTitleDisplayChange?: (state: TranslatableDisplayState) => void;
+    /** Screen variant: the body replaced a spinner, so it fades in. Default false (drawn at rest). */
+    arrives?: boolean;
 }
 
 type SuggestionProps = BaseProps & { suggestion: ForYouSuggestion; article?: never };
@@ -109,6 +112,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         aboveReason,
         read = false,
         onTitleDisplayChange,
+        arrives = false,
     } = props;
 
     const suggestion = 'suggestion' in props ? props.suggestion : undefined;
@@ -276,7 +280,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
     }
 
     return (
-        <Box className="flex-1">
+        <Appear style={{ flex: 1 }} animateOnMount={arrives}>
         <SmoothScrollView
             ref={scrollViewRef}
             style={{ flex: 1 }}
@@ -340,7 +344,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                 <Box style={{ height: contentBottomInset }} />
             </VStack>
         </SmoothScrollView>
-        </Box>
+        </Appear>
     );
 };
 

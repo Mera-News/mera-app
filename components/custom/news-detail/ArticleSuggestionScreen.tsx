@@ -9,6 +9,7 @@ import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import { MERA_BUTTON_BAR_GAP, MERA_BUTTON_SIZE } from '@/lib/navigation/tab-bar';
 import DetailTopBar from '@/components/custom/news-detail/DetailTopBar';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
+import { Appear } from '@/components/ui/appear';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { AlertCircleIcon, Icon } from '@/components/ui/icon';
@@ -24,7 +25,7 @@ import { secureUrlOrNull } from '@/lib/algorithms/secure-url';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useColors } from '@/lib/theme/tokens';
 import { useArticleSuggestionScreen } from '@/components/custom/news-detail/useArticleSuggestionScreen';
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -105,6 +106,8 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         handleToggleSave,
         handleArticleUrlPress,
     } = useArticleSuggestionScreen({ articleSuggestionId, trackedStoryId });
+    // Opened on a spinner: the body fades in. A row already in the store is drawn at rest.
+    const [waited] = useState(isLoading);
 
     if (isLoading) {
         return (
@@ -130,19 +133,21 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                     everything else on the page. */}
                 <AbstractGradientBackdrop />
 
-                <MaterialIcons
-                    name="error-outline"
-                    size={48}
-                    color={colors.negative}
-                    accessibilityElementsHidden={true}
-                    importantForAccessibility="no-hide-descendants"
-                />
-                <Text size="lg" className="text-ink mt-4 text-center">
-                    {error || t('articleDetail.articleNotFound')}
-                </Text>
-                <Pressable onPress={onBack} className="mt-6 bg-surface-raised rounded-lg px-6 py-3">
-                    <Text size="md" className="text-ink">{t('common.goBack')}</Text>
-                </Pressable>
+                <Appear style={{ alignItems: 'center' }} animateOnMount={waited}>
+                    <MaterialIcons
+                        name="error-outline"
+                        size={48}
+                        color={colors.negative}
+                        accessibilityElementsHidden={true}
+                        importantForAccessibility="no-hide-descendants"
+                    />
+                    <Text size="lg" className="text-ink mt-4 text-center">
+                        {error || t('articleDetail.articleNotFound')}
+                    </Text>
+                    <Pressable onPress={onBack} className="mt-6 bg-surface-raised rounded-lg px-6 py-3">
+                        <Text size="md" className="text-ink">{t('common.goBack')}</Text>
+                    </Pressable>
+                </Appear>
             </Box>
         );
     }
@@ -193,6 +198,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
             <ArticleSuggestionContainer
                 suggestion={suggestion}
                 variant="screen"
+                arrives={waited}
                 read={read}
                 onTitleDisplayChange={handleTitleDisplayChange}
                 scrollViewRef={scrollViewRef}

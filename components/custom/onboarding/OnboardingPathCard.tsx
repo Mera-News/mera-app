@@ -4,6 +4,7 @@
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import { GlyphSafeButton, TOUCH_FRAME } from '@/components/custom/floating-chat/glyph-safe';
 import type { OnboardingPath } from '@/components/custom/floating-chat/types';
+import { Appear } from '@/components/ui/appear';
 import { Text } from '@/components/ui/text';
 import { observeFacts } from '@/lib/database/services/fact-service';
 import { observeActive } from '@/lib/database/services/tracked-story-service';
@@ -49,7 +50,7 @@ export default function OnboardingPathCard({ onPick }: OnboardingPathCardProps) 
   ];
 
   return (
-    <View style={styles.card} testID="onboarding-path-card">
+    <Appear style={styles.card} testID="onboarding-path-card">
       {options.map(({ path, icon, label, done }, i) => (
         <GlyphSafeButton
           key={path}
@@ -79,7 +80,7 @@ export default function OnboardingPathCard({ onPick }: OnboardingPathCardProps) 
           ) : null}
         </GlyphSafeButton>
       ))}
-    </View>
+    </Appear>
   );
 }
 

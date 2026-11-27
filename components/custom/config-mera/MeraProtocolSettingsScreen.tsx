@@ -1,4 +1,5 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import { Appear } from '@/components/ui/appear';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
@@ -99,6 +100,8 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     const insets = useSafeAreaInsets();
     // The topic stays set while the card fades out, so its text never blanks mid-close.
     const [help, setHelp] = useState<{ topic: HelpTopic; open: boolean } | null>(null);
+    // A tab's block fades in only after a tab tap: when the page opens it arrives with the page.
+    const [tabTapped, setTabTapped] = useState(false);
     const openHelp = (topic: HelpTopic) => setHelp({ topic, open: true });
 
     // Apple Intelligence can be switched on while the app runs: ask again on every focus.
@@ -533,6 +536,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     value={onPhoneTab ? ProcessingMode.OnDevice : ProcessingMode.Cloud}
                     onChange={(mode) => {
                         if (isUpdatingMode || isDeletingModel) return;
+                        setTabTapped(true);
                         void selectMode(mode);
                     }}
                     options={[
@@ -549,7 +553,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             </View>
 
             {onPhoneTab ? (
-                <View style={{ paddingHorizontal: 14, marginBottom: 8 }} testID="mera-protocol-on-device-tab">
+                <Appear key="phone" rise={0} animateOnMount={tabTapped} style={{ paddingHorizontal: 14, marginBottom: 8 }} testID="mera-protocol-on-device-tab">
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10, marginHorizontal: 4 }}>
                         {steps.phase !== 'cantRun' ? (
                             <Text style={{ flexShrink: 1, color: colors.ink2, fontSize: 13, lineHeight: 18 }}>{t('meraProtocol.onPhoneIntro')}</Text>
@@ -568,16 +572,16 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                         </Pressable>
                     ) : null}
                     {speed()}
-                </View>
+                </Appear>
             ) : (
-                <View style={{ paddingHorizontal: 14, marginBottom: 8 }} testID="mera-protocol-cloud-tab">
+                <Appear key="cloud" rise={0} animateOnMount={tabTapped} style={{ paddingHorizontal: 14, marginBottom: 8 }} testID="mera-protocol-cloud-tab">
                     <Help>{t('meraProtocol.encrypted')}</Help>
                     {sectionHead(t('meraProtocol.chatGroup'), 'webSearch')}
                     <Group>{webSearchRow()}</Group>
                     {keptModel ? (
                         <Group style={{ marginTop: 12 }}>{keptModelRow()}</Group>
                     ) : null}
-                </View>
+                </Appear>
             )}
 
             {/* Verify (it names each provider): whenever chat or the feed reaches the cloud. */}
@@ -643,7 +647,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                         <Spinner size="large" />
                     </VStack>
                 ) : (
-                    <View style={{ flex: 1 }}>
+                    <Appear style={{ flex: 1 }}>
                         <ScrollView
                             ref={scrollRef}
                             className="flex-1"
@@ -651,7 +655,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                         >
                             {renderContent()}
                         </ScrollView>
-                    </View>
+                    </Appear>
                 )}
 
                 <HelpModal

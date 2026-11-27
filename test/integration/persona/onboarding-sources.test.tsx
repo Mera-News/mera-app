@@ -194,7 +194,7 @@ describe('onboarding sources step', () => {
         await act(async () => {
             fireEvent.changeText(screen.getByTestId('sources-search'), '');
         });
-        expect(screen.queryByTestId('sources-search-panel')).toBeNull();
+        await waitFor(() => expect(screen.queryByTestId('sources-search-panel')).toBeNull());
         expect(screen.getByText('Your sources')).toBeTruthy();
         expect(screen.getByTestId('onboarding-pick-publisher:pub-1')).toBeTruthy();
     });
@@ -236,7 +236,7 @@ describe('onboarding sources step', () => {
         await mountAtSources();
         await search();
         await press(screen.getByTestId('sources-search-backdrop'));
-        expect(screen.queryByTestId('sources-search-panel')).toBeNull();
+        await waitFor(() => expect(screen.queryByTestId('sources-search-panel')).toBeNull());
         expect(screen.getByTestId('sources-search').props.value).toBe('spiegel');
         await act(async () => {
             fireEvent.changeText(screen.getByTestId('sources-search'), 'spiegel ');
@@ -262,7 +262,7 @@ describe('onboarding sources step', () => {
         expect(screen.getByTestId('sources-search-clear').props.accessibilityLabel).toBe('Close');
         await press(screen.getByTestId('sources-search-clear'));
         expect(screen.getByTestId('sources-search').props.value).toBe('');
-        expect(screen.queryByTestId('sources-search-panel')).toBeNull();
+        await waitFor(() => expect(screen.queryByTestId('sources-search-panel')).toBeNull());
         expect(screen.queryByTestId('sources-search-clear')).toBeNull();
     });
 

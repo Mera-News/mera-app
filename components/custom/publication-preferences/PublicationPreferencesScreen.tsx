@@ -5,6 +5,7 @@ import PublicationControlRow from './PublicationControlRow';
 import PublicationListRow from '@/components/custom/publication-page/PublicationListRow';
 import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
 import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
+import { Appear } from '@/components/ui/appear';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -105,7 +106,7 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
                     <Spinner size="large" />
                 </Box>
             ) : (
-                <View style={{ flex: 1 }}>
+                <Appear style={{ flex: 1 }}>
                 <FlatList
                     data={items}
                     keyExtractor={(item) => (item.type === 'scope' ? item.scope.group.key : item.pub.key)}
@@ -136,7 +137,7 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
                         ) : undefined
                     }
                 />
-                </View>
+                </Appear>
             )}
         </Box>
     );
