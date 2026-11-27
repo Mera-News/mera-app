@@ -5,6 +5,8 @@ public commit the update was built from and the SHA-256 of the JavaScript bundle
 
 | Published | Runtime | Update group | Commit | iOS bundle SHA-256 | Android bundle SHA-256 |
 |---|---|---|---|---|---|
+| 2026-11-27 13:07 UTC | 1.3.8 | `45f619f4-abc1-42b0-98d9-1562a4f13cd7` | `2861c9f35a4566be97786a2d9d2a58635f7f0c73` | `200c2a6a59c901d0080b4c6ea133f916b48765f43046373419938493b720be80` | `8d5ae0dbaeec40b6f283d92bdd18e67824e15773355ce89b76165f85e68a677b` |
+| 2026-11-27 13:03 UTC | 1.3.9 | `10646708-c9d2-402b-b9d9-f6036dfe5f26` | `2861c9f35a4566be97786a2d9d2a58635f7f0c73` | `5b50c0b826cd8967fbe42069a2b13b45ad2cef3315d65310fc1bd760e474c140` | `218fce2f97c42c2da6b425a3a76bf8a803c7c3d58bdf87c13616ebe9b57761ce` |
 | 2026-11-27 07:54 UTC | 1.3.8 | `620baf0f-486f-4d41-9f9d-a5846297c058` | `f3b6dd90cba551d6e10332eda7556e57fdaa3723` | `cdf780cdf799d1422d866c239672e93c80f675c354b21db6f7550c7b203f80fb` | `470115c13c126ba46ab93080f61d3d834f6234d4d02680e2c479587c68d840f7` |
 | 2026-11-27 07:51 UTC | 1.3.9 | `a2840d72-8bea-4708-9e6d-1ac3f026266a` | `f3b6dd90cba551d6e10332eda7556e57fdaa3723` | `5dc2a5b7a17ff5869451d885d87e4371ed0f4aa965193a6ab2850ab3063c8930` | `f742ca2df07f8eae9cd88004c5fc71faa0a48c114976a172794e98e8f0b18a4d` |
 | 2026-11-20 21:06 UTC | 1.3.8 | `4db82341-5188-4eb5-ab97-9db88978abd1` | `a0aac7de6edb5f867e339cb55f9d4b2f5c36778a` | `6fa27cc7799422d93bd3f2532a203e89eee21a0c8a7ff8e392a293999bb35186` | `8005d66c5c0ec406d4e59ef183f4d31316f2a409456f43d7b02703b24a8976b1` |
@@ -14,8 +16,8 @@ public commit the update was built from and the SHA-256 of the JavaScript bundle
 | 2026-11-16 16:35 UTC | 1.3.8 | `61445b4b-9712-44f9-8427-236c8eae73d9` | `a70cae08a227174f2a515694962eb62a25e6a4cf` | `3e23a517b9e7f45e2180617a68c303dfea87b5ed964af3fd2671a8f229bdcdc4` | `9fe440cc9e42724ddce1b52fc533c85917d99d42f906a9b4decdfe23e38be5c9` |
 | 2026-11-16 14:06 UTC | 1.3.8 | `81afaf29-dc10-4ccf-a9c2-ea5ed560a4dd` | `a07c60f3697192c72d2f19f652ecd8658a3e6bec` | `e1c47207333ab2030a340cd35cee634eca7169f5ded8651030d6b2ce3ff8a392` | `de6e71bdac9767149dc407f9971502559fd21e4d2272f39b3a98aaa6d0957124` |
 
-The two 2026-11-27 rows are one commit published to both runtimes. The 1.3.8 one was built with the
-app version set to 1.3.8 for that build only, so its bundles differ from the 1.3.9 ones. The
+The 2026-11-27 rows are two commits, each published to both runtimes. Each 1.3.8 one was built with
+the app version set to 1.3.8 for that build only, so its bundles differ from the 1.3.9 ones. The
 2026-11-20 21:06 row is a republish of the 2026-11-19 update, so it has the same bundles. The
 2026-11-20 16:21 update was rolled back the same day. Updates older than 2026-11-16 are not listed.
 
