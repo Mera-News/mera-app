@@ -18,6 +18,9 @@ import { StyleSheet, View } from 'react-native';
  * of which a per-screen mount would break. `pointerEvents="box-none"` keeps the
  * underlying screens interactive; only the popover itself captures touches.
  */
+/** One model ping per app open, from the launch effect below. */
+let launchPinged = false;
+
 const FloatingChatHost: React.FC = () => {
     const aiAccess = useAiAccess();
     useChatPanelHold();
@@ -46,9 +49,14 @@ const FloatingChatHost: React.FC = () => {
     // `!== 'locked'` would prewarm during that window and 403 for a free-tier
     // user. There is deliberately no matching early return below any more;
     // the two are not meant to agree.
+    //
+    // The first firing also pings the model once (and refreshes the routing
+    // table, which a ping alone skips), so the first chat turn after an app
+    // open does not meet a cold model. A later firing warms the two fetches only.
     useEffect(() => {
         if (aiAccess !== 'entitled') return;
-        prewarmCloudChat();
+        prewarmCloudChat(launchPinged ? {} : { ping: true, routing: true });
+        launchPinged = true;
     }, [aiAccess]);
 
     // Mera News Free renders the host too. It used to return null, which is
