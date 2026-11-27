@@ -6,7 +6,6 @@ import { Stack } from 'expo-router';
 import { View } from 'react-native';
 
 import { useReportTabBarClearance } from '@/lib/navigation/tab-bar';
-import { TabArrive } from '@/components/ui/appear/TabArrive';
 import { useMotionAllowed } from '@/lib/motion-gate';
 import { useRestoreInProgress } from '@/lib/navigation/use-restore-state';
 import { useColors } from '@/lib/theme/tokens';
@@ -22,23 +21,21 @@ export default function FeedStackLayout() {
   const { ref, onLayout } = useReportTabBarClearance();
   return (
     <View ref={ref} onLayout={onLayout} style={{ flex: 1 }}>
-      <TabArrive index={0}>
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.base }, ...(restoring ? { animation: 'none' } : motionAllowed ? null : { animation: 'fade' }) }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen
-            name="interest"
-            // A hop from an interest's "Next" row (via: 'next') replaces the
-            // screen with the next interest; it crossfades rather than sliding.
-            options={({ route }) => ({
-              animation: restoring
-                ? 'none'
-                : !motionAllowed || (route.params as { via?: string } | undefined)?.via === 'next'
-                  ? 'fade'
-                  : 'slide_from_right',
-            })}
-          />
-        </Stack>
-      </TabArrive>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.base }, ...(restoring ? { animation: 'none' } : motionAllowed ? null : { animation: 'fade' }) }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen
+          name="interest"
+          // A hop from an interest's "Next" row (via: 'next') replaces the
+          // screen with the next interest; it crossfades rather than sliding.
+          options={({ route }) => ({
+            animation: restoring
+              ? 'none'
+              : !motionAllowed || (route.params as { via?: string } | undefined)?.via === 'next'
+                ? 'fade'
+                : 'slide_from_right',
+          })}
+        />
+      </Stack>
     </View>
   );
 }

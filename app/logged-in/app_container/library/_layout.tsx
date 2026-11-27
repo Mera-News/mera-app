@@ -4,7 +4,6 @@ import { Stack } from 'expo-router';
 import { View } from 'react-native';
 
 import { useReportTabBarClearance } from '@/lib/navigation/tab-bar';
-import { TabArrive } from '@/components/ui/appear/TabArrive';
 import { useMotionAllowed } from '@/lib/motion-gate';
 import { useRestoreInProgress } from '@/lib/navigation/use-restore-state';
 import { useColors } from '@/lib/theme/tokens';
@@ -20,9 +19,7 @@ export default function StackLayout() {
   const { ref, onLayout } = useReportTabBarClearance();
   return (
     <View ref={ref} onLayout={onLayout} style={{ flex: 1 }}>
-      <TabArrive index={2}>
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.base }, ...(restoring ? { animation: 'none' } : motionAllowed ? null : { animation: 'fade' }) }} />
-      </TabArrive>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.base }, ...(restoring ? { animation: 'none' } : motionAllowed ? null : { animation: 'fade' }) }} />
     </View>
   );
 }
