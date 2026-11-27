@@ -500,8 +500,8 @@ const ChatThread: React.FC<ChatThreadProps> = ({
           isLoadingOlder={isLoadingOlder}
           header={
             showChips || !hasRealMessage ? (
-              // Leaves on the first send: it fades in place while the new bubble lands.
-              <Animated.View style={styles.header} entering={appearIn} exiting={appearExiting}>
+              // No exit: on the first send the wait row lands on this spot, and a fading header overlaps it.
+              <Animated.View style={styles.header} entering={appearIn}>
                 {!hasRealMessage && usageNotice && (
                   <View style={styles.noticeRow}>
                     <MaterialIcons {...DECORATIVE_ICON_A11Y} name="info-outline" size={14} color={colors.ink3} />

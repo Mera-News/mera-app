@@ -23,7 +23,6 @@
 
 import FirstFeedCard, { useFirstFeedVisible } from '@/components/custom/for-you/FirstFeedCard';
 import { GlassPanel } from '@/components/custom/GlassSurface';
-import { Appear } from '@/components/ui/appear';
 import { Pressable } from '@/components/ui/pressable';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -153,24 +152,16 @@ export function useStatsCardItem(empty: boolean, hasRows: boolean): React.ReactE
     // The first-feed privacy card leads (D9). It is its own gate: the first run shows no counts card yet.
     // shortcut: this instance only gates the header; dismissing inside the card leaves an empty zero-height header until the next mount.
     const [intro] = useFirstFeedVisible();
-    // The card fades in only when it arrives after the list did (the first rows of a launch);
-    // a list that mounts with it (a view switch) draws it at rest.
-    const [arrives, setArrives] = useState(!shown);
-    if (!shown && !arrives) setArrives(true);
     // One element per state, so the list header is not re-rendered per render.
     return useMemo(
         () =>
             shown || intro ? (
                 <>
                     {intro ? <FirstFeedCard /> : null}
-                    {shown ? (
-                        <Appear animateOnMount={arrives}>
-                            <DashboardStatsCard testID="feed-status-card" />
-                        </Appear>
-                    ) : null}
+                    {shown ? <DashboardStatsCard testID="feed-status-card" /> : null}
                 </>
             ) : null,
-        [shown, intro, arrives],
+        [shown, intro],
     );
 }
 

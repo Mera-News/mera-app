@@ -34,6 +34,7 @@ import Animated, {
     Extrapolation,
     interpolate,
     runOnJS,
+    ReduceMotion,
     useAnimatedStyle,
     useReducedMotion,
     useSharedValue,
@@ -41,6 +42,7 @@ import Animated, {
     withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useMotionAllowed } from '@/lib/motion-gate';
 
 /** The header's avatar slot, where the riding mark lands (FinalMeraChat #5). */
 const AVATAR = 24;
@@ -91,7 +93,9 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
               error: { label: t('chat.statusError'), tone: 'negative' as const, icon: 'error-outline' as const },
           }[readiness]
         : null;
-    const reduceMotion = useReducedMotion();
+    // Lite and Reduce Motion: the panel fades in place, no morph.
+    const motionAllowed = useMotionAllowed();
+    const reduceMotion = useReducedMotion() || !motionAllowed;
     const insets = useSafeAreaInsets();
     const { width: screenWidth, height: screenHeight, fontScale } = useWindowDimensions();
     // The title wrapping beside the buttons also stacks them. LATCHED per font
@@ -143,7 +147,7 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
         progress.value = withTiming(
             0,
             reduceMotion
-                ? { duration: MOTION.chat.reduce }
+                ? { duration: MOTION.chat.reduce, reduceMotion: ReduceMotion.Never }
                 : { duration: MOTION.chat.close, easing: EASE.leave },
             (finished) => {
                 if (finished) runOnJS(finishClose)();
@@ -235,7 +239,7 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
             progress.value = withTiming(
                 1,
                 reduceMotion
-                    ? { duration: MOTION.chat.reduce }
+                    ? { duration: MOTION.chat.reduce, reduceMotion: ReduceMotion.Never }
                     : { duration: MOTION.chat.open, easing: EASE.arrive },
                 (finished) => {
                     if (finished) runOnJS(finishOpen)();

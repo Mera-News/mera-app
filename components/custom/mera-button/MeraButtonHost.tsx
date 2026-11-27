@@ -244,6 +244,9 @@ const MeraButtonHost: React.FC = () => {
     [size, tabHeaderBottom, tabBarTop, insets.top, insets.bottom],
   );
 
+  // The chat opens out of the button and closes back into it with its own morph, so under the
+  // chat the button is unmounted and it returns at rest; every other hide and return fades.
+  if (chatOpen) return null;
   const visible = meraButtonVisible({ route, hydrated, chatOpen, arrangeOpen, keyboardUp });
   // Search and the article pages carry no page of their own: the generic set.
   const page: MeraPageKey = (onTab ? pageKeyFor(surface) : null) ?? 'settings';
@@ -252,9 +255,9 @@ const MeraButtonHost: React.FC = () => {
     <Appear
       show={visible}
       rise={0}
+      animateOnMount={false}
       {...OVERLAY_PROPS}
-      // The chat opens out of the button with its own morph, so there the button cuts.
-      style={[StyleSheet.absoluteFill, styles.physical, chatOpen && styles.gone]}
+      style={[StyleSheet.absoluteFill, styles.physical]}
       onLayout={(e) => {
         const { width, height } = e.nativeEvent.layout;
         setSize((prev) => (prev?.width === width && prev?.height === height ? prev : { width, height }));
@@ -279,7 +282,6 @@ const styles = StyleSheet.create({
   // Corners are PHYSICAL: top-left stays top-left in RTL.
   physical: { direction: 'ltr' },
   placed: { position: 'absolute', left: 0, top: 0 },
-  gone: { display: 'none' },
 });
 
 export default MeraButtonHost;
