@@ -664,7 +664,10 @@
     "addAnyway": "Add it anyway",
     "addedToProfile": "Added to your profile",
     "optionAsWritten": "{{phrase}}, as you wrote it",
-    "optionSpellingFixed": "{{phrase}}, with spelling fixed"
+    "optionSpellingFixed": "{{phrase}}, with spelling fixed",
+    "regenerateWithWeb": "Regenerate with web search",
+    "regenerateLoading": "Searching the web for new options",
+    "regenerateDone": "Options updated from the web"
   },
   "notificationCenter": {
     "title": "Notifications",

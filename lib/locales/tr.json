@@ -1171,7 +1171,10 @@
     "addToProfile": "Bunun yerine profilime ekle",
     "impactQuestion": "Eklemeden önce, bu sizi nasıl etkiliyor? Mera’nın yapay zekası, bir makalenin sizin için ne kadar önemli olduğunu bulmak için bunu kullanır. Sizi kişisel olarak etkilemiyorsa, sadece bir haber hikâyesi olarak takip etmenizi öneririm.",
     "addAnyway": "Yine de ekle",
-    "addedToProfile": "Profilinize eklendi"
+    "addedToProfile": "Profilinize eklendi",
+    "regenerateWithWeb": "Web aramasıyla yeniden oluştur",
+    "regenerateLoading": "Web'de yeni seçenekler aranıyor",
+    "regenerateDone": "Seçenekler web'den güncellendi"
   },
   "notificationCenter": {
     "title": "Bildirimler",

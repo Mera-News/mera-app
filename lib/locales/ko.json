@@ -1154,7 +1154,10 @@
     "addToProfile": "대신 내 프로필에 추가",
     "impactQuestion": "추가하기 전에, 이것이 회원님에게 어떤 영향을 주나요? 메라의 AI는 이 답으로 기사가 회원님에게 얼마나 중요한지 판단해요. 개인적인 영향이 없다면 스토리로 팔로우하시는 걸 추천해요.",
     "addAnyway": "그래도 추가",
-    "addedToProfile": "프로필에 추가했어요"
+    "addedToProfile": "프로필에 추가했어요",
+    "regenerateWithWeb": "웹 검색으로 다시 생성",
+    "regenerateLoading": "웹에서 새 옵션을 찾는 중",
+    "regenerateDone": "웹 검색 결과로 옵션을 업데이트했습니다"
   },
   "notificationCenter": {
     "title": "알림",

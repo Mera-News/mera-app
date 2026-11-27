@@ -1154,7 +1154,10 @@
     "addToProfile": "改為加入我的檔案",
     "impactQuestion": "加入之前，這件事對你有什麼影響？梅拉的 AI 會用這個判斷一篇文章對你有多重要。如果它對你個人沒有影響，我建議你把它當成報導來關注。",
     "addAnyway": "仍要加入",
-    "addedToProfile": "已加入你的檔案"
+    "addedToProfile": "已加入你的檔案",
+    "regenerateWithWeb": "透過網路搜尋重新產生",
+    "regenerateLoading": "正在網路上搜尋新選項",
+    "regenerateDone": "已根據網路搜尋更新選項"
   },
   "notificationCenter": {
     "title": "通知",

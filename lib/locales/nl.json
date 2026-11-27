@@ -1169,7 +1169,10 @@
     "addToProfile": "Liever aan mijn profiel toevoegen",
     "impactQuestion": "Voordat ik het toevoeg: hoe raakt het jou? De AI van Mera gebruikt dit om te bepalen hoeveel een artikel voor jou telt. Als het je persoonlijk niet raakt, raad ik aan het gewoon als verhaal te volgen.",
     "addAnyway": "Toch toevoegen",
-    "addedToProfile": "Toegevoegd aan je profiel"
+    "addedToProfile": "Toegevoegd aan je profiel",
+    "regenerateWithWeb": "Opnieuw genereren met websearch",
+    "regenerateLoading": "Het web doorzoeken naar nieuwe opties",
+    "regenerateDone": "Opties bijgewerkt vanaf het web"
   },
   "notificationCenter": {
     "title": "Meldingen",

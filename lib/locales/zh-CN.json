@@ -1154,7 +1154,10 @@
     "addToProfile": "改为添加到我的档案",
     "impactQuestion": "添加之前，它会对你有什么影响？梅拉的 AI 会据此判断一篇文章对你有多重要。如果它对你没有直接影响，我建议你把它当作报道来关注。",
     "addAnyway": "仍然添加",
-    "addedToProfile": "已添加到你的档案"
+    "addedToProfile": "已添加到你的档案",
+    "regenerateWithWeb": "通过网络搜索重新生成",
+    "regenerateLoading": "正在网上搜索新选项",
+    "regenerateDone": "已根据网络搜索更新选项"
   },
   "notificationCenter": {
     "title": "通知",

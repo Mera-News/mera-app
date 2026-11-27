@@ -1177,7 +1177,10 @@
     "addToProfile": "Ajouter plutôt à mon profil",
     "impactQuestion": "Avant de l'ajouter, en quoi cela vous concerne-t-il ? L'IA de Mera s'en sert pour évaluer l'importance d'un article pour vous. Si cela ne vous concerne pas personnellement, je vous conseille de simplement le suivre comme une histoire.",
     "addAnyway": "L'ajouter quand même",
-    "addedToProfile": "Ajouté à votre profil"
+    "addedToProfile": "Ajouté à votre profil",
+    "regenerateWithWeb": "Régénérer avec la recherche Web",
+    "regenerateLoading": "Recherche de nouvelles options sur le Web",
+    "regenerateDone": "Options mises à jour depuis le Web"
   },
   "notificationCenter": {
     "title": "Notifications",

@@ -1239,7 +1239,10 @@
     "addToProfile": "Dodaj do mojego profilu",
     "impactQuestion": "Zanim dodam, jak to na Ciebie wpływa? AI Mery używa tego, żeby ocenić, jak bardzo artykuł jest dla Ciebie ważny. Jeśli nie dotyczy to Ciebie osobiście, polecam po prostu śledzić to jako historię.",
     "addAnyway": "Dodaj mimo to",
-    "addedToProfile": "Dodano do Twojego profilu"
+    "addedToProfile": "Dodano do Twojego profilu",
+    "regenerateWithWeb": "Wygeneruj ponownie z wyszukiwaniem w sieci",
+    "regenerateLoading": "Szukam nowych opcji w sieci",
+    "regenerateDone": "Opcje zaktualizowane z sieci"
   },
   "notificationCenter": {
     "title": "Powiadomienia",

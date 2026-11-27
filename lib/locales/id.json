@@ -1154,7 +1154,10 @@
     "addToProfile": "Tambahkan ke profil saya saja",
     "impactQuestion": "Sebelum saya tambahkan, bagaimana ini memengaruhi Anda? AI Mera menggunakan ini untuk menghitung seberapa penting sebuah artikel bagi Anda. Jika tidak berdampak langsung pada Anda, saya sarankan cukup mengikutinya sebagai cerita.",
     "addAnyway": "Tetap tambahkan",
-    "addedToProfile": "Ditambahkan ke profil Anda"
+    "addedToProfile": "Ditambahkan ke profil Anda",
+    "regenerateWithWeb": "Buat ulang dengan pencarian web",
+    "regenerateLoading": "Mencari opsi baru di web",
+    "regenerateDone": "Opsi diperbarui dari web"
   },
   "notificationCenter": {
     "title": "Notifikasi",

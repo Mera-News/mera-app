@@ -1154,7 +1154,10 @@
     "addToProfile": "Thêm vào hồ sơ của tôi thay vì vậy",
     "impactQuestion": "Trước khi thêm, điều này ảnh hưởng đến bạn như thế nào? AI của Mera dùng thông tin này để xác định một bài viết quan trọng với bạn đến mức nào. Nếu nó không ảnh hưởng trực tiếp đến bạn, mình khuyên bạn chỉ nên theo dõi nó như một câu chuyện.",
     "addAnyway": "Vẫn thêm",
-    "addedToProfile": "Đã thêm vào hồ sơ của bạn"
+    "addedToProfile": "Đã thêm vào hồ sơ của bạn",
+    "regenerateWithWeb": "Tạo lại bằng tìm kiếm web",
+    "regenerateLoading": "Đang tìm lựa chọn mới trên web",
+    "regenerateDone": "Đã cập nhật lựa chọn từ web"
   },
   "notificationCenter": {
     "title": "Thông báo",

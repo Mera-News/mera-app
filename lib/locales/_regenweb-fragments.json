@@ -1,0 +1,142 @@
+{
+  "en": {
+    "trackedStories": {
+      "regenerateWithWeb": "Regenerate with web search",
+      "regenerateLoading": "Searching the web for new options",
+      "regenerateDone": "Options updated from the web"
+    }
+  },
+  "ar": {
+    "trackedStories": {
+      "regenerateWithWeb": "أعد الإنشاء باستخدام بحث الويب",
+      "regenerateLoading": "جارٍ البحث في الويب عن خيارات جديدة",
+      "regenerateDone": "تم تحديث الخيارات من الويب"
+    }
+  },
+  "de": {
+    "trackedStories": {
+      "regenerateWithWeb": "Mit Websuche neu erstellen",
+      "regenerateLoading": "Im Web wird nach neuen Optionen gesucht",
+      "regenerateDone": "Optionen aus dem Web aktualisiert"
+    }
+  },
+  "es": {
+    "trackedStories": {
+      "regenerateWithWeb": "Regenerar con búsqueda web",
+      "regenerateLoading": "Buscando nuevas opciones en la web",
+      "regenerateDone": "Opciones actualizadas desde la web"
+    }
+  },
+  "fr": {
+    "trackedStories": {
+      "regenerateWithWeb": "Régénérer avec la recherche Web",
+      "regenerateLoading": "Recherche de nouvelles options sur le Web",
+      "regenerateDone": "Options mises à jour depuis le Web"
+    }
+  },
+  "hi": {
+    "trackedStories": {
+      "regenerateWithWeb": "वेब खोज के साथ फिर से बनाएं",
+      "regenerateLoading": "नए विकल्पों के लिए वेब पर खोजा जा रहा है",
+      "regenerateDone": "विकल्प वेब से अपडेट किए गए"
+    }
+  },
+  "id": {
+    "trackedStories": {
+      "regenerateWithWeb": "Buat ulang dengan pencarian web",
+      "regenerateLoading": "Mencari opsi baru di web",
+      "regenerateDone": "Opsi diperbarui dari web"
+    }
+  },
+  "it": {
+    "trackedStories": {
+      "regenerateWithWeb": "Rigenera con la ricerca web",
+      "regenerateLoading": "Cerco nuove opzioni sul web",
+      "regenerateDone": "Opzioni aggiornate dal web"
+    }
+  },
+  "ja": {
+    "trackedStories": {
+      "regenerateWithWeb": "ウェブ検索で再生成",
+      "regenerateLoading": "ウェブで新しい候補を探しています",
+      "regenerateDone": "ウェブの結果で候補を更新しました"
+    }
+  },
+  "ko": {
+    "trackedStories": {
+      "regenerateWithWeb": "웹 검색으로 다시 생성",
+      "regenerateLoading": "웹에서 새 옵션을 찾는 중",
+      "regenerateDone": "웹 검색 결과로 옵션을 업데이트했습니다"
+    }
+  },
+  "nl": {
+    "trackedStories": {
+      "regenerateWithWeb": "Opnieuw genereren met websearch",
+      "regenerateLoading": "Het web doorzoeken naar nieuwe opties",
+      "regenerateDone": "Opties bijgewerkt vanaf het web"
+    }
+  },
+  "pl": {
+    "trackedStories": {
+      "regenerateWithWeb": "Wygeneruj ponownie z wyszukiwaniem w sieci",
+      "regenerateLoading": "Szukam nowych opcji w sieci",
+      "regenerateDone": "Opcje zaktualizowane z sieci"
+    }
+  },
+  "pt-BR": {
+    "trackedStories": {
+      "regenerateWithWeb": "Gerar novamente com busca na web",
+      "regenerateLoading": "Buscando novas opções na web",
+      "regenerateDone": "Opções atualizadas pela web"
+    }
+  },
+  "ru": {
+    "trackedStories": {
+      "regenerateWithWeb": "Создать заново с веб-поиском",
+      "regenerateLoading": "Ищем новые варианты в интернете",
+      "regenerateDone": "Варианты обновлены из интернета"
+    }
+  },
+  "th": {
+    "trackedStories": {
+      "regenerateWithWeb": "สร้างใหม่ด้วยการค้นหาเว็บ",
+      "regenerateLoading": "กำลังค้นหาตัวเลือกใหม่บนเว็บ",
+      "regenerateDone": "อัปเดตตัวเลือกจากเว็บแล้ว"
+    }
+  },
+  "tr": {
+    "trackedStories": {
+      "regenerateWithWeb": "Web aramasıyla yeniden oluştur",
+      "regenerateLoading": "Web'de yeni seçenekler aranıyor",
+      "regenerateDone": "Seçenekler web'den güncellendi"
+    }
+  },
+  "uk": {
+    "trackedStories": {
+      "regenerateWithWeb": "Створити заново з веб-пошуком",
+      "regenerateLoading": "Шукаю нові варіанти в інтернеті",
+      "regenerateDone": "Варіанти оновлено з інтернету"
+    }
+  },
+  "vi": {
+    "trackedStories": {
+      "regenerateWithWeb": "Tạo lại bằng tìm kiếm web",
+      "regenerateLoading": "Đang tìm lựa chọn mới trên web",
+      "regenerateDone": "Đã cập nhật lựa chọn từ web"
+    }
+  },
+  "zh-CN": {
+    "trackedStories": {
+      "regenerateWithWeb": "通过网络搜索重新生成",
+      "regenerateLoading": "正在网上搜索新选项",
+      "regenerateDone": "已根据网络搜索更新选项"
+    }
+  },
+  "zh-TW": {
+    "trackedStories": {
+      "regenerateWithWeb": "透過網路搜尋重新產生",
+      "regenerateLoading": "正在網路上搜尋新選項",
+      "regenerateDone": "已根據網路搜尋更新選項"
+    }
+  }
+}

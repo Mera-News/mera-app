@@ -1169,7 +1169,10 @@
     "addToProfile": "Stattdessen zu meinem Profil hinzufügen",
     "impactQuestion": "Bevor ich es hinzufüge: Wie betrifft dich das? Die KI von Mera nutzt das, um einzuschätzen, wie wichtig ein Artikel für dich ist. Wenn es dich persönlich nicht betrifft, empfehle ich, ihm einfach als Geschichte zu folgen.",
     "addAnyway": "Trotzdem hinzufügen",
-    "addedToProfile": "Zu deinem Profil hinzugefügt"
+    "addedToProfile": "Zu deinem Profil hinzugefügt",
+    "regenerateWithWeb": "Mit Websuche neu erstellen",
+    "regenerateLoading": "Im Web wird nach neuen Optionen gesucht",
+    "regenerateDone": "Optionen aus dem Web aktualisiert"
   },
   "notificationCenter": {
     "title": "Benachrichtigungen",

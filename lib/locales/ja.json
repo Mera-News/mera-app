@@ -1154,7 +1154,10 @@
     "addToProfile": "代わりにプロフィールに追加",
     "impactQuestion": "追加する前に、これはあなたにどう影響しますか？ メラのAIは、この答えを使って記事があなたにとってどれくらい重要かを判断します。個人的な影響がないなら、ストーリーとしてフォローするのがおすすめです。",
     "addAnyway": "それでも追加する",
-    "addedToProfile": "プロフィールに追加しました"
+    "addedToProfile": "プロフィールに追加しました",
+    "regenerateWithWeb": "ウェブ検索で再生成",
+    "regenerateLoading": "ウェブで新しい候補を探しています",
+    "regenerateDone": "ウェブの結果で候補を更新しました"
   },
   "notificationCenter": {
     "title": "通知",
