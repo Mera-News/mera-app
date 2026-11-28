@@ -2,7 +2,7 @@
 // measurements that keep the buttons below from moving. Faked: only the in-app browser.
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { Dimensions, StyleSheet } from 'react-native';
 import PublicationHeader from '@/components/custom/publication-page/PublicationHeader';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { TextScaleContext } from '@/lib/typography/TextScaleContext';
@@ -30,6 +30,12 @@ const header = (props: Partial<React.ComponentProps<typeof PublicationHeader>> =
 );
 
 beforeAll(initI18nEn);
+// The RN jest preset's window reports fontScale 2: every test starts at the OS default, 1.
+const originalWindow = Dimensions.get('window');
+const setOsFontScale = (fontScale: number) =>
+    Dimensions.set({ window: { ...originalWindow, fontScale }, screen: Dimensions.get('screen') });
+beforeEach(() => setOsFontScale(1));
+afterAll(() => setOsFontScale(originalWindow.fontScale));
 beforeEach(() => {
     (openInAppBrowser as jest.Mock).mockClear();
     useAppLanguageStore.setState({ appLanguage: 'en' });
@@ -84,5 +90,17 @@ describe('the score line', () => {
     it('the reserved height follows the text size', async () => {
         const { getByTestId } = await render(<TextScaleContext.Provider value={1.5}>{header()}</TextScaleContext.Provider>);
         expect(flat(getByTestId('publication-score-slot')).minHeight).toBe(27);
+    });
+
+    describe('with a large OS text size', () => {
+        it('reserves the line React Native will draw, capped at the ui Text cap (2x)', async () => {
+            setOsFontScale(1.5);
+            const first = await render(header());
+            expect(flat(first.getByTestId('publication-score-slot')).minHeight).toBe(27);
+            first.unmount();
+            setOsFontScale(3.1);
+            const capped = await render(header());
+            expect(flat(capped.getByTestId('publication-score-slot')).minHeight).toBe(36);
+        });
     });
 });

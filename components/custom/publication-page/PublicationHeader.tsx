@@ -3,6 +3,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { Appear } from '@/components/ui/appear';
+import { maxFontSizeMultiplierFor } from '@/lib/algorithms/policy';
 import { TYPE_SCALE } from '@/lib/algorithms/scale';
 import { WEBSITE_URL } from '@/lib/config/branding';
 import logger from '@/lib/logger';
@@ -13,7 +14,7 @@ import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
 import {
@@ -158,7 +159,14 @@ const PublicationHeader: React.FC<PublicationHeaderProps> = ({
         });
     }, [url]);
 
-    const lineHeight = scaledTypeStyle('xs', useTextScale())?.lineHeight ?? TYPE_SCALE.xs.lineHeight;
+    // The score text's rendered line: the in-app scale sets lineHeight, and React Native then multiplies
+    // it by the OS font scale, capped as the ui Text caps it. Reserve and the arc box use the same line,
+    // or at a large OS size the line outgrows the reserve (the buttons move) and the arc sits high.
+    const userScale = useTextScale();
+    const { fontScale } = useWindowDimensions();
+    const lineHeight =
+        (scaledTypeStyle('xs', userScale)?.lineHeight ?? TYPE_SCALE.xs.lineHeight) *
+        Math.min(fontScale || 1, maxFontSizeMultiplierFor('content', userScale));
     const openReport = useCallback(() => {
         if (!reportPublisherId) return;
         openInAppBrowser(withAppLanguage(`${WEBSITE_URL}/publications/${reportPublisherId}`)).catch((error) => {
