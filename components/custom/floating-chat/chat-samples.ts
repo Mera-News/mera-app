@@ -1,5 +1,5 @@
-// The faint example behind a fresh chat: what people tell Mera (the welcome) or
-// what they follow (Follow a story). English source; ChatSample translates it.
+// The faint example on an empty page: what people tell Mera (Profile, the Feed
+// with no facts) or what they follow (Stories). English source; ChatSample translates it.
 // Owner rule: the profile holds what affects the reader; anything they only like
 // is a story to follow. Translated sets are all-or-nothing, so lines stay short.
 // The trending names date: refresh them by OTA, no native build needed.

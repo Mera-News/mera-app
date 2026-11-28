@@ -25,6 +25,7 @@ import {
     type StoryRetainedRow,
 } from '@/lib/story-export';
 import { deleteTrackedStoryById, disownStoryMember } from '@/lib/tracking/track-actions';
+import { useIsOnline } from '@/lib/stores/network-store';
 import { toastManager } from '@/lib/toast-manager';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { buildTimeline, foldTimeline, type TimelineCard, type TimelineEntry } from './merge-timeline';
@@ -327,7 +328,9 @@ export function useStoryTimelineScreen({
 
     // A follow starts a feed sync, and a story opened before it ends has read
     // its row too early: re-read when the sync ends, with no spinner over cards.
-    const syncing = useFeedSyncRunning();
+    // Online only: an unreachable sync runs for minutes and would hold the spinner.
+    const online = useIsOnline();
+    const syncing = useFeedSyncRunning() && online;
     const wasSyncing = useRef(false);
     useEffect(() => {
         if (wasSyncing.current && !syncing && focusedRef.current) void load({ quiet: true });

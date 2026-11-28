@@ -13,6 +13,8 @@
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import TapPressable from '@/components/custom/cards/TapPressable';
+import ChatSample from '@/components/custom/floating-chat/ChatSample';
 import LoopScene from '@/components/custom/for-you/LoopScene';
 import { openMeraChat } from '@/components/custom/mera-button/open-mera-chat';
 import { animationSourceFor } from '@/components/custom/tutorials/animation-registry';
@@ -160,6 +162,16 @@ export const FeedNoFacts: React.FC<{ readonly view: 'continuous' | 'sectioned' }
           </View>
         </View>
       </GlassPanel>
+      {/* What "tell it about your life" means, by example; a tap opens the same chat as the mark. */}
+      <TapPressable
+        testID="feed-no-facts-sample"
+        accessibilityRole="button"
+        accessibilityLabel={t('tutorials.askMera')}
+        onPress={() => openMeraChat({ kind: 'persona' })}
+        style={{ paddingVertical: 12 }}
+      >
+        <ChatSample kind="profile" />
+      </TapPressable>
       {/* One tap gives a zero-fact reader a country; the chip renders nothing with no region or a home on file. */}
       <HomeChipBlock />
       <FeedShortcuts reading={false} />

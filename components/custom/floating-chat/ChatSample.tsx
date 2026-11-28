@@ -1,9 +1,12 @@
-// The faint example behind a fresh chat (owner design): a label and a few
-// lines that change every few seconds, each line wiping in left to right while
-// the old one wipes out along the same edge. Not a control: it takes no touch,
-// and ChatSessionView unmounts it on the first touch anywhere in the chat.
+// The faint example on an empty page (owner design; it left the chat): what a
+// reader could tell Mera (Profile, the Feed with no facts) or follow (Stories).
+// A label and a few lines that change every few seconds, each line wiping in
+// left to right while the old one wipes out along the same edge. It takes no
+// touch itself: the host wraps it in the tap that opens the chat.
 // The wipe is a sliding clip, not a soft mask: a mask needs a native module.
 
+import { usePageActive } from '@/components/custom/nav/page-active';
+import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
 import { useMotionAllowed } from '@/lib/motion-gate';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useColors } from '@/lib/theme/tokens';
@@ -41,11 +44,17 @@ export default function ChatSample({ kind }: { kind: ChatSampleKind }) {
   const lang = useAppLanguageStore((s) => s.appLanguage);
   const [shown, setShown] = useState<{ cur: string[]; prev: string[]; gen: number } | null>(null);
   const seed = useRef(0);
+  // Tabs and warm pages stay mounted: unseen, the cycle (and its translator calls) stops.
+  // Both hooks run every render: `a() && b()` would skip one and change the hook order.
+  const focused = useAnimationsActive();
+  const pageActive = usePageActive();
+  const looking = focused && pageActive;
 
   // Ready the next set, then swap it in. A set waits until EVERY line is in the
   // app language (owner): the current one stays up meanwhile, and a set whose
   // translation fails is skipped for the next seed.
   useEffect(() => {
+    if (!looking) return;
     let alive = true;
     let timer: ReturnType<typeof setTimeout> | undefined;
     // A different first sample each open.
@@ -64,13 +73,12 @@ export default function ChatSample({ kind }: { kind: ChatSampleKind }) {
       alive = false;
       clearTimeout(timer);
     };
-  }, [kind, lang]);
+  }, [kind, lang, looking]);
 
   if (!shown) return null;
   const label = t(kind === 'profile' ? 'chatSample.profileLabel' : 'chatSample.storiesLabel');
   return (
-    // The fade is on a wrapper: `wrap` holds the sample's own 0.8 opacity. It also runs when
-    // ChatSessionView drops the sample (first touch, keyboard).
+    // The fade is on a wrapper: `wrap` holds the sample's own 0.8 opacity.
     <Animated.View pointerEvents="none" entering={appearIn} exiting={appearExiting}>
     <View
       pointerEvents="none"

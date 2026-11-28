@@ -1,4 +1,8 @@
 import BlockedBanner from '@/components/custom/BlockedBanner';
+import TapPressable from '@/components/custom/cards/TapPressable';
+import ChatSample from '@/components/custom/floating-chat/ChatSample';
+import { chatContextFor } from '@/components/custom/mera-button/mera-pages';
+import { openMeraChat } from '@/components/custom/mera-button/open-mera-chat';
 import { openFactPage } from '@/components/custom/facts/open-fact-page';
 import { sentenceCase } from '@/components/custom/facts/sentence-case';
 import { composeLocationLabel, roleMeta } from '@/components/custom/locations/location-display';
@@ -55,8 +59,8 @@ interface ProfileHubProps {
  * Facts and Places always render (their empty lines say how they fill).
  * Tidy-up suggestions are cards in Feed > Notifications, not here.
  *
- * No name, monogram or greeting (Mera never knows the name). No chat invite:
- * the Mera button carries "Tell me about something new...".
+ * No name, monogram or greeting (Mera never knows the name). With no facts the
+ * Facts card shows an example profile (owner); a tap on it opens the chat.
  */
 const ProfileHub: React.FC<ProfileHubProps> = ({ header, active }) => {
     const { t } = useTranslation();
@@ -105,6 +109,17 @@ const ProfileHub: React.FC<ProfileHubProps> = ({ header, active }) => {
                 <Row title={t('you.profile.facts')} bold value={facts && facts.length > 0 ? String(facts.length) : undefined} />
                 {facts && facts.length === 0 ? (
                     <Row testID="profile-facts-empty" title={t('you.profile.factsEmpty')} titleColor={colors.ink2} />
+                ) : null}
+                {facts && facts.length === 0 ? (
+                    <TapPressable
+                        testID="profile-facts-sample"
+                        accessibilityRole="button"
+                        accessibilityLabel={t('tutorials.askMera')}
+                        onPress={() => openMeraChat(chatContextFor('profile'))}
+                        style={{ paddingVertical: 20 }}
+                    >
+                        <ChatSample kind="profile" />
+                    </TapPressable>
                 ) : null}
                 {(facts ?? []).slice(0, FACTS_SHOWN).map((fact) => <FactRow key={fact.id} fact={fact} />)}
                 {facts && facts.length > 0 ? (

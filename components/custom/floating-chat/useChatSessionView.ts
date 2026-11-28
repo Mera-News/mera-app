@@ -36,7 +36,6 @@ import { decideTopicPlanTurn } from './topic-plan-turn';
 import { buildTopicPlanTurnBody } from '@/lib/news-harness/persona-management/topic-plan-notes';
 import { getAiAccess } from '@/lib/stores/subscription-store';
 import { useTopicPlanResolutions } from './useTopicPlanResolutions';
-import type { ChatSampleKind } from './chat-samples';
 import type { ComposerAction, OnboardingPath, StarterChip } from './types';
 import { renderableTerminal } from './types';
 import { HARNESS_TAP_ONLY } from '@/lib/chat-session/cloud-engine-helpers';
@@ -276,18 +275,6 @@ export function useChatSessionView(props: ChatSessionViewProps) {
   const [introCleared, setIntroCleared] = useState(false);
   // In onboarding it stays: it holds the question the reader is answering.
   const introMessage = introCleared && !inOnboarding ? null : introShown;
-  // The faint example behind a fresh chat: the welcome shows a sample profile,
-  // a follow chat shows sample stories. Any earlier message means not fresh.
-  // Onboarding shows none: Mera doesn't yet know what the reader wants to do.
-  const sampleKind: ChatSampleKind | null =
-    introMessage && messages.length === 0 && resume.length === 0 && !inOnboarding
-      ? originalWelcome || (context.kind === 'persona' && !context.page)
-        ? 'profile'
-        : context.kind === 'follow-story'
-          ? 'stories'
-          : null
-      : null;
-
   // Lazily page in older history on scroll-up.
   const { history, loadOlder, hasOlder, isLoadingOlder } = useChatHistory(
     conversationId ?? undefined,
@@ -898,7 +885,6 @@ export function useChatSessionView(props: ChatSessionViewProps) {
     composerHint,
     handleUnblockSubmitted,
     introMessage,
-    sampleKind,
     onboarding,
     unresolvedTopicPlans,
     unresolvedFactChoices,

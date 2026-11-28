@@ -14,6 +14,10 @@ import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import { ActionSheetRow } from '@/components/custom/cards/ArticleOverflowMenu';
 import FlatCardSurface from '@/components/custom/cards/FlatCardSurface';
 import PressableCard from '@/components/custom/cards/PressableCard';
+import TapPressable from '@/components/custom/cards/TapPressable';
+import ChatSample from '@/components/custom/floating-chat/ChatSample';
+import { chatContextFor } from '@/components/custom/mera-button/mera-pages';
+import { openMeraChat } from '@/components/custom/mera-button/open-mera-chat';
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { openTutorial } from '@/components/custom/tutorials/open-tutorial';
@@ -30,7 +34,7 @@ import { formatTimeAgo } from '@/lib/algorithms/time-ago';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { type ListRenderItem, Pressable, StyleSheet, View } from 'react-native';
+import { type ListRenderItem, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { latestMember } from './merge-timeline';
@@ -179,6 +183,8 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
     );
 
     const keyExtractor = useCallback((item: TrackedStoryModel) => item.id, []);
+    // The empty page's tap area fills what the list shows (a list gives its empty item no height).
+    const emptyHeight = useWindowDimensions().height - headerHeight - PAGE_CONTENT_GAP - listEndClearance;
 
     return (
         <View style={{ flex: 1 }}>
@@ -190,17 +196,28 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                 keyExtractor={keyExtractor}
                 ListHeaderComponent={listHeader ? <View style={{ marginBottom: PAGE_TITLE_GAP }}>{listHeader}</View> : undefined}
                 ListEmptyComponent={
-                    <ForYouEmptyState
-                        animationId="following-what-it-is"
-                        title={t('trackedStories.emptyTitle')}
-                        body={t('trackedStories.emptyBodyMera')}
-                        action={{
-                            label: t('trackedStories.learnAbout'),
-                            onPress: () => openTutorial('following'),
-                            testID: 'tracked-stories-learn',
-                        }}
-                        testID="tracked-stories-empty"
-                    />
+                    // A story is added in the chat, so a tap anywhere on the empty page
+                    // opens it (owner). Not one accessible element: that would hide the
+                    // Learn link from VoiceOver, which opens the chat from the Mera button.
+                    <TapPressable
+                        testID="tracked-stories-empty-open"
+                        accessible={false}
+                        onPress={() => openMeraChat(chatContextFor('stories'))}
+                        style={{ minHeight: emptyHeight, gap: 28 }}
+                    >
+                        <ForYouEmptyState
+                            animationId="following-what-it-is"
+                            title={t('trackedStories.emptyTitle')}
+                            body={t('trackedStories.emptyBodyMera')}
+                            action={{
+                                label: t('trackedStories.learnAbout'),
+                                onPress: () => openTutorial('following'),
+                                testID: 'tracked-stories-learn',
+                            }}
+                            testID="tracked-stories-empty"
+                        />
+                        <ChatSample kind="stories" />
+                    </TapPressable>
                 }
                 ListFooterComponent={
                     aiNote ? (
