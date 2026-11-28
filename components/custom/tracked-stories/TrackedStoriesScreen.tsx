@@ -206,8 +206,9 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                         testID="tracked-stories-empty-open"
                         accessible={false}
                         onPress={() => openMeraChat(chatContextFor('stories'))}
-                        style={{ minHeight: emptyHeight, gap: 28, paddingBottom: listEndClearance - tabBarClearance }}
+                        style={{ minHeight: emptyHeight, gap: 28, paddingTop: 24, paddingBottom: listEndClearance - tabBarClearance }}
                     >
+                        <ChatSample kind="stories" />
                         <ForYouEmptyState
                             animationId="following-what-it-is"
                             title={t('trackedStories.emptyTitle')}
@@ -219,7 +220,6 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                             }}
                             testID="tracked-stories-empty"
                         />
-                        <ChatSample kind="stories" />
                     </TapPressable>
                 }
                 ListFooterComponent={

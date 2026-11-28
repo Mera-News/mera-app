@@ -3,10 +3,11 @@
 // page. The cone sweeps at rest; Mera reading the news changes nothing here
 // (the Feed's status icon shows that).
 //
-// THE ONE HINT (FinalMeraChat #1): while the person has told Mera no fact at
+// THE HINT (FinalMeraChat #1): while the person has told Mera no fact at
 // all, a tooltip "Tell Mera about you" points at the button. It is DERIVED
 // from the facts table (no timer, no rotation, no stored "dismissed" flag) and
-// goes for good with the first fact.
+// goes for good with the first fact. On the Stories page with nothing followed
+// it says "Follow a story" instead (owner): a story is added through this button.
 //
 // Accessibility: the label says what the button does or what it is showing
 // (working, an answer ready); the tooltip is hidden from screen readers and
@@ -81,6 +82,23 @@ function useHasNoFacts(): boolean {
   return none;
 }
 
+/** True while no story is followed. Same shape and reasons as `useHasNoFacts`. */
+function useHasNoStories(): boolean {
+  const [none, setNone] = useState(false);
+  useEffect(() => {
+    let sub: { unsubscribe: () => void } | undefined;
+    try {
+      const { observeActive } =
+        require('@/lib/database/services/tracked-story-service') as typeof import('@/lib/database/services/tracked-story-service');
+      sub = observeActive().subscribe((stories) => setNone(stories.length === 0));
+    } catch {
+      setNone(false);
+    }
+    return () => sub?.unsubscribe();
+  }, []);
+  return none;
+}
+
 export interface MeraButtonProps {
   /** The surface showing (`interest:<id>`, `country:DE`, `facts`…). */
   readonly surface: string;
@@ -118,7 +136,12 @@ const MeraButton: React.FC<MeraButtonProps> = ({
   const look = meraButtonColors(useMeraButtonLook());
   const { t } = useTranslation();
   const reduceMotion = useReducedMotion();
-  const tooltipOn = useHasNoFacts() && !working && !unread;
+  const noFacts = useHasNoFacts();
+  const noStories = useHasNoStories();
+  // The Stories hint is the page starter's own string, so it needs no new copy.
+  const tooltipKey =
+    page === 'stories' && noStories ? 'meraHints.stories.follow' : noFacts ? 'meraButton.tooltipNew' : null;
+  const tooltipOn = tooltipKey !== null && !working && !unread;
 
   // ── working: the logo grows on the UI thread ─────────────────────────────
   const scale = useSharedValue(working ? 1 : REST_SCALE);
@@ -198,7 +221,7 @@ const MeraButton: React.FC<MeraButtonProps> = ({
             testID="mera-button-tooltip"
           >
             <Text style={[styles.tooltipText, { color: colors.ink }]} maxFontSizeMultiplier={1.4}>
-              {t('meraButton.tooltipNew')}
+              {tooltipKey ? t(tooltipKey) : null}
             </Text>
             <View style={[styles.pointer, tooltipColours, pointsLeft ? styles.pointerLeft : styles.pointerRight]} />
           </Animated.View>
@@ -214,7 +237,7 @@ const MeraButton: React.FC<MeraButtonProps> = ({
           accessibilityLabel={
             working ? t('meraButton.working') : unread ? t('meraButton.answerReady') : t('tutorials.askMera')
           }
-          accessibilityHint={tooltipOn ? t('meraButton.tooltipNew') : undefined}
+          accessibilityHint={tooltipOn && tooltipKey ? t(tooltipKey) : undefined}
           accessibilityActions={actions}
           onAccessibilityAction={(e) => {
             const name = e.nativeEvent.actionName;
