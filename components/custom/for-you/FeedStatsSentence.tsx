@@ -16,6 +16,7 @@
 
 import { Text } from '@/components/ui/text';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
+import { useStoryCounts } from './use-story-counts';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { formatCount } from '@/lib/algorithms/format-count';
 import { joinClauses } from './card-state';
@@ -37,11 +38,11 @@ type StatsClauseKey =
   | 'feed.statsPublished'
   | 'feed.statsPublishedPending'
   | 'feed.statsAnalysed'
-  | 'feed.statsRelevant'
+  | 'feed.statsStories'
   | 'feed.statsRead'
   | 'feed.statsSyncAnalysing'
   | 'feed.statsSyncFrom'
-  | 'feed.statsSyncRelevant';
+  | 'feed.statsSyncStories';
 
 const TABULAR = { fontVariant: ['tabular-nums' as const] };
 
@@ -55,7 +56,9 @@ const FeedStatsSentence: React.FC<FeedStatsSentenceProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const appLanguage = useAppLanguage();
-  const { articleCount, analysedCount, relevantCount, readCount } = useFeedCounts();
+  const { articleCount, analysedCount } = useFeedCounts();
+  // The last two clauses count STORIES, as the Feed lists them (use-story-counts).
+  const { storyCount, storyReadCount } = useStoryCounts();
 
   const clause = (key: StatsClauseKey, count: number) =>
     t(key, { count, formatted: formatCount(count, appLanguage) });
@@ -87,7 +90,7 @@ const FeedStatsSentence: React.FC<FeedStatsSentenceProps> = ({
           [
             clause('feed.statsSyncAnalysing', analysedCount),
             clause('feed.statsSyncFrom', articleCount),
-            clause('feed.statsSyncRelevant', relevantCount),
+            clause('feed.statsSyncStories', storyCount),
           ],
           i18n.language,
         )
@@ -95,8 +98,8 @@ const FeedStatsSentence: React.FC<FeedStatsSentenceProps> = ({
           [
             clause('feed.statsPublished', articleCount),
             clause('feed.statsAnalysed', analysedCount),
-            clause('feed.statsRelevant', relevantCount),
-            clause('feed.statsRead', readCount),
+            clause('feed.statsStories', storyCount),
+            clause('feed.statsRead', storyReadCount),
           ],
           i18n.language,
         );

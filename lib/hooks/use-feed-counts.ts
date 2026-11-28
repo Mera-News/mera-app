@@ -164,6 +164,11 @@ function minuteSnapshot(): number {
   return lastMinute;
 }
 
+/** The counts' shared minute clock, for any other count the card shows beside these. */
+export function useCountsMinute(): number {
+  return useSyncExternalStore(subscribeMinute, minuteSnapshot, minuteSnapshot);
+}
+
 let memo: {
   suggestions: unknown;
   opened: unknown;

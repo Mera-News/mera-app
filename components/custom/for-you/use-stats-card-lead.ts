@@ -1,6 +1,7 @@
 import React from 'react';
 import { useHasFactsOrPlaces } from '@/components/custom/for-you/use-has-facts-or-places';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
+import { useStoryCounts } from './use-story-counts';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useIsConnected } from '@/lib/stores/network-store';
@@ -88,14 +89,16 @@ export function useStatsCardLead() {
     // `a11yStateKey` is computed from the mode; see its own note on `tAny`.
     const tAny = t as unknown as (key: string) => string;
     const mode = useFeedStatusMode();
-    const { articleCount, analysedCount, relevantCount } = useFeedCounts();
+    const { articleCount, analysedCount } = useFeedCounts();
+    // "None look relevant" keys on the stories the sentence counts, so the two never disagree.
+    const { storyCount } = useStoryCounts();
     // Not the list's emptiness (an empty Feed past a run, exactly where a zero needs
     // explaining): with no facts at all the no-facts card owns the Feed.
     const noFacts = useHasFactsOrPlaces() === false;
     const offline = useIsConnected() === false;
     const syncFailure = syncFailureOf(useForYouSyncStatusMessage());
     const outageLanes = useOutageLanes();
-    const state = cardState({ mode, noFacts, offline, articleCount, analysedCount, relevantCount, syncFailure, outageLanes });
+    const state = cardState({ mode, noFacts, offline, articleCount, analysedCount, relevantCount: storyCount, syncFailure, outageLanes });
     const zeroText = useStateText(state, syncFailure);
     const stateLabel = tAny(a11yStateKey(mode));
     const processing = mode === 'processing';
