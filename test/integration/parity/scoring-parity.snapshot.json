@@ -541,6 +541,7 @@
         "scoredWithV3": false
       },
       "memberCount": 1,
+      "attachedCount": 0,
       "memberIds": [
         "f1a"
       ],
@@ -597,6 +598,7 @@
         "scoredWithV3": false
       },
       "memberCount": 1,
+      "attachedCount": 0,
       "memberIds": [
         "msp"
       ],
@@ -653,6 +655,7 @@
         "scoredWithV3": false
       },
       "memberCount": 1,
+      "attachedCount": 0,
       "memberIds": [
         "utc"
       ],
@@ -719,6 +722,7 @@
         "scoredWithV3": false
       },
       "memberCount": 1,
+      "attachedCount": 0,
       "memberIds": [
         "utr"
       ],
