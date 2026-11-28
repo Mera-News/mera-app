@@ -337,7 +337,17 @@
     "moreReports_other": "Ещё {{count}} отчёта",
     "homeChipHint": "Скажите Мере, где вы живёте, чтобы начать свою ленту.",
     "moreReports_few": "Ещё {{count}} отчёта",
-    "moreReports_many": "Ещё {{count}} отчётов"
+    "moreReports_many": "Ещё {{count}} отчётов",
+    "statsStories_zero": "в вашей Ленте пока нет историй,",
+    "statsStories_one": "{{formatted}} история в вашей Ленте,",
+    "statsStories_few": "{{formatted}} истории в вашей Ленте,",
+    "statsStories_many": "{{formatted}} историй в вашей Ленте,",
+    "statsStories_other": "{{formatted}} истории в вашей Ленте,",
+    "statsSyncStories_zero": "Историй для вас пока нет.",
+    "statsSyncStories_one": "Для вас пока отобрана {{formatted}} история.",
+    "statsSyncStories_few": "Для вас пока отобраны {{formatted}} истории.",
+    "statsSyncStories_many": "Для вас пока отобраны {{formatted}} историй.",
+    "statsSyncStories_other": "Для вас пока отобраны {{formatted}} истории."
   },
   "relevance": {
     "emergency": "Экстренное",
@@ -1526,7 +1536,11 @@
       "incoherentTopics_many": "{{count}} тем в «{{fact}}» не подходят: {{topics}}",
       "incoherentTopics_other": "{{count}} тем в «{{fact}}» не подходят: {{topics}}",
       "followInsteadFlood": "«{{topic}}» заполняет вашу Ленту. Отслеживать это как историю?",
-      "followInsteadNoStake": "По теме «{{topic}}» много новостей, но ни одна из них ничего для вас не меняет, поэтому Лента её пропускает. Отслеживать как историю, чтобы видеть всё?"
+      "followInsteadNoStake": "По теме «{{topic}}» много новостей, но ни одна из них ничего для вас не меняет, поэтому Лента её пропускает. Отслеживать как историю, чтобы видеть всё?",
+      "staleTopicNoFeed_one": "Из темы {{topic}} в вашу Ленту за {{count}} неделю ничего не попало. Она создана на основе факта из вашего профиля: {{fact}}. Удалить эту тему?",
+      "staleTopicNoFeed_few": "Из темы {{topic}} в вашу Ленту за {{count}} недели ничего не попало. Она создана на основе факта из вашего профиля: {{fact}}. Удалить эту тему?",
+      "staleTopicNoFeed_many": "Из темы {{topic}} в вашу Ленту за {{count}} недель ничего не попало. Она создана на основе факта из вашего профиля: {{fact}}. Удалить эту тему?",
+      "staleTopicNoFeed_other": "Из темы {{topic}} в вашу Ленту за {{count}} недели ничего не попало. Она создана на основе факта из вашего профиля: {{fact}}. Удалить эту тему?"
     },
     "titleFollowInstead": "История для отслеживания",
     "effectFollowInstead": "Отслеживаемые истории бесплатны, и ИИ их не читает.",

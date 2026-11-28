@@ -273,7 +273,11 @@
     },
     "moreReports_one": "另有 {{count}} 則報導",
     "moreReports_other": "另有 {{count}} 則報導",
-    "homeChipHint": "告訴梅拉您住在哪裡，開始您的動態。"
+    "homeChipHint": "告訴梅拉您住在哪裡，開始您的動態。",
+    "statsStories_zero": "目前還沒有為你挑選的報導，",
+    "statsStories_other": "{{formatted}}則報導為你挑選，",
+    "statsSyncStories_zero": "目前還沒有為你挑選的報導。",
+    "statsSyncStories_other": "目前已為你挑出 {{formatted}} 則報導。"
   },
   "relevance": {
     "emergency": "緊急",
@@ -1421,7 +1425,8 @@
       "staleTopic": "{{topic}} 已經好幾週沒有動靜了",
       "incoherentTopics_other": "{{fact}} 底下有 {{count}} 個主題不符合：{{topics}}",
       "followInsteadFlood": "「{{topic}}」正在填滿你的資訊流。要改為當成報導來關注嗎？",
-      "followInsteadNoStake": "關於{{topic}}的新聞很多，但都不會改變你的任何事，所以資訊流會略過它。要當成報導關注，好看到全部內容嗎？"
+      "followInsteadNoStake": "關於{{topic}}的新聞很多，但都不會改變你的任何事，所以資訊流會略過它。要當成報導關注，好看到全部內容嗎？",
+      "staleTopicNoFeed_other": "過去 {{count}} 週內，沒有任何來自{{topic}}的文章進入你的資訊流。它是根據你的資料「{{fact}}」建立的。要移除這個主題嗎？"
     },
     "titleFollowInstead": "一則可以關注的報導",
     "effectFollowInstead": "已關注的報導免費，AI 不會閱讀。",

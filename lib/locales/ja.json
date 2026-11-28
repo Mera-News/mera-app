@@ -273,7 +273,11 @@
     },
     "moreReports_one": "ほかに{{count}}件の記事",
     "moreReports_other": "ほかに{{count}}件の記事",
-    "homeChipHint": "フィードを始めるために、メラにお住まいの地域を教えてください。"
+    "homeChipHint": "フィードを始めるために、メラにお住まいの地域を教えてください。",
+    "statsStories_zero": "あなたのためのストーリーはまだありません、",
+    "statsStories_other": "{{formatted}}件のストーリーがあなたのために選ばれており、",
+    "statsSyncStories_zero": "あなたのためのストーリーはまだありません。",
+    "statsSyncStories_other": "今のところ{{formatted}}件のストーリーがあなたのために選ばれています。"
   },
   "relevance": {
     "emergency": "緊急",
@@ -1421,7 +1425,8 @@
       "staleTopic": "{{topic}}は数週間動きがありません",
       "incoherentTopics_other": "{{fact}}の下にある{{count}}件のトピックは合っていません：{{topics}}",
       "followInsteadFlood": "「{{topic}}」がフィードを埋めています。代わりにストーリーとしてフォローしますか？",
-      "followInsteadNoStake": "{{topic}}に関するニュースは多いですが、あなたに影響するものはないので、フィードには表示しません。すべて見たい場合は、ストーリーとしてフォローしてください。"
+      "followInsteadNoStake": "{{topic}}に関するニュースは多いですが、あなたに影響するものはないので、フィードには表示しません。すべて見たい場合は、ストーリーとしてフォローしてください。",
+      "staleTopicNoFeed_other": "{{topic}}の記事は、{{count}}週間、あなたのフィードに一つも届いていません。このトピックは、あなたのプロフィールの「{{fact}}」をもとに作られました。このトピックを削除しますか？"
     },
     "titleFollowInstead": "フォローするストーリー",
     "effectFollowInstead": "フォロー中のストーリーは無料で、AIは読みません。",

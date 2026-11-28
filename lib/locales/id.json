@@ -273,7 +273,11 @@
     },
     "moreReports_one": "{{count}} laporan lagi",
     "moreReports_other": "{{count}} laporan lagi",
-    "homeChipHint": "Beri tahu Mera tempat tinggal Anda untuk memulai feed Anda."
+    "homeChipHint": "Beri tahu Mera tempat tinggal Anda untuk memulai feed Anda.",
+    "statsStories_zero": "belum ada cerita untuk Anda,",
+    "statsStories_other": "{{formatted}} cerita untuk Anda,",
+    "statsSyncStories_zero": "Belum ada cerita untuk Anda.",
+    "statsSyncStories_other": "{{formatted}} cerita untuk Anda sejauh ini."
   },
   "relevance": {
     "emergency": "Darurat",
@@ -1421,7 +1425,8 @@
       "staleTopic": "{{topic}} sepi selama berminggu-minggu",
       "incoherentTopics_other": "{{count}} topik di bawah {{fact}} tidak cocok dengannya: {{topics}}",
       "followInsteadFlood": "“{{topic}}” memenuhi feed Anda. Ikuti sebagai cerita saja?",
-      "followInsteadNoStake": "Ada banyak berita tentang {{topic}}, tapi tidak satu pun mengubah apa pun bagi Anda, jadi feed Anda melewatinya. Ikuti sebagai cerita untuk melihat semuanya?"
+      "followInsteadNoStake": "Ada banyak berita tentang {{topic}}, tapi tidak satu pun mengubah apa pun bagi Anda, jadi feed Anda melewatinya. Ikuti sebagai cerita untuk melihat semuanya?",
+      "staleTopicNoFeed_other": "Tidak ada yang dari {{topic}} masuk ke Umpan Anda selama {{count}} minggu. Topik ini berasal dari profil Anda: {{fact}}. Hapus topik ini?"
     },
     "titleFollowInstead": "Cerita untuk diikuti",
     "effectFollowInstead": "Cerita yang diikuti gratis, dan tidak ada AI yang membacanya.",

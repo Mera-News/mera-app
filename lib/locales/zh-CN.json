@@ -273,7 +273,11 @@
     },
     "moreReports_one": "另有 {{count}} 篇报道",
     "moreReports_other": "另有 {{count}} 篇报道",
-    "homeChipHint": "告诉梅拉您住在哪里，开始您的动态。"
+    "homeChipHint": "告诉梅拉您住在哪里，开始您的动态。",
+    "statsStories_zero": "暂时还没有为你挑选的报道，",
+    "statsStories_other": "为你挑选的 {{formatted}} 条报道，",
+    "statsSyncStories_zero": "暂时还没有为你挑选的报道。",
+    "statsSyncStories_other": "目前已为你挑出 {{formatted}} 条报道。"
   },
   "relevance": {
     "emergency": "紧急",
@@ -1421,7 +1425,8 @@
       "staleTopic": "{{topic}} 已经好几周没有动静了",
       "incoherentTopics_other": "{{fact}} 下的 {{count}} 个话题与它不匹配：{{topics}}",
       "followInsteadFlood": "“{{topic}}”正在占满你的信息流。要改为作为报道关注吗？",
-      "followInsteadNoStake": "关于{{topic}}的新闻很多，但都不会对你产生影响，所以你的信息流会跳过它。要作为报道关注，好看到全部内容吗？"
+      "followInsteadNoStake": "关于{{topic}}的新闻很多，但都不会对你产生影响，所以你的信息流会跳过它。要作为报道关注，好看到全部内容吗？",
+      "staleTopicNoFeed_other": "{{topic}}的报道已有 {{count}} 周没有进入你的信息流。它来自你的资料：{{fact}}。要移除这个话题吗？"
     },
     "titleFollowInstead": "一个可以关注的报道",
     "effectFollowInstead": "已关注的报道免费，AI 不会阅读。",

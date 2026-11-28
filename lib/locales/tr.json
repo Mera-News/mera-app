@@ -285,7 +285,13 @@
     },
     "moreReports_one": "{{count}} rapor daha",
     "moreReports_other": "{{count}} rapor daha",
-    "homeChipHint": "Akışını başlatmak için Mera'ya nerede yaşadığını söyle."
+    "homeChipHint": "Akışını başlatmak için Mera'ya nerede yaşadığını söyle.",
+    "statsStories_zero": "şimdilik senin için haber yok",
+    "statsStories_one": "senin için {{formatted}} haber",
+    "statsStories_other": "senin için {{formatted}} haber",
+    "statsSyncStories_zero": "Şimdilik senin için haber yok.",
+    "statsSyncStories_one": "Şimdiye kadar senin için {{formatted}} haber var.",
+    "statsSyncStories_other": "Şimdiye kadar senin için {{formatted}} haber var."
   },
   "relevance": {
     "emergency": "Acil",
@@ -1442,7 +1448,9 @@
       "incoherentTopics_one": "{{fact}} altındaki {{count}} konu buna uymuyor: {{topics}}",
       "incoherentTopics_other": "{{fact}} altındaki {{count}} konu buna uymuyor: {{topics}}",
       "followInsteadFlood": "“{{topic}}” akışınızı dolduruyor. Bunu bir hikâye olarak takip edelim mi?",
-      "followInsteadNoStake": "{{topic}} ile ilgili çok haber var, ama hiçbiri sizin için bir şey değiştirmiyor, bu yüzden Akışınız bunları atlıyor. Hepsini görmek için bir hikâye olarak takip etmek ister misiniz?"
+      "followInsteadNoStake": "{{topic}} ile ilgili çok haber var, ama hiçbiri sizin için bir şey değiştirmiyor, bu yüzden Akışınız bunları atlıyor. Hepsini görmek için bir hikâye olarak takip etmek ister misiniz?",
+      "staleTopicNoFeed_one": "{{topic}} konusundan son {{count}} haftada Akışa hiçbir haber ulaşmadı. Bu konu profilinden oluşturuldu: {{fact}}. Kaldırmak ister misin?",
+      "staleTopicNoFeed_other": "{{topic}} konusundan son {{count}} haftada Akışa hiçbir haber ulaşmadı. Bu konu profilinden oluşturuldu: {{fact}}. Kaldırmak ister misin?"
     },
     "titleFollowInstead": "Takip edilecek bir hikâye",
     "effectFollowInstead": "Takip edilen haberler ücretsizdir ve hiçbir yapay zeka onları okumaz.",

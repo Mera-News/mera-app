@@ -292,7 +292,13 @@
     },
     "moreReports_one": "{{count}} autre reportage",
     "moreReports_other": "{{count}} autres reportages",
-    "homeChipHint": "Dites à Mera où vous habitez pour démarrer votre Fil d'actu."
+    "homeChipHint": "Dites à Mera où vous habitez pour démarrer votre Fil d'actu.",
+    "statsStories_zero": "aucune histoire retenue pour vous pour l'instant,",
+    "statsStories_one": "{{formatted}} histoire retenue pour vous,",
+    "statsStories_other": "{{formatted}} histoires retenues pour vous,",
+    "statsSyncStories_zero": "Aucune histoire retenue pour vous pour l'instant.",
+    "statsSyncStories_one": "Pour l'instant, {{formatted}} histoire est retenue pour vous.",
+    "statsSyncStories_other": "Pour l'instant, {{formatted}} histoires sont retenues pour vous."
   },
   "relevance": {
     "emergency": "Urgence",
@@ -1452,7 +1458,9 @@
       "incoherentTopics_one": "{{count}} sujet sous {{fact}} ne lui correspond pas : {{topics}}",
       "incoherentTopics_other": "{{count}} sujets sous {{fact}} ne lui correspondent pas : {{topics}}",
       "followInsteadFlood": "« {{topic}} » remplit votre fil. Voulez-vous le suivre comme une histoire ?",
-      "followInsteadNoStake": "Il y a beaucoup d'actualités sur {{topic}}, mais aucune ne change quoi que ce soit pour vous, alors votre fil les laisse de côté. Voulez-vous suivre ce sujet comme une histoire pour tout voir ?"
+      "followInsteadNoStake": "Il y a beaucoup d'actualités sur {{topic}}, mais aucune ne change quoi que ce soit pour vous, alors votre fil les laisse de côté. Voulez-vous suivre ce sujet comme une histoire pour tout voir ?",
+      "staleTopicNoFeed_one": "Aucun article de {{topic}} n'a atteint votre Fil d'actu en {{count}} semaine. Il vient de votre profil : {{fact}}. Voulez-vous le retirer ?",
+      "staleTopicNoFeed_other": "Aucun article de {{topic}} n'a atteint votre Fil d'actu en {{count}} semaines. Il vient de votre profil : {{fact}}. Voulez-vous le retirer ?"
     },
     "titleFollowInstead": "Une histoire à suivre",
     "effectFollowInstead": "Les histoires suivies sont gratuites, et aucune IA ne les lit.",

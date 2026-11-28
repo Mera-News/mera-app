@@ -273,7 +273,11 @@
     },
     "moreReports_one": "보도 {{count}}건 더",
     "moreReports_other": "보도 {{count}}건 더",
-    "homeChipHint": "피드를 시작하려면 메라에게 사는 곳을 알려 주세요."
+    "homeChipHint": "피드를 시작하려면 메라에게 사는 곳을 알려 주세요.",
+    "statsStories_zero": "회원님을 위해 고른 스토리가 아직 없으며,",
+    "statsStories_other": "회원님을 위해 고른 스토리가 {{formatted}}개이며,",
+    "statsSyncStories_zero": "아직 회원님을 위해 고른 스토리가 없습니다.",
+    "statsSyncStories_other": "지금까지 회원님을 위해 고른 스토리가 {{formatted}}개입니다."
   },
   "relevance": {
     "emergency": "긴급",
@@ -1421,7 +1425,8 @@
       "staleTopic": "{{topic}}이(가) 몇 주째 잠잠합니다",
       "incoherentTopics_other": "{{fact}}에 맞지 않는 토픽이 {{count}}개 있습니다: {{topics}}",
       "followInsteadFlood": "“{{topic}}” 기사가 피드를 채우고 있어요. 대신 스토리로 팔로우할까요?",
-      "followInsteadNoStake": "{{topic}} 관련 뉴스가 많지만 회원님에게 바뀌는 것은 없어서, 피드에서는 건너뛰고 있어요. 전부 보고 싶다면 스토리로 팔로우해 보세요."
+      "followInsteadNoStake": "{{topic}} 관련 뉴스가 많지만 회원님에게 바뀌는 것은 없어서, 피드에서는 건너뛰고 있어요. 전부 보고 싶다면 스토리로 팔로우해 보세요.",
+      "staleTopicNoFeed_other": "{{topic}}의 기사가 {{count}}주 동안 회원님의 피드에 하나도 오지 않았습니다. 이 주제는 회원님 프로필의 다음 내용에서 만들어졌습니다: {{fact}}. 이 주제를 제거하시겠습니까?"
     },
     "titleFollowInstead": "팔로우할 스토리",
     "effectFollowInstead": "팔로우한 스토리는 무료이고, AI가 읽지 않아요.",

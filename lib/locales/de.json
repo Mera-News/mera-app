@@ -285,7 +285,13 @@
     },
     "moreReports_one": "{{count}} weiterer Bericht",
     "moreReports_other": "{{count}} weitere Berichte",
-    "homeChipHint": "Sag Mera, wo du wohnst, damit dein Feed startet."
+    "homeChipHint": "Sag Mera, wo du wohnst, damit dein Feed startet.",
+    "statsStories_zero": "noch keine Geschichten für dich,",
+    "statsStories_one": "{{formatted}} Geschichte für dich,",
+    "statsStories_other": "{{formatted}} Geschichten für dich,",
+    "statsSyncStories_zero": "Noch keine Geschichten für dich.",
+    "statsSyncStories_one": "{{formatted}} Geschichte ist bisher für dich ausgewählt.",
+    "statsSyncStories_other": "{{formatted}} Geschichten sind bisher für dich ausgewählt."
   },
   "relevance": {
     "emergency": "Notfall",
@@ -1440,7 +1446,9 @@
       "incoherentTopics_one": "{{count}} Thema unter {{fact}} passt nicht dazu: {{topics}}",
       "incoherentTopics_other": "{{count}} Themen unter {{fact}} passen nicht dazu: {{topics}}",
       "followInsteadFlood": "„{{topic}}“ füllt gerade deinen Feed. Willst du dem Thema lieber als Geschichte folgen?",
-      "followInsteadNoStake": "Es gibt viele Nachrichten zu {{topic}}, aber keine davon ändert etwas für dich, deshalb überspringt sie dein Feed. Willst du dem Thema als Geschichte folgen, um alles zu sehen?"
+      "followInsteadNoStake": "Es gibt viele Nachrichten zu {{topic}}, aber keine davon ändert etwas für dich, deshalb überspringt sie dein Feed. Willst du dem Thema als Geschichte folgen, um alles zu sehen?",
+      "staleTopicNoFeed_one": "Nichts von {{topic}} ist seit {{count}} Woche in deinen Nachrichten angekommen. Es stammt aus deinem Profil: {{fact}}. Willst du das Thema entfernen?",
+      "staleTopicNoFeed_other": "Nichts von {{topic}} ist seit {{count}} Wochen in deinen Nachrichten angekommen. Es stammt aus deinem Profil: {{fact}}. Willst du das Thema entfernen?"
     },
     "titleFollowInstead": "Eine Geschichte zum Folgen",
     "effectFollowInstead": "Gefolgte Geschichten sind kostenlos, und KI liest sie nicht.",

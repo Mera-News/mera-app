@@ -364,7 +364,19 @@
     },
     "moreReports_one": "{{count}} تقرير آخر",
     "moreReports_other": "{{count}} تقريرًا آخر",
-    "homeChipHint": "أخبر ميرا أين تعيش لتبدأ خلاصتك."
+    "homeChipHint": "أخبر ميرا أين تعيش لتبدأ خلاصتك.",
+    "statsStories_zero": "لا توجد قصص مختارة لك بعد،",
+    "statsStories_one": "{{formatted}} قصة اختيرت لك،",
+    "statsStories_two": "{{formatted}} قصتان اختيرتا لك،",
+    "statsStories_few": "{{formatted}} قصص اختيرت لك،",
+    "statsStories_many": "{{formatted}} قصة اختيرت لك،",
+    "statsStories_other": "{{formatted}} قصة اختيرت لك،",
+    "statsSyncStories_zero": "لا توجد قصص مختارة لك بعد.",
+    "statsSyncStories_one": "{{formatted}} قصة مختارة لك حتى الآن.",
+    "statsSyncStories_two": "{{formatted}} قصتان مختارتان لك حتى الآن.",
+    "statsSyncStories_few": "{{formatted}} قصص مختارة لك حتى الآن.",
+    "statsSyncStories_many": "{{formatted}} قصة مختارة لك حتى الآن.",
+    "statsSyncStories_other": "{{formatted}} قصة مختارة لك حتى الآن."
   },
   "relevance": {
     "emergency": "طارئ",
@@ -1593,7 +1605,13 @@
       "incoherentTopics_many": "{{count}} موضوعًا تحت {{fact}} لا يناسبها: {{topics}}",
       "incoherentTopics_other": "{{count}} موضوع تحت {{fact}} لا يناسبها: {{topics}}",
       "followInsteadFlood": "“{{topic}}” يملأ خلاصتك. هل تتابعه كقصة بدلًا من ذلك؟",
-      "followInsteadNoStake": "هناك أخبار كثيرة عن {{topic}}، لكن لا شيء منها يغيّر شيئًا بالنسبة إليك، لذلك تتخطاه خلاصتك. هل تتابعه كقصة لترى كل ما فيه؟"
+      "followInsteadNoStake": "هناك أخبار كثيرة عن {{topic}}، لكن لا شيء منها يغيّر شيئًا بالنسبة إليك، لذلك تتخطاه خلاصتك. هل تتابعه كقصة لترى كل ما فيه؟",
+      "staleTopicNoFeed_zero": "لم يصل أي شيء من {{topic}} إلى الخلاصة خلال {{count}} أسبوع. أُنشئ هذا الموضوع من ملفك الشخصي: {{fact}}. هل تريد إزالته؟",
+      "staleTopicNoFeed_one": "لم يصل أي شيء من {{topic}} إلى الخلاصة خلال {{count}} أسبوع. أُنشئ هذا الموضوع من ملفك الشخصي: {{fact}}. هل تريد إزالته؟",
+      "staleTopicNoFeed_two": "لم يصل أي شيء من {{topic}} إلى الخلاصة خلال {{count}} أسبوعين. أُنشئ هذا الموضوع من ملفك الشخصي: {{fact}}. هل تريد إزالته؟",
+      "staleTopicNoFeed_few": "لم يصل أي شيء من {{topic}} إلى الخلاصة خلال {{count}} أسابيع. أُنشئ هذا الموضوع من ملفك الشخصي: {{fact}}. هل تريد إزالته؟",
+      "staleTopicNoFeed_many": "لم يصل أي شيء من {{topic}} إلى الخلاصة خلال {{count}} أسبوعاً. أُنشئ هذا الموضوع من ملفك الشخصي: {{fact}}. هل تريد إزالته؟",
+      "staleTopicNoFeed_other": "لم يصل أي شيء من {{topic}} إلى الخلاصة خلال {{count}} أسبوعاً. أُنشئ هذا الموضوع من ملفك الشخصي: {{fact}}. هل تريد إزالته؟"
     },
     "titleFollowInstead": "قصة للمتابعة",
     "effectFollowInstead": "القصص المتابَعة مجانية، ولا يقرأها الذكاء الاصطناعي.",

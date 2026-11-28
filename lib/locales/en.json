@@ -323,7 +323,13 @@
     },
     "moreReports_one": "{{count}} more report",
     "moreReports_other": "{{count}} more reports",
-    "homeChipHint": "Tell Mera where you live to start your feed."
+    "homeChipHint": "Tell Mera where you live to start your feed.",
+    "statsStories_zero": "no stories for you yet,",
+    "statsStories_one": "{{formatted}} story for you,",
+    "statsStories_other": "{{formatted}} stories for you,",
+    "statsSyncStories_zero": "No stories for you yet.",
+    "statsSyncStories_one": "{{formatted}} story for you so far.",
+    "statsSyncStories_other": "{{formatted}} stories for you so far."
   },
   "relevance": {
     "emergency": "Emergency",
@@ -1676,7 +1682,9 @@
       "incoherentTopics_one": "{{count}} topic under {{fact}} doesn't fit it: {{topics}}",
       "incoherentTopics_other": "{{count}} topics under {{fact}} don't fit it: {{topics}}",
       "followInsteadFlood": "\"{{topic}}\" is filling your feed. Follow it as a story instead?",
-      "followInsteadNoStake": "There's a lot of news on {{topic}}, but none of it changes anything for you, so your Feed skips it. Follow it as a story to see it all?"
+      "followInsteadNoStake": "There's a lot of news on {{topic}}, but none of it changes anything for you, so your Feed skips it. Follow it as a story to see it all?",
+      "staleTopicNoFeed_one": "Nothing from {{topic}} has reached your Feed in {{count}} week. It came from your profile: {{fact}}. Remove it?",
+      "staleTopicNoFeed_other": "Nothing from {{topic}} has reached your Feed in {{count}} weeks. It came from your profile: {{fact}}. Remove it?"
     }
   },
   "locations": {

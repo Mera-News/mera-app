@@ -287,7 +287,13 @@
     },
     "moreReports_one": "{{count}} altro servizio",
     "moreReports_other": "{{count}} altri servizi",
-    "homeChipHint": "Dì a Mera dove vivi per iniziare il tuo Feed."
+    "homeChipHint": "Dì a Mera dove vivi per iniziare il tuo Feed.",
+    "statsStories_zero": "nessuna storia per te ancora,",
+    "statsStories_one": "{{formatted}} storia per te,",
+    "statsStories_other": "{{formatted}} storie per te,",
+    "statsSyncStories_zero": "Nessuna storia per te ancora.",
+    "statsSyncStories_one": "{{formatted}} storia per te finora.",
+    "statsSyncStories_other": "{{formatted}} storie per te finora."
   },
   "relevance": {
     "emergency": "Emergenza",
@@ -1446,7 +1452,9 @@
       "incoherentTopics_one": "{{count}} argomento sotto {{fact}} non c'entra: {{topics}}",
       "incoherentTopics_other": "{{count}} argomenti sotto {{fact}} non c'entrano: {{topics}}",
       "followInsteadFlood": "«{{topic}}» sta riempiendo il tuo feed. Vuoi seguirlo come storia?",
-      "followInsteadNoStake": "Ci sono molte notizie su {{topic}}, ma nessuna cambia qualcosa per te, quindi il tuo feed le salta. Vuoi seguire questo argomento come storia per vederle tutte?"
+      "followInsteadNoStake": "Ci sono molte notizie su {{topic}}, ma nessuna cambia qualcosa per te, quindi il tuo feed le salta. Vuoi seguire questo argomento come storia per vederle tutte?",
+      "staleTopicNoFeed_one": "Nulla da {{topic}} è arrivato nelle tue Notizie in {{count}} settimana. Deriva dal tuo profilo: {{fact}}. Vuoi rimuovere questo argomento?",
+      "staleTopicNoFeed_other": "Nulla da {{topic}} è arrivato nelle tue Notizie in {{count}} settimane. Deriva dal tuo profilo: {{fact}}. Vuoi rimuovere questo argomento?"
     },
     "titleFollowInstead": "Una storia da seguire",
     "effectFollowInstead": "Le storie seguite sono gratuite e nessuna IA le legge.",

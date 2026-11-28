@@ -337,7 +337,17 @@
     "moreReports_other": "Ще {{count}} звіти",
     "homeChipHint": "Скажіть Мері, де ви живете, щоб почати вашу стрічку.",
     "moreReports_few": "Ще {{count}} звіти",
-    "moreReports_many": "Ще {{count}} звітів"
+    "moreReports_many": "Ще {{count}} звітів",
+    "statsStories_zero": "поки що жодної історії для вас,",
+    "statsStories_one": "{{formatted}} історія підібрана для вас,",
+    "statsStories_few": "{{formatted}} історії підібрані для вас,",
+    "statsStories_many": "{{formatted}} історій підібрано для вас,",
+    "statsStories_other": "{{formatted}} історії підібрані для вас,",
+    "statsSyncStories_zero": "Поки що для вас немає історій.",
+    "statsSyncStories_one": "{{formatted}} історія для вас поки що.",
+    "statsSyncStories_few": "{{formatted}} історії для вас поки що.",
+    "statsSyncStories_many": "{{formatted}} історій для вас поки що.",
+    "statsSyncStories_other": "{{formatted}} історії для вас поки що."
   },
   "relevance": {
     "emergency": "Надзвичайна подія",
@@ -1530,7 +1540,11 @@
       "incoherentTopics_many": "{{count}} тем у {{fact}} не підходять до нього: {{topics}}",
       "incoherentTopics_other": "{{count}} тем у {{fact}} не підходять до нього: {{topics}}",
       "followInsteadFlood": "«{{topic}}» заповнює вашу стрічку. Стежити за цим як за історією?",
-      "followInsteadNoStake": "Про тему «{{topic}}» багато новин, але жодна з них нічого для вас не змінює, тож ваша стрічка її пропускає. Стежити як за історією, щоб бачити все?"
+      "followInsteadNoStake": "Про тему «{{topic}}» багато новин, але жодна з них нічого для вас не змінює, тож ваша стрічка її пропускає. Стежити як за історією, щоб бачити все?",
+      "staleTopicNoFeed_one": "Жодна стаття на тему «{{topic}}» не потрапила до вашої Стрічки за {{count}} тиждень. Її створено на основі факту з вашого профілю «{{fact}}». Видалити цю тему?",
+      "staleTopicNoFeed_few": "Жодна стаття на тему «{{topic}}» не потрапила до вашої Стрічки за {{count}} тижні. Її створено на основі факту з вашого профілю «{{fact}}». Видалити цю тему?",
+      "staleTopicNoFeed_many": "Жодна стаття на тему «{{topic}}» не потрапила до вашої Стрічки за {{count}} тижнів. Її створено на основі факту з вашого профілю «{{fact}}». Видалити цю тему?",
+      "staleTopicNoFeed_other": "Жодна стаття на тему «{{topic}}» не потрапила до вашої Стрічки за {{count}} тижня. Її створено на основі факту з вашого профілю «{{fact}}». Видалити цю тему?"
     },
     "titleFollowInstead": "Історія, за якою варто стежити",
     "effectFollowInstead": "Відстежувані історії безплатні, і ШІ їх не читає.",

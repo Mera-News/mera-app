@@ -337,7 +337,17 @@
     "moreReports_other": "{{count}} kolejnych raportów",
     "homeChipHint": "Powiedz Merze, gdzie mieszkasz, aby zacząć swój Strumień.",
     "moreReports_few": "{{count}} kolejne raporty",
-    "moreReports_many": "{{count}} kolejnych raportów"
+    "moreReports_many": "{{count}} kolejnych raportów",
+    "statsStories_zero": "brak historii dla Ciebie na razie",
+    "statsStories_one": "{{formatted}} historia dla Ciebie",
+    "statsStories_few": "{{formatted}} historie dla Ciebie",
+    "statsStories_many": "{{formatted}} historii dla Ciebie",
+    "statsStories_other": "{{formatted}} historie dla Ciebie",
+    "statsSyncStories_zero": "Na razie brak historii dla Ciebie.",
+    "statsSyncStories_one": "{{formatted}} historia jest na razie dla Ciebie.",
+    "statsSyncStories_few": "{{formatted}} historie są na razie dla Ciebie.",
+    "statsSyncStories_many": "{{formatted}} historii jest na razie dla Ciebie.",
+    "statsSyncStories_other": "{{formatted}} historie są na razie dla Ciebie."
   },
   "relevance": {
     "emergency": "Pilne",
@@ -1526,7 +1536,11 @@
       "incoherentTopics_many": "{{count}} tematów pod {{fact}} nie pasuje do niego: {{topics}}",
       "incoherentTopics_other": "{{count}} tematów pod {{fact}} nie pasuje do niego: {{topics}}",
       "followInsteadFlood": "„{{topic}}” zapycha Twój Kanał. Śledzić to jako historię?",
-      "followInsteadNoStake": "O temacie „{{topic}}” jest sporo wiadomości, ale żadna nic dla Ciebie nie zmienia, więc Twój Kanał je pomija. Śledzić jako historię, żeby widzieć wszystko?"
+      "followInsteadNoStake": "O temacie „{{topic}}” jest sporo wiadomości, ale żadna nic dla Ciebie nie zmienia, więc Twój Kanał je pomija. Śledzić jako historię, żeby widzieć wszystko?",
+      "staleTopicNoFeed_one": "Nic z tematu {{topic}} nie trafiło do Twojego Strumienia w ciągu {{count}} tygodnia. Powstał on z Twojego profilu: {{fact}}. Usunąć ten temat?",
+      "staleTopicNoFeed_few": "Nic z tematu {{topic}} nie trafiło do Twojego Strumienia w ciągu {{count}} tygodni. Powstał on z Twojego profilu: {{fact}}. Usunąć ten temat?",
+      "staleTopicNoFeed_many": "Nic z tematu {{topic}} nie trafiło do Twojego Strumienia w ciągu {{count}} tygodni. Powstał on z Twojego profilu: {{fact}}. Usunąć ten temat?",
+      "staleTopicNoFeed_other": "Nic z tematu {{topic}} nie trafiło do Twojego Strumienia w ciągu {{count}} tygodnia. Powstał on z Twojego profilu: {{fact}}. Usunąć ten temat?"
     },
     "titleFollowInstead": "Historia do śledzenia",
     "effectFollowInstead": "Śledzone historie są za darmo i żadna AI ich nie czyta.",

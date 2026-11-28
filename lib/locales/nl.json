@@ -285,7 +285,13 @@
     },
     "moreReports_one": "{{count}} extra bericht",
     "moreReports_other": "{{count}} extra berichten",
-    "homeChipHint": "Vertel Mera waar je woont om je feed te starten."
+    "homeChipHint": "Vertel Mera waar je woont om je feed te starten.",
+    "statsStories_zero": "nog geen verhalen voor je,",
+    "statsStories_one": "{{formatted}} verhaal voor je,",
+    "statsStories_other": "{{formatted}} verhalen voor je,",
+    "statsSyncStories_zero": "Nog geen verhalen voor je.",
+    "statsSyncStories_one": "{{formatted}} verhaal is tot nu toe voor je gevonden.",
+    "statsSyncStories_other": "{{formatted}} verhalen zijn tot nu toe voor je gevonden."
   },
   "relevance": {
     "emergency": "Noodgeval",
@@ -1440,7 +1446,9 @@
       "incoherentTopics_one": "{{count}} onderwerp onder {{fact}} past daar niet bij: {{topics}}",
       "incoherentTopics_other": "{{count}} onderwerpen onder {{fact}} passen daar niet bij: {{topics}}",
       "followInsteadFlood": "“{{topic}}” vult je feed. Wil je het als verhaal volgen?",
-      "followInsteadNoStake": "Er is veel nieuws over {{topic}}, maar niets daarvan verandert iets voor jou, dus je feed slaat het over. Wil je het als verhaal volgen om alles te zien?"
+      "followInsteadNoStake": "Er is veel nieuws over {{topic}}, maar niets daarvan verandert iets voor jou, dus je feed slaat het over. Wil je het als verhaal volgen om alles te zien?",
+      "staleTopicNoFeed_one": "Er is niets van {{topic}} in je Feed terechtgekomen in {{count}} week. Het komt uit je profiel: {{fact}}. Wil je dit onderwerp verwijderen?",
+      "staleTopicNoFeed_other": "Er is niets van {{topic}} in je Feed terechtgekomen in {{count}} weken. Het komt uit je profiel: {{fact}}. Wil je dit onderwerp verwijderen?"
     },
     "titleFollowInstead": "Een verhaal om te volgen",
     "effectFollowInstead": "Gevolgde verhalen zijn gratis, en geen AI leest ze.",

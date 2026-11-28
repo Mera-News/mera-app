@@ -273,7 +273,11 @@
     },
     "moreReports_one": "{{count}} bài viết khác",
     "moreReports_other": "{{count}} bài viết khác",
-    "homeChipHint": "Cho Mera biết bạn sống ở đâu để bắt đầu bảng tin của bạn."
+    "homeChipHint": "Cho Mera biết bạn sống ở đâu để bắt đầu bảng tin của bạn.",
+    "statsStories_zero": "chưa có câu chuyện nào dành cho bạn,",
+    "statsStories_other": "{{formatted}} câu chuyện dành cho bạn,",
+    "statsSyncStories_zero": "Chưa có câu chuyện nào dành cho bạn.",
+    "statsSyncStories_other": "{{formatted}} câu chuyện dành cho bạn cho đến lúc này."
   },
   "relevance": {
     "emergency": "Khẩn cấp",
@@ -1421,7 +1425,8 @@
       "staleTopic": "{{topic}} đã không có tin mới trong nhiều tuần",
       "incoherentTopics_other": "{{count}} chủ đề trong {{fact}} không phù hợp: {{topics}}",
       "followInsteadFlood": "“{{topic}}” đang lấp đầy bảng tin của bạn. Theo dõi nó như một câu chuyện thay vì vậy nhé?",
-      "followInsteadNoStake": "Có rất nhiều tin về {{topic}}, nhưng không tin nào thay đổi điều gì đối với bạn, nên bảng tin của bạn bỏ qua nó. Theo dõi nó như một câu chuyện để xem đầy đủ?"
+      "followInsteadNoStake": "Có rất nhiều tin về {{topic}}, nhưng không tin nào thay đổi điều gì đối với bạn, nên bảng tin của bạn bỏ qua nó. Theo dõi nó như một câu chuyện để xem đầy đủ?",
+      "staleTopicNoFeed_other": "Không có bài nào thuộc {{topic}} xuất hiện trong Bảng tin của bạn trong {{count}} tuần. Chủ đề này được tạo từ hồ sơ của bạn: {{fact}}. Bạn có muốn xóa chủ đề này không?"
     },
     "titleFollowInstead": "Một câu chuyện để theo dõi",
     "effectFollowInstead": "Câu chuyện theo dõi miễn phí, và không có AI nào đọc chúng.",
