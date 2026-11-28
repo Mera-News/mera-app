@@ -1418,7 +1418,6 @@
       "locationConflict": "{{fact}} và {{other}} nêu các địa điểm khác nhau",
       "staleFact": "{{fact}} không còn chủ đề đang hoạt động nào",
       "tooBroad": "{{fact}} quá rộng",
-      "staleTopic": "{{topic}} đã không có tin mới trong nhiều tuần",
       "incoherentTopics_other": "{{count}} chủ đề trong {{fact}} không phù hợp: {{topics}}",
       "followInsteadFlood": "“{{topic}}” đang lấp đầy bảng tin của bạn. Theo dõi nó như một câu chuyện thay vì vậy nhé?",
       "followInsteadNoStake": "Có rất nhiều tin về {{topic}}, nhưng không tin nào thay đổi điều gì đối với bạn, nên bảng tin của bạn bỏ qua nó. Theo dõi nó như một câu chuyện để xem đầy đủ?",

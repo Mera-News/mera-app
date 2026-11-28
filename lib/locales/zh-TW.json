@@ -1418,7 +1418,6 @@
       "locationConflict": "{{fact}} 和 {{other}} 指向不同的地點",
       "staleFact": "{{fact}} 已經沒有任何有效的主題",
       "tooBroad": "{{fact}} 的範圍很廣",
-      "staleTopic": "{{topic}} 已經好幾週沒有動靜了",
       "incoherentTopics_other": "{{fact}} 底下有 {{count}} 個主題不符合：{{topics}}",
       "followInsteadFlood": "「{{topic}}」正在填滿你的資訊流。要改為當成報導來關注嗎？",
       "followInsteadNoStake": "關於{{topic}}的新聞很多，但都不會改變你的任何事，所以資訊流會略過它。要當成報導關注，好看到全部內容嗎？",

@@ -1444,7 +1444,6 @@
       "locationConflict": "{{fact}} e {{other}} indicano luoghi diversi",
       "staleFact": "{{fact}} non ha più argomenti attivi",
       "tooBroad": "{{fact}} è molto generico",
-      "staleTopic": "{{topic}} è fermo da settimane",
       "incoherentTopics_one": "{{count}} argomento sotto {{fact}} non c'entra: {{topics}}",
       "incoherentTopics_other": "{{count}} argomenti sotto {{fact}} non c'entrano: {{topics}}",
       "followInsteadFlood": "«{{topic}}» sta riempiendo il tuo feed. Vuoi seguirlo come storia?",

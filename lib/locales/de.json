@@ -1438,7 +1438,6 @@
       "locationConflict": "{{fact}} und {{other}} nennen unterschiedliche Orte",
       "staleFact": "{{fact}} hat keine aktiven Themen mehr",
       "tooBroad": "{{fact}} ist sehr weit gefasst",
-      "staleTopic": "{{topic}} ist seit Wochen ruhig",
       "incoherentTopics_one": "{{count}} Thema unter {{fact}} passt nicht dazu: {{topics}}",
       "incoherentTopics_other": "{{count}} Themen unter {{fact}} passen nicht dazu: {{topics}}",
       "followInsteadFlood": "„{{topic}}“ füllt gerade deinen Feed. Willst du dem Thema lieber als Geschichte folgen?",

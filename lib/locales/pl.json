@@ -1522,7 +1522,6 @@
       "locationConflict": "{{fact}} i {{other}} podają różne miejsca",
       "staleFact": "{{fact}} nie ma już aktywnych tematów",
       "tooBroad": "{{fact}} jest bardzo szerokie",
-      "staleTopic": "{{topic}} nie pojawia się od tygodni",
       "incoherentTopics_one": "{{count}} temat pod {{fact}} nie pasuje do niego: {{topics}}",
       "incoherentTopics_few": "{{count}} tematy pod {{fact}} nie pasują do niego: {{topics}}",
       "incoherentTopics_many": "{{count}} tematów pod {{fact}} nie pasuje do niego: {{topics}}",

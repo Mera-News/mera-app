@@ -1522,7 +1522,6 @@
       "locationConflict": "«{{fact}}» и «{{other}}» указывают на разные места",
       "staleFact": "Для «{{fact}}» не осталось активных тем",
       "tooBroad": "«{{fact}}» слишком общий",
-      "staleTopic": "«{{topic}}» уже несколько недель без новостей",
       "incoherentTopics_one": "{{count}} тема в «{{fact}}» не подходит: {{topics}}",
       "incoherentTopics_few": "{{count}} темы в «{{fact}}» не подходят: {{topics}}",
       "incoherentTopics_many": "{{count}} тем в «{{fact}}» не подходят: {{topics}}",

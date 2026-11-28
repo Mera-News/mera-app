@@ -1449,7 +1449,6 @@
       "locationConflict": "{{fact}} et {{other}} désignent des lieux différents",
       "staleFact": "{{fact}} n'a plus de sujets actifs",
       "tooBroad": "{{fact}} est très large",
-      "staleTopic": "{{topic}} est silencieux depuis des semaines",
       "incoherentTopics_one": "{{count}} sujet sous {{fact}} ne lui correspond pas : {{topics}}",
       "incoherentTopics_other": "{{count}} sujets sous {{fact}} ne lui correspondent pas : {{topics}}",
       "followInsteadFlood": "« {{topic}} » remplit votre fil. Voulez-vous le suivre comme une histoire ?",

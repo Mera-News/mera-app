@@ -94,7 +94,11 @@ function summaryFor(item: HygieneProposal, t: TFunction): string | null {
         case 'too_broad_fact':
             return t('hygiene.summary.tooBroad', { fact });
         case 'stale_topic':
-            return t('hygiene.summary.staleTopic', { topic: subject.topics[0] ?? '' });
+            return t('hygiene.summary.staleTopicNoFeed', {
+                topic: subject.topics[0] ?? '',
+                count: subject.idleWeeks ?? 0,
+                fact,
+            });
         case 'incoherent_topics':
             return t('hygiene.summary.incoherentTopics', {
                 count: subject.topics.length,

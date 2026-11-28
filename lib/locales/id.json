@@ -1418,7 +1418,6 @@
       "locationConflict": "{{fact}} dan {{other}} menyebut tempat yang berbeda",
       "staleFact": "{{fact}} tidak punya topik aktif lagi",
       "tooBroad": "{{fact}} sangat luas",
-      "staleTopic": "{{topic}} sepi selama berminggu-minggu",
       "incoherentTopics_other": "{{count}} topik di bawah {{fact}} tidak cocok dengannya: {{topics}}",
       "followInsteadFlood": "“{{topic}}” memenuhi feed Anda. Ikuti sebagai cerita saja?",
       "followInsteadNoStake": "Ada banyak berita tentang {{topic}}, tapi tidak satu pun mengubah apa pun bagi Anda, jadi feed Anda melewatinya. Ikuti sebagai cerita untuk melihat semuanya?",

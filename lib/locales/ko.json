@@ -1418,7 +1418,6 @@
       "locationConflict": "{{fact}}과(와) {{other}}이(가) 서로 다른 장소를 가리킵니다",
       "staleFact": "{{fact}}에 남은 활성 토픽이 없습니다",
       "tooBroad": "{{fact}}이(가) 너무 넓습니다",
-      "staleTopic": "{{topic}}이(가) 몇 주째 잠잠합니다",
       "incoherentTopics_other": "{{fact}}에 맞지 않는 토픽이 {{count}}개 있습니다: {{topics}}",
       "followInsteadFlood": "“{{topic}}” 기사가 피드를 채우고 있어요. 대신 스토리로 팔로우할까요?",
       "followInsteadNoStake": "{{topic}} 관련 뉴스가 많지만 회원님에게 바뀌는 것은 없어서, 피드에서는 건너뛰고 있어요. 전부 보고 싶다면 스토리로 팔로우해 보세요.",

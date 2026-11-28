@@ -1418,7 +1418,6 @@
       "locationConflict": "{{fact}}と{{other}}では場所が異なります",
       "staleFact": "{{fact}}には、アクティブなトピックがなくなりました",
       "tooBroad": "{{fact}}は範囲が非常に広くなっています",
-      "staleTopic": "{{topic}}は数週間動きがありません",
       "incoherentTopics_other": "{{fact}}の下にある{{count}}件のトピックは合っていません：{{topics}}",
       "followInsteadFlood": "「{{topic}}」がフィードを埋めています。代わりにストーリーとしてフォローしますか？",
       "followInsteadNoStake": "{{topic}}に関するニュースは多いですが、あなたに影響するものはないので、フィードには表示しません。すべて見たい場合は、ストーリーとしてフォローしてください。",

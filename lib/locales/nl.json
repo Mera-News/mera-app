@@ -1438,7 +1438,6 @@
       "locationConflict": "{{fact}} en {{other}} noemen verschillende plaatsen",
       "staleFact": "{{fact}} heeft geen actieve onderwerpen meer",
       "tooBroad": "{{fact}} is erg breed",
-      "staleTopic": "{{topic}} is al weken rustig",
       "incoherentTopics_one": "{{count}} onderwerp onder {{fact}} past daar niet bij: {{topics}}",
       "incoherentTopics_other": "{{count}} onderwerpen onder {{fact}} passen daar niet bij: {{topics}}",
       "followInsteadFlood": "“{{topic}}” vult je feed. Wil je het als verhaal volgen?",

@@ -1674,7 +1674,6 @@
       "locationConflict": "{{fact}} and {{other}} name different places",
       "staleFact": "{{fact}} has no active topics left",
       "tooBroad": "{{fact}} is very broad",
-      "staleTopic": "{{topic}} has been quiet for weeks",
       "incoherentTopics_one": "{{count}} topic under {{fact}} doesn't fit it: {{topics}}",
       "incoherentTopics_other": "{{count}} topics under {{fact}} don't fit it: {{topics}}",
       "followInsteadFlood": "\"{{topic}}\" is filling your feed. Follow it as a story instead?",

@@ -1526,7 +1526,6 @@
       "locationConflict": "{{fact}} і {{other}} називають різні місця",
       "staleFact": "У {{fact}} не лишилось активних тем",
       "tooBroad": "{{fact}} дуже загальний",
-      "staleTopic": "{{topic}} уже кілька тижнів без новин",
       "incoherentTopics_one": "{{count}} тема у {{fact}} не підходить до нього: {{topics}}",
       "incoherentTopics_few": "{{count}} теми у {{fact}} не підходять до нього: {{topics}}",
       "incoherentTopics_many": "{{count}} тем у {{fact}} не підходять до нього: {{topics}}",

@@ -1440,7 +1440,6 @@
       "locationConflict": "{{fact}} और {{other}} अलग-अलग जगहों के नाम लेते हैं",
       "staleFact": "{{fact}} के पास अब कोई सक्रिय विषय नहीं बचा",
       "tooBroad": "{{fact}} बहुत व्यापक है",
-      "staleTopic": "{{topic}} कुछ हफ़्तों से शांत है",
       "incoherentTopics_one": "{{fact}} के अंतर्गत {{count}} विषय उससे मेल नहीं खाता: {{topics}}",
       "incoherentTopics_other": "{{fact}} के अंतर्गत {{count}} विषय उससे मेल नहीं खाते: {{topics}}",
       "followInsteadFlood": "“{{topic}}” आपकी फ़ीड भर रहा है। क्या इसे एक स्टोरी की तरह फ़ॉलो करें?",

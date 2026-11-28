@@ -1585,7 +1585,6 @@
       "locationConflict": "{{fact}} و{{other}} يذكران أماكن مختلفة",
       "staleFact": "{{fact}} لم تعد لها مواضيع نشطة",
       "tooBroad": "{{fact}} واسعة جدًا",
-      "staleTopic": "{{topic}} هادئ منذ أسابيع",
       "incoherentTopics_zero": "{{count}} مواضيع تحت {{fact}} لا تناسبها: {{topics}}",
       "incoherentTopics_one": "{{count}} موضوع تحت {{fact}} لا يناسبها: {{topics}}",
       "incoherentTopics_two": "موضوعان تحت {{fact}} لا يناسبانها: {{topics}}",
