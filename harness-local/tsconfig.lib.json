@@ -70,6 +70,8 @@
     "../node_modules/mera-news-client/lib/news-harness/on-device/article-feedback/kev-spec.ts",
     "../node_modules/mera-news-client/lib/news-harness/on-device/follow-story/kev-spec.ts",
     "scripts/score-calibration.ts",
+    "scripts/score-scoring-fix.ts",
+    "scripts/score-scoring-fix.test.ts",
     "scripts/test-account.ts"
   ]
 }
