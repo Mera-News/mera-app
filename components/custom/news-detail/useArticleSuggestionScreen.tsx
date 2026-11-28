@@ -21,6 +21,8 @@ import { useSavedOverride, type SavedList } from '@/lib/saved-state';
 import { useArchiveMenuItem } from '@/components/custom/cards/use-archive-menu-item';
 import { useForYouStore, type ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
+import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
+import { feedStoryMembersOf } from './feed-story-members';
 import {
     buildStoryGroups,
     DISPLAY_GROUPING_OPTIONS,
@@ -158,15 +160,26 @@ export function useArticleSuggestionScreen({
     }, []);
 
     // Locally-derived "More coverage" siblings: the user's other personalized
-    // cards for the same story that the feed collapsed away. We deliberately
-    // group over the ENTIRE store pool (not just feed-visible rows) so that
-    // low-relevance or still-unscored coverage of the same story surfaces here.
+    // cards for the same story that the feed collapsed away. A story the Feed
+    // holds lists its Feed row's members (feed-story-members.ts), so the card's
+    // "N more reports" and this list agree. Anything else groups over the
+    // ENTIRE store pool (not just feed-visible rows) so that low-relevance or
+    // still-unscored coverage of the same story surfaces here.
     // Withheld until `afterInteractions` (see effect above) — see downstream
     // memos (`relatedEntries`) for the knock-on effect.
     const localSiblings = useMemo<ForYouSuggestion[]>(() => {
         if (!afterInteractions || !suggestion) return [];
         // The DB-fallback-loaded row (deep link before hydration) may not be in
         // the store yet — include it so its group can form.
+        // A story the Feed holds lists exactly the copies its card counts.
+        const feedMembers = feedStoryMembersOf(suggestion.articleId, useFeedOrderStore.getState());
+        if (feedMembers) {
+            const byArticle = new Map(suggestions.map((s) => [s.articleId, s]));
+            return feedMembers
+                .filter((id) => id !== suggestion.articleId)
+                .map((id) => byArticle.get(id))
+                .filter((s): s is ForYouSuggestion => s !== undefined);
+        }
         const pool = suggestions.some((x) => x._id === suggestion._id)
             ? suggestions
             : [...suggestions, suggestion];
