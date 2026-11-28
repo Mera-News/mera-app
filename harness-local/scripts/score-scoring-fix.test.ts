@@ -15,8 +15,8 @@ registerPromptVariant({ id: 'sf-plain', description: 'test: no rescore field' })
 registerPromptVariant({ id: 'sf-drop', description: 'test: no rescore field, drops a must_show' });
 
 const ARTICLES = [
-  { articleId: 'a', verdict: 'must_show' },
-  { articleId: 'b', verdict: 'must_show' },
+  { articleId: 'a', verdict: 'must_show', story: 's1' },
+  { articleId: 'b', verdict: 'must_show', story: 's1' },
   { articleId: 'c', verdict: 'nice_to_have' },
   { articleId: 'd', verdict: 'skip' },
 ];
@@ -68,20 +68,30 @@ test('min of the two passes, per spec, with a must_show drop failing', () => {
   const arm = (v: string) => res.arms.find((a) => a.arm === `${M}@${v}`)!;
 
   assert.equal(arm('sf-rescore').rescores, true);
-  assert.equal(arm('sf-rescore').changedByPass2, 2); // a, in each of 2 repeats
+  assert.equal(arm('sf-rescore').changedByPass2, 4); // runner's count: a (lower) and b (higher), 2 repeats
+  assert.equal(arm('sf-rescore').minChanges, 2); // only a is lower
+  assert.equal(arm('sf-rescore').mean.mustPrecision, 1);
   assert.equal(arm('sf-rescore').mean.mustRecall, 0.5); // a fell below 0.4
   assert.equal(arm('sf-rescore').verdict, 'FAIL');
 
   assert.equal(arm('sf-plain').rescores, false);
-  assert.equal(arm('sf-plain').changedByPass2, 0);
+  assert.equal(arm('sf-plain').changedByPass2, 2); // pass 2 differs, so the runner counts it...
+  assert.equal(arm('sf-plain').mean.mustRecall, 1); // ...but FINAL ignores it
   assert.equal(arm('sf-plain').verdict, 'PASS');
 
   assert.equal(arm('sf-drop').verdict, 'FAIL');
+  // Tier accuracy is gate side vs verdict: baseline all right, sf-drop wrong on a in every repeat.
+  assert.equal(arm('baseline').tierAccuracy, 1);
+  assert.equal(arm('sf-drop').tierAccuracy, 0.75);
+  // Story s1 (a, b) stays in one band in baseline, splits across the gate in sf-drop.
+  assert.deepEqual(arm('baseline').stableStories, { count: 1, of: 1, needed: 1 });
+  assert.equal(arm('sf-drop').stableStories?.count, 0);
   assert.deepEqual(arm('sf-drop').failed, ['must-show recall']);
 
   assert.equal(arm('baseline').verdict, 'REFERENCE');
   assert.equal(arm('null-control').verdict, 'PASS');
   assert.equal(res.mismatch, null);
+  assert.equal(res.crossCheck, 'skipped: no console.log');
 
   // Blind rater file: only note and tier, no arm; the key maps line number to the row.
   const lines = readFileSync(join(dir, 'rater-contradiction.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l));
@@ -91,8 +101,12 @@ test('min of the two passes, per spec, with a must_show drop failing', () => {
   assert.ok(!JSON.stringify(lines).includes('@'));
 });
 
-test('a runner rescore count that disagrees with the scorer exits via mismatch', () => {
-  const dir = build({ baseline: BASE, 'null-control': BASE, 'sf-rescore': BASE }, { 'sf-rescore': { a: 0.2 } });
-  writeFileSync(join(dir, 'agreement.txt'), `${M}@sf-rescore\n  rescore: n=5 mean-signed-delta=0\n`);
-  assert.match(scoreRun(dir).mismatch ?? '', /runner says rescore n=5, scorer counts 2/);
+test('the runner rescore count is read from console.log and compared', () => {
+  const dir = build({ baseline: BASE, 'null-control': BASE, 'sf-rescore': BASE }, { 'sf-rescore': { a: 0.2, b: 0.95 } });
+  writeFileSync(join(dir, 'console.log'), `RESCORE REPORT\n${M}@sf-rescore\n  rescore: n=4 mean-signed-delta=0\n`);
+  const ok = scoreRun(dir);
+  assert.equal(ok.crossCheck, 'done');
+  assert.equal(ok.mismatch, null);
+  writeFileSync(join(dir, 'console.log'), `${M}@sf-rescore\n  rescore: n=2 mean-signed-delta=0\n`);
+  assert.match(scoreRun(dir).mismatch ?? '', /runner says rescore n=2, scorer counts 4/);
 });

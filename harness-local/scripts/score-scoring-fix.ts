@@ -11,7 +11,7 @@
 // Also writes rater-contradiction.jsonl + rater-contradiction.key.json into the run dir (blind rater).
 // Node-only; no network, no model calls.
 
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { bandOf, bucketScore, DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness';
@@ -23,14 +23,14 @@ const GATE = DEFAULT_HARNESS_CONFIG.articlePipeline.discardFloor;
 const CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
 const SEED = 20260528;
 
-interface FixtureArticle { articleId: string; verdict?: string | null; story?: string | null; label?: string | null }
+interface FixtureArticle { articleId: string; verdict?: string | null; story?: string | null }
 interface Row {
   dupOf?: string | null; repeat: number; arm: string; variant: string; callType: string; error?: string | null;
   items?: { id: string }[];
   parsedSchema?: { byId?: { articleId: string; s: number | null }[]; reason?: string; score?: number } | null;
 }
 interface Cell { articleId: string; pass1: number; pass2?: number; final: number; note: string | null }
-interface Metrics { mustRecall: number | null; broadRecall: number | null; precision: number | null }
+interface Metrics { mustRecall: number | null; broadRecall: number | null; precision: number | null; mustPrecision: number | null }
 export interface ArmReport {
   arm: string;
   rescores: boolean;
@@ -38,11 +38,14 @@ export interface ArmReport {
   mean: Metrics;
   verdict: 'REFERENCE' | 'PASS' | 'FAIL';
   failed: string[];
+  /** Cells with a parsed pass 2 whose raw score differs from pass 1, either direction: the runner's `rescore: n=`. */
   changedByPass2: number;
+  /** Of those, pass 2 lower than pass 1 (what min() acts on). */
+  minChanges: number;
   tierAccuracy?: number | null;
   stableStories?: { count: number; of: number; needed: number };
 }
-export interface ScoreResult { arms: ArmReport[]; floor: Metrics; text: string; mismatch: string | null }
+export interface ScoreResult { arms: ArmReport[]; floor: Metrics; text: string; mismatch: string | null; crossCheck: 'done' | 'skipped: no console.log' }
 
 const mean = (xs: (number | null)[]): number | null => {
   const v = xs.filter((x): x is number => x !== null);
@@ -99,12 +102,13 @@ export function scoreRun(dir: string): ScoreResult {
   }
 
   const reports = new Map<string, ArmReport>();
-  const tiered = fixture.articles.some((a) => a.story && a.label);
+  const tiered = fixture.articles.some((a) => a.story);
   const rater: { line: { note: string | null; tier: string }; key: { arm: string; repeat: number; articleId: string } }[] = [];
   for (const [arm, byRep] of [...cells].sort(([a], [b]) => a.localeCompare(b))) {
     const rescores = specRescores(variantOf.get(arm) as string);
     const perRepeat: Metrics[] = [];
     let changed = 0;
+    let lower = 0;
     const tierHits: boolean[] = [];
     const storyTiers = new Map<string, string[]>(); // story -> per-repeat "all copies one tier" (tier or 'SPLIT')
     for (const rep of [...byRep.keys()].sort((a, b) => a - b)) {
@@ -114,14 +118,15 @@ export function scoreRun(dir: string): ScoreResult {
       for (const c of byId.values()) {
         if (Number.isNaN(c.pass1)) continue; // no pass-1 score: nothing to judge
         const raw = rescores && c.pass2 !== undefined ? Math.min(c.pass1, c.pass2) : c.pass1;
-        if (raw !== c.pass1) changed += 1;
+        if (c.pass2 !== undefined && c.pass2 !== c.pass1) changed += 1;
+        if (c.pass2 !== undefined && c.pass2 < c.pass1) lower += 1;
         c.final = bucketScore(raw, CFG);
         items.push({ score: c.final, verdict: art.get(c.articleId)?.verdict ?? null });
         const tier = bandOf(c.final, DEFAULT_HARNESS_CONFIG);
         if (c.final >= GATE) rater.push({ line: { note: c.note, tier }, key: { arm, repeat: rep, articleId: c.articleId } });
         const a = art.get(c.articleId);
-        if (a?.story && a.label) {
-          tierHits.push(tier === a.label.toUpperCase());
+        if (a?.verdict) tierHits.push(c.final >= GATE === (a.verdict === 'must_show' || a.verdict === 'nice_to_have'));
+        if (a?.story) {
           const s = storyRep.get(a.story) ?? new Set();
           s.add(tier);
           storyRep.set(a.story, s);
@@ -134,16 +139,17 @@ export function scoreRun(dir: string): ScoreResult {
       }
       const must = precisionRecallAt(items, GATE, new Set(['must_show']));
       const broad = precisionRecallAt(items, GATE, new Set(['must_show', 'nice_to_have']));
-      perRepeat.push({ mustRecall: must.recall, broadRecall: broad.recall, precision: broad.precision });
+      perRepeat.push({ mustRecall: must.recall, broadRecall: broad.recall, precision: broad.precision, mustPrecision: must.precision });
     }
     const repeats = byRep.size;
     const needed = repeats >= 5 ? 4 : Math.max(repeats - 1, 0);
     const rep: ArmReport = {
-      arm, rescores, perRepeat, changedByPass2: changed, verdict: 'REFERENCE', failed: [],
+      arm, rescores, perRepeat, changedByPass2: changed, minChanges: lower, verdict: 'REFERENCE', failed: [],
       mean: {
         mustRecall: mean(perRepeat.map((m) => m.mustRecall)),
         broadRecall: mean(perRepeat.map((m) => m.broadRecall)),
         precision: mean(perRepeat.map((m) => m.precision)),
+        mustPrecision: mean(perRepeat.map((m) => m.mustPrecision)),
       },
     };
     if (tiered) {
@@ -168,9 +174,9 @@ export function scoreRun(dir: string): ScoreResult {
       if (!b || !n) return null;
       return mean(b.perRepeat.map((m, i) => (m[k] === null || n.perRepeat[i]?.[k] == null ? null : Math.abs((m[k] as number) - (n.perRepeat[i][k] as number)))));
     };
-    return { mustRecall: diff('mustRecall'), broadRecall: diff('broadRecall'), precision: diff('precision') };
+    return { mustRecall: diff('mustRecall'), broadRecall: diff('broadRecall'), precision: diff('precision'), mustPrecision: diff('mustPrecision') };
   };
-  let floorShown: Metrics = { mustRecall: null, broadRecall: null, precision: null };
+  let floorShown: Metrics = { mustRecall: null, broadRecall: null, precision: null, mustPrecision: null };
   for (const r of reports.values()) {
     const model = r.arm.split('@')[0];
     const base = reports.get(`${model}@baseline`);
@@ -188,16 +194,18 @@ export function scoreRun(dir: string): ScoreResult {
     r.verdict = r.failed.length ? 'FAIL' : 'PASS';
   }
 
-  // Cross-check against the runner's own `rescore: n=` lines, when a log sits in the run dir.
+  // Cross-check against the runner's RESCORE REPORT, which it only prints to the console (tee'd to console.log).
   let mismatch: string | null = null;
-  for (const name of readdirSync(dir).filter((n) => /\.(txt|log)$/.test(n))) {
+  const consoleLog = join(dir, 'console.log');
+  const crossCheck = existsSync(consoleLog) ? 'done' : 'skipped: no console.log';
+  if (existsSync(consoleLog)) {
     let arm = '';
-    for (const line of readFileSync(join(dir, name), 'utf8').split('\n')) {
+    for (const line of readFileSync(consoleLog, 'utf8').split('\n')) {
       if (/^\S+@\S+$/.test(line)) arm = line.trim();
       const m = /rescore: n=(\d+)/.exec(line);
       const r = m && reports.get(arm);
       if (m && r && Number(m[1]) !== r.changedByPass2) {
-        mismatch = `${arm}: runner says rescore n=${m[1]}, scorer counts ${r.changedByPass2} rows where pass 2 changed FINAL (${name})`;
+        mismatch = `${arm}: runner says rescore n=${m[1]}, scorer counts ${r.changedByPass2} cells where pass 2 differs from pass 1`;
       }
     }
   }
@@ -213,16 +221,16 @@ export function scoreRun(dir: string): ScoreResult {
 
   const out: string[] = [`gate ${GATE}; precision = broad (must_show + nice_to_have); recall columns as named`];
   for (const r of reports.values()) {
-    out.push(`\n${r.arm}  [${r.verdict}${r.failed.length ? `: ${r.failed.join(', ')}` : ''}]  rescore=${r.rescores}  pass2-changed-final=${r.changedByPass2}`);
-    r.perRepeat.forEach((m, i) => out.push(`  repeat ${i}: must-show recall ${f(m.mustRecall)}  broad recall ${f(m.broadRecall)}  precision ${f(m.precision)}`));
-    out.push(`  mean    : must-show recall ${f(r.mean.mustRecall)}  broad recall ${f(r.mean.broadRecall)}  precision ${f(r.mean.precision)}`);
+    out.push(`\n${r.arm}  [${r.verdict}${r.failed.length ? `: ${r.failed.join(', ')}` : ''}]  rescore=${r.rescores}  pass2-differs=${r.changedByPass2} (lower=${r.minChanges})`);
+    r.perRepeat.forEach((m, i) => out.push(`  repeat ${i}: must-show recall ${f(m.mustRecall)}  broad recall ${f(m.broadRecall)}  precision ${f(m.precision)}  must-show precision ${f(m.mustPrecision)}`));
+    out.push(`  mean    : must-show recall ${f(r.mean.mustRecall)}  broad recall ${f(r.mean.broadRecall)}  precision ${f(r.mean.precision)}  must-show precision ${f(r.mean.mustPrecision)}`);
     if (r.stableStories) {
       const rule = r.perRepeat.length >= 5 ? 'at least 4 of 5 repeats' : `all but one repeat (run has ${r.perRepeat.length}, fewer than 5)`;
-      out.push(`  tier accuracy ${f(r.tierAccuracy ?? null)}; stories with all copies in one tier in ${rule}: ${r.stableStories.count} of ${r.stableStories.of}`);
+      out.push(`  tier accuracy (gate side matches verdict) ${f(r.tierAccuracy ?? null)}; stories with all copies in one band in ${rule}: ${r.stableStories.count} of ${r.stableStories.of}`);
     }
   }
-  out.push(`\nnoise floor (mean |baseline - null-control|): must-show recall ${f(floorShown.mustRecall)}  broad recall ${f(floorShown.broadRecall)}  precision ${f(floorShown.precision)}`);
-  return { arms: [...reports.values()], floor: floorShown, text: out.join('\n'), mismatch };
+  out.push(`\ncross-check vs runner rescore n: ${crossCheck}\nnoise floor (mean |baseline - null-control|): must-show recall ${f(floorShown.mustRecall)}  broad recall ${f(floorShown.broadRecall)}  precision ${f(floorShown.precision)}`);
+  return { arms: [...reports.values()], floor: floorShown, text: out.join('\n'), mismatch, crossCheck };
 }
 
 if (/score-scoring-fix\.ts$/.test(process.argv[1] ?? '')) {
