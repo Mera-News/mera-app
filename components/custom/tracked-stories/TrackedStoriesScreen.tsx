@@ -28,7 +28,7 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import type TrackedStoryModel from '@/lib/database/models/TrackedStory';
 import { hapticLight } from '@/lib/haptics';
-import { useListEndClearance } from '@/lib/navigation/tab-bar';
+import { useListEndClearance, useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { useColors } from '@/lib/theme/tokens';
 import { formatTimeAgo } from '@/lib/algorithms/time-ago';
 import { notifyScrollTick } from '@/lib/visibility-tick';
@@ -183,8 +183,11 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
     );
 
     const keyExtractor = useCallback((item: TrackedStoryModel) => item.id, []);
-    // The empty page's tap area fills what the list shows (a list gives its empty item no height).
-    const emptyHeight = useWindowDimensions().height - headerHeight - PAGE_CONTENT_GAP - listEndClearance;
+    // The empty page's tap area runs from the header to the tab bar (a list gives its empty
+    // item no height). It carries the list's end padding itself, so the strip beside the
+    // Mera button is part of the tap too.
+    const tabBarClearance = useTabBarClearance();
+    const emptyHeight = useWindowDimensions().height - headerHeight - PAGE_CONTENT_GAP - tabBarClearance;
 
     return (
         <View style={{ flex: 1 }}>
@@ -203,7 +206,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                         testID="tracked-stories-empty-open"
                         accessible={false}
                         onPress={() => openMeraChat(chatContextFor('stories'))}
-                        style={{ minHeight: emptyHeight, gap: 28 }}
+                        style={{ minHeight: emptyHeight, gap: 28, paddingBottom: listEndClearance - tabBarClearance }}
                     >
                         <ForYouEmptyState
                             animationId="following-what-it-is"
@@ -231,7 +234,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                     // The same inset as the Feed's list, so the title row
                     // lines up with the rows under it.
                     paddingHorizontal: PAGE_SIDE_INSET,
-                    paddingBottom: listEndClearance,
+                    paddingBottom: stories.length === 0 ? tabBarClearance : listEndClearance,
                     flexGrow: 1,
                 }}
                 showsVerticalScrollIndicator={false}
