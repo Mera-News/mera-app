@@ -13,6 +13,7 @@ import {
 } from '@/lib/database/services/tracked-story-service';
 import * as trackedStoryService from '@/lib/database/services/tracked-story-service';
 import { createTopics, getAllByNormalizedText } from '@/lib/database/services/topic-service';
+import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
 
 const T0 = Date.UTC(2026, 9, 1, 12, 0, 0);
 const snap = (articleId: string, hoursAfter: number): TrackedStoryMemberSnapshot => ({
@@ -103,6 +104,54 @@ describe('onFocus', () => {
     });
     expect(result.current.cards).toEqual([]);
     expect(result.current.isLoading).toBe(true);
+  });
+});
+
+describe('opened while the follow sync still runs', () => {
+  const setSync = (status: 'running' | 'completed') =>
+    act(async () => {
+      useSchedulerStore.setState((s) => ({ taskCurrentStatus: { ...s.taskCurrentStatus, 'feed-sync': status } }));
+    });
+  afterEach(() => useSchedulerStore.setState({ taskCurrentStatus: {} }));
+
+  it('keeps loading over an empty story, then shows what the sync found with no refresh', async () => {
+    const story = await trackStory({
+      stableClusterId: null,
+      articleId: '',
+      title: 'Harbour bridge',
+      originSurface: 'chat',
+      topicId: null,
+      topicText: TOPIC_TEXT,
+    });
+    await setSync('running');
+    const { result } = await open(story.id);
+    await focus(result);
+    await waitFor(() => expect(result.current.emptyReason).toBe('quiet'));
+    await act(async () => {
+      for (let i = 0; i < 20; i++) await new Promise<void>((resolve) => setImmediate(resolve));
+    });
+    expect(result.current.cards).toEqual([]);
+    expect(result.current.isLoading).toBe(true);
+
+    await applyUpdates(story.id, { newMemberIds: ['m2'], newSnapshots: [snap('m2', 1)] });
+    await setSync('completed');
+    await waitFor(() => expect(result.current.cards.map((c) => c.articleId)).toEqual(['m2']));
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  it('a blurred screen does not re-read when the sync ends', async () => {
+    const { storyId } = await seedStory();
+    await setSync('running');
+    const { result } = await open(storyId);
+    const blur = await focus(result);
+    await waitFor(() => expect(result.current.cards).toHaveLength(3));
+    await act(async () => blur());
+    await applyUpdates(storyId, { newMemberIds: ['m4'], newSnapshots: [snap('m4', 3)] });
+    await setSync('completed');
+    await act(async () => {
+      for (let i = 0; i < 20; i++) await new Promise<void>((resolve) => setImmediate(resolve));
+    });
+    expect(result.current.cards).toHaveLength(3);
   });
 });
 

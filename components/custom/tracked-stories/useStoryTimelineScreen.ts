@@ -3,6 +3,7 @@ import type {
     ExportContentOptions,
     ExportWizardRow,
 } from '@/components/custom/saved-suggestions/ExportWizardModal';
+import { useFeedSyncRunning } from '@/components/custom/FeedSyncIndicator';
 import { getLocalizedLanguageName } from '@/lib/algorithms/language-names';
 import { ArticleService } from '@/lib/article-service';
 import { getSuggestionByArticleId } from '@/lib/database/services/article-suggestion-reads';
@@ -28,7 +29,7 @@ import { toastManager } from '@/lib/toast-manager';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { buildTimeline, foldTimeline, type TimelineCard, type TimelineEntry } from './merge-timeline';
 import logger from '@/lib/logger';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 /** The list: a date heading over each day's coverage, even for one item
@@ -217,13 +218,14 @@ export function useStoryTimelineScreen({
     // the focus-effect cleanup bumps it so a load resolving after blur/unmount
     // never writes stale state.
     const runIdRef = useRef(0);
+    const focusedRef = useRef(false);
 
     const load = useCallback(
-        async (opts?: { isRefresh?: boolean }) => {
+        async (opts?: { isRefresh?: boolean; quiet?: boolean }) => {
             const runId = ++runIdRef.current;
             const alive = () => runId === runIdRef.current;
             if (opts?.isRefresh) setRefreshing(true);
-            else setIsLoading(true);
+            else if (!opts?.quiet) setIsLoading(true);
 
             try {
                 const story = await getTrackedStoryById(trackedStoryId);
@@ -315,11 +317,22 @@ export function useStoryTimelineScreen({
             await markSeen(trackedStoryId);
         })();
         void load();
+        focusedRef.current = true;
         return () => {
+            focusedRef.current = false;
             // Invalidate any in-flight load so it can't write state post-blur.
             runIdRef.current++;
         };
     }, [trackedStoryId, load]);
+
+    // A follow starts a feed sync, and a story opened before it ends has read
+    // its row too early: re-read when the sync ends, with no spinner over cards.
+    const syncing = useFeedSyncRunning();
+    const wasSyncing = useRef(false);
+    useEffect(() => {
+        if (wasSyncing.current && !syncing && focusedRef.current) void load({ quiet: true });
+        wasSyncing.current = syncing;
+    }, [syncing, load]);
 
     // Opens the reason view when Mera scored this article, carrying the story
     // so the page lists its other copies (see use-open-article).
@@ -415,7 +428,8 @@ export function useStoryTimelineScreen({
         stableClusterId,
         cards,
         entries,
-        isLoading,
+        // An empty story is still loading while the sync that fills it runs.
+        isLoading: isLoading || (syncing && cards.length === 0 && emptyReason === 'quiet'),
         refreshing,
         emptyReason,
         followedSinceMs,

@@ -668,7 +668,8 @@ const useStyles = themedStyles((c, mode) =>
     // Settled: the accent frame was the ask; a done card wears the neutral content plate.
     cardSettled: { backgroundColor: mode === 'light' ? c.panel : c.surface, borderColor: c.panelBorder },
     settledTitle: { color: c.ink },
-    settledRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, minHeight: FRAME, paddingVertical: 10 },
+    // Centred: the story button is a 44pt frame, so a top-aligned disc sat above its label.
+    settledRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: FRAME, paddingVertical: 10 },
     disc: {
       width: 20,
       height: 20,
