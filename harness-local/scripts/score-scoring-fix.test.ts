@@ -110,3 +110,33 @@ test('the runner rescore count is read from console.log and compared', () => {
   writeFileSync(join(dir, 'console.log'), `${M}@sf-rescore\n  rescore: n=2 mean-signed-delta=0\n`);
   assert.match(scoreRun(dir).mismatch ?? '', /runner says rescore n=2, scorer counts 4/);
 });
+
+test('verdict-slot: the slots decide, never min(), and a bad slot leaves pass 1', () => {
+  // c (nice_to_have) and the d stand-in are both over the gate on pass 1; pass 2 scores every row low.
+  const P1 = { ...BASE, d: 0.6 };
+  const dir = build({ baseline: P1, 'null-control': P1, 'verdict-slot': P1 }, {});
+  const say = (changes: string, family: string) => JSON.stringify({ reason: 'x', changes, family_place: family, k: 'none', s: 0.1 });
+  const raw: Record<string, string> = {
+    a: say('yes', 'no'), // kept at 0.8 although pass 2 says 0.1
+    b: say('no', 'yes'), // kept at the lowest tier
+    c: '{"reason":"x","changes":"perhaps","family_place":"no"}', // malformed: pass 1 stands
+    d: say('no', 'no'), // hidden
+  };
+  const extra: string[] = [];
+  for (let repeat = 0; repeat < 2; repeat++) {
+    for (const [id, out] of Object.entries(raw)) {
+      extra.push(JSON.stringify({
+        arm: `${M}@verdict-slot`, variant: 'verdict-slot', repeat, callType: 'reason', dupOf: null, error: null,
+        items: [{ id: `reason:${id}` }], rawOutput: out, parsedSchema: { reason: 'x', score: 0.1 },
+      }));
+    }
+  }
+  writeFileSync(join(dir, 'rows.jsonl'), readFileSync(join(dir, 'rows.jsonl'), 'utf8') + `${extra.join('\n')}\n`);
+  const v = scoreRun(dir).arms.find((a) => a.arm === `${M}@verdict-slot`)!;
+  assert.equal(v.rescores, false);
+  assert.deepEqual(v.slot, { calls: 8, missing: 2, no: 4, familyKept: 2, noCall: 0 });
+  assert.equal(v.mean.mustRecall, 1); // a at 0.8, b at 0.4
+  assert.equal(v.mean.precision, 1); // shown: a, b, c; d (skip) hidden
+  const key = JSON.parse(readFileSync(join(dir, 'rater-contradiction.key.json'), 'utf8')) as { arm: string; articleId: string }[];
+  assert.deepEqual(key.filter((k) => k.arm.endsWith('@verdict-slot')).map((k) => k.articleId).sort(), ['a', 'a', 'b', 'b', 'c', 'c']);
+});

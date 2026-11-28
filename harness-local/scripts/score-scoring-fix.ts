@@ -8,7 +8,8 @@
 // with the shipped decoder); pass 2 from the reason row's parsedSchema.score, joined to its article by
 // `items[0].id` with any `reason:` prefix stripped (the RESCORE REPORT join in run-newsharness-corpus).
 //
-// Also writes rater-contradiction.jsonl + rater-contradiction.key.json into the run dir (blind rater).
+// Also writes rater-contradiction.jsonl + rater-contradiction.key.json into the run dir (blind rater),
+// and cells.json (every judged cell with its final score).
 // Node-only; no network, no model calls.
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -16,9 +17,17 @@ import { join } from 'node:path';
 
 import { bandOf, bucketScore, DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness';
 import { resolvePromptVariant } from '@/lib/news-harness/prompts/prompt-variants';
+import * as reasonArms from '@/lib/news-harness/prompts/reason-arms';
 import { readJsonl } from '../lib/agreement';
 import { precisionRecallAt } from '../lib/rescore-metrics';
 
+// shortcut: the app's client pin predates the verdict-slot arm, so these are read untyped; type the
+// import once the pin moves. Without MERA_CLIENT_ROOT the arm id is unknown and specRescores throws.
+const { applyVerdictSlot, readVerdictSlot, VERDICT_SLOT_ID } = reasonArms as unknown as {
+  applyVerdictSlot: (pass1: number, output: string, config: { discardFloor: number; lowPriorityScore: number }) => number;
+  readVerdictSlot: (output: string) => { changes: boolean; familyPlace: boolean } | null;
+  VERDICT_SLOT_ID: string;
+};
 const GATE = DEFAULT_HARNESS_CONFIG.articlePipeline.discardFloor;
 const CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
 const SEED = 20260528;
@@ -27,9 +36,10 @@ interface FixtureArticle { articleId: string; verdict?: string | null; story?: s
 interface Row {
   dupOf?: string | null; repeat: number; arm: string; variant: string; callType: string; error?: string | null;
   items?: { id: string }[];
+  rawOutput?: string | null;
   parsedSchema?: { byId?: { articleId: string; s: number | null }[]; reason?: string; score?: number } | null;
 }
-interface Cell { articleId: string; pass1: number; pass2?: number; final: number; note: string | null }
+interface Cell { articleId: string; pass1: number; pass2?: number; final: number; note: string | null; raw?: string }
 interface Metrics { mustRecall: number | null; broadRecall: number | null; precision: number | null; mustPrecision: number | null }
 export interface ArmReport {
   arm: string;
@@ -44,6 +54,9 @@ export interface ArmReport {
   minChanges: number;
   tierAccuracy?: number | null;
   stableStories?: { count: number; of: number; needed: number };
+  /** Verdict-slot arm only: note calls, slots missing or malformed, "no" verdicts, of those kept at
+   *  the lowest tier for a family place, and rows over the gate on pass 1 that got no note call. */
+  slot?: { calls: number; missing: number; no: number; familyKept: number; noCall: number };
 }
 export interface ScoreResult { arms: ArmReport[]; floor: Metrics; text: string; mismatch: string | null; crossCheck: 'done' | 'skipped: no console.log' }
 
@@ -97,6 +110,7 @@ export function scoreRun(dir: string): ScoreResult {
       if (!id) continue;
       const c = cellFor(r.arm, r.repeat, id);
       c.note = r.parsedSchema?.reason ?? null;
+      if (typeof r.rawOutput === 'string') c.raw = r.rawOutput;
       if (typeof r.parsedSchema?.score === 'number') c.pass2 = r.parsedSchema.score;
     }
   }
@@ -105,7 +119,10 @@ export function scoreRun(dir: string): ScoreResult {
   const tiered = fixture.articles.some((a) => a.story);
   const rater: { line: { note: string | null; tier: string }; key: { arm: string; repeat: number; articleId: string } }[] = [];
   for (const [arm, byRep] of [...cells].sort(([a], [b]) => a.localeCompare(b))) {
-    const rescores = specRescores(variantOf.get(arm) as string);
+    // The verdict-slot arm also returns k/s, but its policy reads only the slots, never min().
+    const verdictSlot = variantOf.get(arm) === VERDICT_SLOT_ID;
+    const rescores = !verdictSlot && specRescores(variantOf.get(arm) as string);
+    const slot = { calls: 0, missing: 0, no: 0, familyKept: 0, noCall: 0 };
     const perRepeat: Metrics[] = [];
     let changed = 0;
     let lower = 0;
@@ -117,7 +134,21 @@ export function scoreRun(dir: string): ScoreResult {
       const storyRep = new Map<string, Set<string>>();
       for (const c of byId.values()) {
         if (Number.isNaN(c.pass1)) continue; // no pass-1 score: nothing to judge
-        const raw = rescores && c.pass2 !== undefined ? Math.min(c.pass1, c.pass2) : c.pass1;
+        let raw = rescores && c.pass2 !== undefined ? Math.min(c.pass1, c.pass2) : c.pass1;
+        if (verdictSlot) {
+          if (c.raw === undefined) {
+            if (c.pass1 >= GATE) slot.noCall += 1;
+          } else {
+            slot.calls += 1;
+            const v = readVerdictSlot(c.raw);
+            if (!v) slot.missing += 1;
+            else if (!v.changes) {
+              slot.no += 1;
+              if (v.familyPlace) slot.familyKept += 1;
+            }
+            raw = applyVerdictSlot(c.pass1, c.raw, CFG);
+          }
+        }
         if (c.pass2 !== undefined && c.pass2 !== c.pass1) changed += 1;
         if (c.pass2 !== undefined && c.pass2 < c.pass1) lower += 1;
         c.final = bucketScore(raw, CFG);
@@ -163,6 +194,7 @@ export function scoreRun(dir: string): ScoreResult {
       }
       rep.stableStories = { count: ok, of: storyTiers.size, needed };
     }
+    if (verdictSlot) rep.slot = slot;
     reports.set(arm, rep);
   }
 
@@ -210,6 +242,12 @@ export function scoreRun(dir: string): ScoreResult {
     }
   }
 
+  // Every judged cell with its FINAL score, for analyses downstream of this policy (never a second copy of it).
+  const all = [...cells].flatMap(([arm, byRep]) => [...byRep].flatMap(([repeat, byId]) => [...byId.values()]
+    .filter((c) => !Number.isNaN(c.pass1))
+    .map((c) => ({ arm, repeat, articleId: c.articleId, pass1: c.pass1, pass2: c.pass2 ?? null, final: c.final, note: c.note, raw: c.raw ?? null }))));
+  writeFileSync(join(dir, 'cells.json'), `${JSON.stringify(all)}\n`, 'utf8');
+
   // Blind-rater file: note + final tier only, fixed-seed shuffle; the key maps line number (1-based) to the row.
   const rnd = mulberry32(SEED);
   for (let i = rater.length - 1; i > 0; i--) {
@@ -227,6 +265,10 @@ export function scoreRun(dir: string): ScoreResult {
     if (r.stableStories) {
       const rule = r.perRepeat.length >= 5 ? 'at least 4 of 5 repeats' : `all but one repeat (run has ${r.perRepeat.length}, fewer than 5)`;
       out.push(`  tier accuracy (gate side matches verdict) ${f(r.tierAccuracy ?? null)}; stories with all copies in one band in ${rule}: ${r.stableStories.count} of ${r.stableStories.of}`);
+    }
+    if (r.slot) {
+      const s = r.slot;
+      out.push(`  verdict slot: ${s.calls} note calls, ${s.missing} missing or malformed, ${s.no} "no" (${s.familyKept} kept at the lowest tier for a family place), ${s.noCall} rows over the gate on pass 1 with no note call (pin-gate)`);
     }
   }
   out.push(`\ncross-check vs runner rescore n: ${crossCheck}\nnoise floor (mean |baseline - null-control|): must-show recall ${f(floorShown.mustRecall)}  broad recall ${f(floorShown.broadRecall)}  precision ${f(floorShown.precision)}`);
