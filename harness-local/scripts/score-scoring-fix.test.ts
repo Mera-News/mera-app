@@ -70,7 +70,7 @@ test('min of the two passes, per spec, with a must_show drop failing', () => {
   assert.equal(arm('sf-rescore').rescores, true);
   assert.equal(arm('sf-rescore').changedByPass2, 4); // runner's count: a (lower) and b (higher), 2 repeats
   assert.equal(arm('sf-rescore').minChanges, 2); // only a is lower
-  assert.equal(arm('sf-rescore').mean.mustPrecision, 1);
+  assert.equal(arm('sf-rescore').mean.mustPrecision, 0.5); // shown: b (must_show) and c (nice_to_have)
   assert.equal(arm('sf-rescore').mean.mustRecall, 0.5); // a fell below 0.4
   assert.equal(arm('sf-rescore').verdict, 'FAIL');
 
