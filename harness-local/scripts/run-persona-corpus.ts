@@ -33,7 +33,7 @@ import { createRunWriter } from '../lib/run-writer';
 import { createJsonlWriter, hashMessages, newRowId, type RowToolCall, type RunRow } from '../lib/jsonl-writer';
 import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
 import { estimateRunCost, formatCostEstimate, type PlannedCall } from '../lib/cost-estimate';
-import { costOf, fetchModelCatalog, rosterWarnings } from '../lib/model-catalog';
+import { CHAT_HEAD, costOf, fetchModelCatalog, rosterWarnings } from '../lib/model-catalog';
 import { hasReasoningLeak, postBody, SpendLimitError } from '../lib/near-call';
 import {
   buildChatTurnBody,
