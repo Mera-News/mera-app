@@ -5,6 +5,8 @@ import { useShallow } from 'zustand/react/shallow';
 import database from '@/lib/database';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import type Setting from '@/lib/database/models/Setting';
+import type Topic from '@/lib/database/models/Topic';
+import type TrackedStory from '@/lib/database/models/TrackedStory';
 import schema from '@/lib/database/schema';
 import logger from '@/lib/logger';
 import { useExportHistory } from './use-export-history';
@@ -230,6 +232,7 @@ export function useObservabilityScreen() {
                 scoringModes,
                 alreadyRead,
                 sharedNotes,
+                topics,
             ] = await Promise.all([
                 getOpenedSeenBreakdown().catch(() => null),
                 loadUserGeoLanguageContext(),
@@ -249,6 +252,27 @@ export function useObservabilityScreen() {
                 // catch → the shared-notes row renders '—' instead of a zero
                 // that would read as "nothing is shared".
                 getSharedNoteBreakdown().catch(() => null),
+                // Where the active topics came from, for the funnel's topic counts.
+                // Own catch: a failed read renders as unavailable, never as zeroes.
+                Promise.all([
+                    database
+                        .get<Topic>('topics')
+                        .query(Q.where('status', 'active'), Q.where('pending_delete_at', null))
+                        .fetch(),
+                    database.get<TrackedStory>('tracked_stories').query().fetch(),
+                ])
+                    .then(([topicRows, stories]) => ({
+                        rows: topicRows.map((r) => ({
+                            id: r.id,
+                            provenance: String(r.provenance ?? ''),
+                            factId: r.factId ?? null,
+                            weight: Number(r.weight ?? 0),
+                        })),
+                        trackedTopicIds: stories
+                            .map((st) => st.topicId)
+                            .filter((id): id is string => !!id),
+                    }))
+                    .catch(() => null),
             ]);
             setAlreadyReadCount(alreadyRead);
             const fo = useFeedOrderStore.getState();
@@ -271,6 +295,7 @@ export function useObservabilityScreen() {
                     openedStats: breakdown?.stats ?? null,
                     scoringModes,
                     sharedNotes,
+                    topics,
                     userCtx,
                     algo: useFeedViewPrefs.getState().algo,
                     nowMs: Date.now(),
