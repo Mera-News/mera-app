@@ -157,9 +157,6 @@
     "statsAnalysed_one": "{{formatted}} a été analysé pour vous,",
     "statsAnalysed_many": "{{formatted}} ont été analysés pour vous,",
     "statsAnalysed_other": "{{formatted}} ont été analysés pour vous,",
-    "statsRelevant_one": "{{formatted}} semble pertinent,",
-    "statsRelevant_many": "{{formatted}} semblent pertinents,",
-    "statsRelevant_other": "{{formatted}} semblent pertinents,",
     "statsRead_one": "et vous avez lu {{formatted}}.",
     "statsRead_many": "et vous avez lu {{formatted}}.",
     "statsRead_other": "et vous avez lu {{formatted}}.",
@@ -177,8 +174,6 @@
     "statsSyncAnalysing_other": "{{formatted}} articles sont en cours d'analyse pour vous,",
     "statsSyncFrom_one": "sur {{formatted}} publié au cours des 24 dernières heures.",
     "statsSyncFrom_other": "sur {{formatted}} publiés au cours des 24 dernières heures.",
-    "statsSyncRelevant_one": "{{formatted}} semble pertinent pour l'instant.",
-    "statsSyncRelevant_other": "{{formatted}} semblent pertinents pour l'instant.",
     "view": {
       "a11y": "Affichage : {{view}}. Changer l'affichage",
       "continuous": "Fil continu",

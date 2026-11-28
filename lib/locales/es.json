@@ -154,8 +154,6 @@
     "statsPublished_other": "{{formatted}} artículos fueron publicados en las últimas 24 horas,",
     "statsAnalysed_one": "{{formatted}} fue analizado para ti,",
     "statsAnalysed_other": "{{formatted}} fueron analizados para ti,",
-    "statsRelevant_one": "{{formatted}} parece relevante,",
-    "statsRelevant_other": "{{formatted}} parecen relevantes,",
     "statsRead_one": "y has leído {{formatted}}.",
     "statsRead_other": "y has leído {{formatted}}.",
     "loadingA11y": "Cargando tu feed",
@@ -172,8 +170,6 @@
     "statsSyncAnalysing_other": "{{formatted}} artículos se están analizando para ti,",
     "statsSyncFrom_one": "de {{formatted}} publicado en las últimas 24 horas.",
     "statsSyncFrom_other": "de {{formatted}} publicados en las últimas 24 horas.",
-    "statsSyncRelevant_one": "{{formatted}} parece relevante por ahora.",
-    "statsSyncRelevant_other": "{{formatted}} parecen relevantes por ahora.",
     "view": {
       "a11y": "Vista: {{view}}. Cambiar la vista",
       "continuous": "Feed continuo",

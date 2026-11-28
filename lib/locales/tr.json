@@ -154,8 +154,6 @@
     "statsPublished_other": "{{formatted}} makale son 24 saatte yayınlandı,",
     "statsAnalysed_one": "{{formatted}} senin için analiz edildi,",
     "statsAnalysed_other": "{{formatted}} senin için analiz edildi,",
-    "statsRelevant_one": "{{formatted}} alakalı görünüyor",
-    "statsRelevant_other": "{{formatted}} alakalı görünüyor",
     "statsRead_one": "ve {{formatted}} tanesini okudun.",
     "statsRead_other": "ve {{formatted}} tanesini okudun.",
     "loadingA11y": "Akışın yükleniyor",
@@ -172,8 +170,6 @@
     "statsSyncAnalysing_other": "{{formatted}} makale senin için analiz ediliyor,",
     "statsSyncFrom_one": "son 24 saatte yayımlanan {{formatted}} arasından.",
     "statsSyncFrom_other": "son 24 saatte yayımlanan {{formatted}} arasından.",
-    "statsSyncRelevant_one": "{{formatted}} şimdiye kadar ilgili görünüyor.",
-    "statsSyncRelevant_other": "{{formatted}} şimdiye kadar ilgili görünüyor.",
     "view": {
       "a11y": "Görünüm: {{view}}. Görünümü değiştir",
       "continuous": "Sürekli akış",

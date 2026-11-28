@@ -154,8 +154,6 @@
     "statsPublished_other": "{{formatted}} artikelen zijn gepubliceerd in de afgelopen 24 uur,",
     "statsAnalysed_one": "{{formatted}} is voor je geanalyseerd,",
     "statsAnalysed_other": "{{formatted}} zijn voor je geanalyseerd,",
-    "statsRelevant_one": "{{formatted}} lijkt relevant,",
-    "statsRelevant_other": "{{formatted}} lijken relevant,",
     "statsRead_one": "en je hebt {{formatted}} gelezen.",
     "statsRead_other": "en je hebt {{formatted}} gelezen.",
     "loadingA11y": "Je feed wordt geladen",
@@ -172,8 +170,6 @@
     "statsSyncAnalysing_other": "{{formatted}} artikelen worden voor je geanalyseerd,",
     "statsSyncFrom_one": "uit {{formatted}} gepubliceerd in de afgelopen 24 uur.",
     "statsSyncFrom_other": "uit {{formatted}} gepubliceerd in de afgelopen 24 uur.",
-    "statsSyncRelevant_one": "{{formatted}} lijkt tot nu toe relevant.",
-    "statsSyncRelevant_other": "{{formatted}} lijken tot nu toe relevant.",
     "view": {
       "a11y": "Weergave: {{view}}. De weergave wijzigen",
       "continuous": "Doorlopende feed",
