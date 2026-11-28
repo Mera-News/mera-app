@@ -7,7 +7,7 @@
 // all, a tooltip "Tell Mera about you" points at the button. It is DERIVED
 // from the facts table (no timer, no rotation, no stored "dismissed" flag) and
 // goes for good with the first fact. On the Stories page with nothing followed
-// it says "Follow a story" instead (owner): a story is added through this button.
+// it says "Tap me to follow a story" instead (owner): a story is added through this button.
 //
 // Accessibility: the label says what the button does or what it is showing
 // (working, an answer ready); the tooltip is hidden from screen readers and
@@ -138,9 +138,8 @@ const MeraButton: React.FC<MeraButtonProps> = ({
   const reduceMotion = useReducedMotion();
   const noFacts = useHasNoFacts();
   const noStories = useHasNoStories();
-  // The Stories hint is the page starter's own string, so it needs no new copy.
   const tooltipKey =
-    page === 'stories' && noStories ? 'meraHints.stories.follow' : noFacts ? 'meraButton.tooltipNew' : null;
+    page === 'stories' && noStories ? 'meraButton.tooltipStories' : noFacts ? 'meraButton.tooltipNew' : null;
   const tooltipOn = tooltipKey !== null && !working && !unread;
 
   // ── working: the logo grows on the UI thread ─────────────────────────────

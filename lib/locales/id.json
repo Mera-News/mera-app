@@ -3133,7 +3133,8 @@
     "moveBottomRight": "Pindahkan ke kanan bawah",
     "answerReady": "Mera, jawaban sudah siap",
     "tooltipNew": "Beri tahu Mera tentang Anda",
-    "working": "Mera sedang mengerjakan permintaan Anda"
+    "working": "Mera sedang mengerjakan permintaan Anda",
+    "tooltipStories": "Ketuk saya untuk mengikuti cerita"
   },
   "meraIntro": {
     "feed": "Anda sedang di Feed. Beri tahu saya apa yang berdampak pada Anda, sebutkan sesuatu untuk diikuti, atau tanyakan apa saja tentang berita.",

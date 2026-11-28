@@ -3133,7 +3133,8 @@
     "moveBottomRight": "移至右下角",
     "answerReady": "梅拉，回答已準備好",
     "tooltipNew": "告訴梅拉關於你的事",
-    "working": "梅拉正在處理你的請求"
+    "working": "梅拉正在處理你的請求",
+    "tooltipStories": "點我追蹤報導"
   },
   "meraIntro": {
     "feed": "你正在看資訊流。告訴我什麼會影響你，說出想關注的內容，或問我任何新聞相關的問題。",

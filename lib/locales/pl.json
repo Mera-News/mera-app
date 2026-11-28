@@ -3307,7 +3307,8 @@
     "moveBottomRight": "Przesuń w prawy dolny róg",
     "answerReady": "Mera, odpowiedź jest gotowa",
     "tooltipNew": "Opowiedz Merze o sobie",
-    "working": "Mera pracuje nad Twoją prośbą"
+    "working": "Mera pracuje nad Twoją prośbą",
+    "tooltipStories": "Stuknij mnie, żeby śledzić historię"
   },
   "meraIntro": {
     "feed": "Jesteś w swoim Kanale. Powiedz, co na Ciebie wpływa, nazwij coś do śledzenia albo zapytaj o cokolwiek w wiadomościach.",

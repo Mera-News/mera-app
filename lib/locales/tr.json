@@ -3159,7 +3159,8 @@
     "moveBottomRight": "Sağ alta taşı",
     "answerReady": "Mera, bir yanıt hazır",
     "tooltipNew": "Mera’ya kendinizi anlatın",
-    "working": "Mera isteğiniz üzerinde çalışıyor"
+    "working": "Mera isteğiniz üzerinde çalışıyor",
+    "tooltipStories": "Bir hikayeyi takip etmek için bana dokunun"
   },
   "meraIntro": {
     "feed": "Akışınızdasınız. Sizi neyin ilgilendirdiğini anlatın, takip edilecek bir şey söyleyin ya da haberlerle ilgili her şeyi sorun.",

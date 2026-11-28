@@ -3163,7 +3163,8 @@
     "moveBottomRight": "Mover abajo a la derecha",
     "answerReady": "Mera, una respuesta está lista",
     "tooltipNew": "Cuéntale a Mera sobre ti",
-    "working": "Mera está trabajando en tu petición"
+    "working": "Mera está trabajando en tu petición",
+    "tooltipStories": "Tócame para seguir una historia"
   },
   "meraIntro": {
     "feed": "Estás en tu feed. Dime qué te afecta, nombra algo que seguir o pregúntame lo que quieras sobre las noticias.",

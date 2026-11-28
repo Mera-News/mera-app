@@ -3133,7 +3133,8 @@
     "moveBottomRight": "Chuyển đến góc dưới bên phải",
     "answerReady": "Mera, đã có câu trả lời",
     "tooltipNew": "Kể cho Mera về bạn",
-    "working": "Mera đang xử lý yêu cầu của bạn"
+    "working": "Mera đang xử lý yêu cầu của bạn",
+    "tooltipStories": "Chạm vào tôi để theo dõi một câu chuyện"
   },
   "meraIntro": {
     "feed": "Bạn đang ở Bảng tin. Hãy cho mình biết điều gì ảnh hưởng đến bạn, nêu một điều muốn theo dõi, hoặc hỏi mình bất cứ điều gì về tin tức.",

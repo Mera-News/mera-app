@@ -3158,7 +3158,8 @@
     "moveBottomRight": "Move to bottom right",
     "answerReady": "Mera, an answer is ready",
     "tooltipNew": "Tell Mera about you",
-    "working": "Mera is working on your request"
+    "working": "Mera is working on your request",
+    "tooltipStories": "Tap me to follow a story"
   },
   "meraIntro": {
     "feed": "You're on your Feed. Tell me what affects you, name something to follow, or ask me anything in the news.",

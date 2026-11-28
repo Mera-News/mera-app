@@ -3157,7 +3157,8 @@
     "moveBottomRight": "Naar rechtsonder verplaatsen",
     "answerReady": "Mera, een antwoord is klaar",
     "tooltipNew": "Vertel Mera over jou",
-    "working": "Mera werkt aan je verzoek"
+    "working": "Mera werkt aan je verzoek",
+    "tooltipStories": "Tik op mij om een verhaal te volgen"
   },
   "meraIntro": {
     "feed": "Je bent op je feed. Vertel me wat jou raakt, noem iets om te volgen, of stel me een vraag over het nieuws.",

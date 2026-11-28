@@ -3157,7 +3157,8 @@
     "moveBottomRight": "Nach rechts unten verschieben",
     "answerReady": "Mera, eine Antwort ist bereit",
     "tooltipNew": "Erzähl Mera von dir",
-    "working": "Mera arbeitet an deiner Anfrage"
+    "working": "Mera arbeitet an deiner Anfrage",
+    "tooltipStories": "Tipp mich an, um einer Geschichte zu folgen"
   },
   "meraIntro": {
     "feed": "Du bist in deinem Feed. Sag mir, was dich betrifft, nenne etwas, dem du folgen willst, oder frag mich alles zu den Nachrichten.",

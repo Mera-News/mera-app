@@ -1,0 +1,22 @@
+{
+  "en": { "meraButton": { "tooltipStories": "Tap me to follow a story" } },
+  "ar": { "meraButton": { "tooltipStories": "اضغط عليّ لمتابعة قصة" } },
+  "de": { "meraButton": { "tooltipStories": "Tipp mich an, um einer Geschichte zu folgen" } },
+  "es": { "meraButton": { "tooltipStories": "Tócame para seguir una historia" } },
+  "fr": { "meraButton": { "tooltipStories": "Appuyez sur moi pour suivre une histoire" } },
+  "hi": { "meraButton": { "tooltipStories": "मुझ पर टैप करें और एक कहानी फ़ॉलो करें" } },
+  "id": { "meraButton": { "tooltipStories": "Ketuk saya untuk mengikuti cerita" } },
+  "it": { "meraButton": { "tooltipStories": "Toccami per seguire una storia" } },
+  "ja": { "meraButton": { "tooltipStories": "私をタップしてストーリーをフォロー" } },
+  "ko": { "meraButton": { "tooltipStories": "나를 탭해서 스토리를 팔로우해 봐요" } },
+  "nl": { "meraButton": { "tooltipStories": "Tik op mij om een verhaal te volgen" } },
+  "pl": { "meraButton": { "tooltipStories": "Stuknij mnie, żeby śledzić historię" } },
+  "pt-BR": { "meraButton": { "tooltipStories": "Toque em mim para acompanhar uma história" } },
+  "ru": { "meraButton": { "tooltipStories": "Нажмите на меня, чтобы отследить историю" } },
+  "th": { "meraButton": { "tooltipStories": "แตะฉันเพื่อติดตามเรื่อง" } },
+  "tr": { "meraButton": { "tooltipStories": "Bir hikayeyi takip etmek için bana dokunun" } },
+  "uk": { "meraButton": { "tooltipStories": "Натисніть на мене, щоб слідкувати за історією" } },
+  "vi": { "meraButton": { "tooltipStories": "Chạm vào tôi để theo dõi một câu chuyện" } },
+  "zh-CN": { "meraButton": { "tooltipStories": "点我关注报道" } },
+  "zh-TW": { "meraButton": { "tooltipStories": "點我追蹤報導" } }
+}
